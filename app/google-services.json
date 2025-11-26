@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "565058219412",
+    "project_id": "sparin-2b08d",
+    "storage_bucket": "sparin-2b08d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:565058219412:android:647582998a98f4c91bb381",
+        "android_client_info": {
+          "package_name": "com.example.sparin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCf7BU39BTDkqmLmp8HgxLzgZEAL6jrkcM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
