@@ -128,7 +128,7 @@ fun PersonalizationScreen(
 
             // Title
             Text(
-                text = "Personalize Your\nSport Profile",
+                text = "Setup Your\nSport Profile",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp,
@@ -143,7 +143,7 @@ fun PersonalizationScreen(
 
             // Subtitle
             Text(
-                text = "Biar rekomendasi & matchmaking makin cocok sama kamu.",
+                text = "Biar rekomendasi & matchmaking makin akurat buat kamu.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = WarmHaze,
                 textAlign = TextAlign.Center,
@@ -449,7 +449,7 @@ fun PersonalizationScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Complete Setup",
+                        text = "Continue",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
@@ -462,6 +462,17 @@ fun PersonalizationScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Footer helper text
+            Text(
+                text = "Kamu bisa ubah ini kapan saja di profil.",
+                style = MaterialTheme.typography.bodySmall,
+                color = WarmHaze.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
         }
