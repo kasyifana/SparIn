@@ -750,7 +750,7 @@ private fun OnboardingPage3() {
             horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
         ) {
             GamificationBadge(Icons.Rounded.EmojiEvents, "Champion", Crunch)
-            GamificationBadge(Icons.Rounded.Whatshot, "Streak", SunsetOrange)
+            GamificationBadge(Icons.Rounded.Whatshot, "Winstreak", SunsetOrange)
             GamificationBadge(Icons.Rounded.Star, "MVP", Crunch)
         }
     }
@@ -923,7 +923,7 @@ private fun FloatingStatsCards() {
                         tint = SunsetOrange
                     )
                     Text(
-                        text = "Streak",
+                        text = "Winstreak",
                         style = MaterialTheme.typography.labelSmall,
                         color = WarmHaze
                     )
