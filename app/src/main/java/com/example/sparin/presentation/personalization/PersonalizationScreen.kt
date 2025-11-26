@@ -57,24 +57,24 @@ data class SportItem(
 val sportsList = listOf(
     SportItem("Badminton", Icons.Rounded.SportsTennis, "🏸"),
     SportItem("Futsal", Icons.Rounded.SportsSoccer, "⚽"),
-    SportItem("Basket", Icons.Rounded.SportsBasketball, "🏀"),
-    SportItem("Voli", Icons.Rounded.SportsVolleyball, "🏐"),
-    SportItem("Tenis Meja", Icons.Rounded.TableRestaurant, "🏓"),
-    SportItem("Tenis", Icons.Rounded.SportsTennis, "🎾"),
+    SportItem("Basketball", Icons.Rounded.SportsBasketball, "🏀"),
+    SportItem("Volleyball", Icons.Rounded.SportsVolleyball, "🏐"),
+    SportItem("Table Tennis", Icons.Rounded.TableRestaurant, "🏓"),
+    SportItem("Tennis", Icons.Rounded.SportsTennis, "🎾"),
     SportItem("Padel", Icons.Rounded.SportsTennis, "🎾"),
     SportItem("Golf", Icons.Rounded.GolfCourse, "⛳"),
-    SportItem("Sepak Bola", Icons.Rounded.SportsSoccer, "⚽"),
+    SportItem("Football", Icons.Rounded.SportsSoccer, "⚽"),
     SportItem("Mini Soccer", Icons.Rounded.SportsSoccer, "⚽"),
     SportItem("Jogging", Icons.AutoMirrored.Rounded.DirectionsRun, "🏃"),
-    SportItem("Lari", Icons.AutoMirrored.Rounded.DirectionsRun, "🏃‍♂️"),
-    SportItem("Sepeda", Icons.Rounded.DirectionsBike, "🚴"),
-    SportItem("Renang", Icons.Rounded.Pool, "🏊"),
+    SportItem("Running", Icons.AutoMirrored.Rounded.DirectionsRun, "🏃‍♂️"),
+    SportItem("Cycling", Icons.Rounded.DirectionsBike, "🚴"),
+    SportItem("Swimming", Icons.Rounded.Pool, "🏊"),
     SportItem("Gym", Icons.Rounded.FitnessCenter, "💪"),
     SportItem("Boxing", Icons.Rounded.SportsMma, "🥊"),
     SportItem("Muaythai", Icons.Rounded.SportsMma, "🥋"),
     SportItem("Taekwondo", Icons.Rounded.SportsMartialArts, "🥋"),
     SportItem("Billiard", Icons.Rounded.Circle, "🎱"),
-    SportItem("Catur", Icons.Rounded.Casino, "♟️"),
+    SportItem("Chess", Icons.Rounded.Casino, "♟️"),
     SportItem("Hiking", Icons.Rounded.Terrain, "🥾"),
     SportItem("Bowling", Icons.Rounded.FiberManualRecord, "🎳")
 )
@@ -143,7 +143,7 @@ fun PersonalizationScreen(
 
             // Subtitle
             Text(
-                text = "Biar rekomendasi & matchmaking makin akurat buat kamu.",
+                text = "Let's make recommendations & matchmaking more accurate for you.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = WarmHaze,
                 textAlign = TextAlign.Center,
@@ -199,7 +199,7 @@ fun PersonalizationScreen(
                         Slider(
                             value = age,
                             onValueChange = { age = it },
-                            valueRange = 13f..60f,
+                            valueRange = 17f..60f,
                             modifier = Modifier.fillMaxWidth(),
                             colors = SliderDefaults.colors(
                                 thumbColor = Crunch,
@@ -237,13 +237,6 @@ fun PersonalizationScreen(
                                 onClick = { selectedGender = "Female" },
                                 modifier = Modifier.weight(1f)
                             )
-                            GenderPill(
-                                text = "Other",
-                                emoji = "🧑",
-                                isSelected = selectedGender == "Other",
-                                onClick = { selectedGender = "Other" },
-                                modifier = Modifier.weight(1f)
-                            )
                         }
                     }
                 }
@@ -270,7 +263,7 @@ fun PersonalizationScreen(
                             .height(420.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
-                        userScrollEnabled = false
+                        userScrollEnabled = true
                     ) {
                         items(sportsList) { sport ->
                             SportTile(
@@ -467,7 +460,7 @@ fun PersonalizationScreen(
 
             // Footer helper text
             Text(
-                text = "Kamu bisa ubah ini kapan saja di profil.",
+                text = "You can change this anytime in your profile.",
                 style = MaterialTheme.typography.bodySmall,
                 color = WarmHaze.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,

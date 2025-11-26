@@ -446,15 +446,31 @@ private fun OnboardingPage2() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Sport category pills
-        Row(
+        // Sport category pills - 7 categories (4 top, 3 bottom)
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SportCategoryPill("🏀", "Basketball")
-            SportCategoryPill("⚽", "Football")
-            SportCategoryPill("🎾", "Tennis")
-            SportCategoryPill("🏸", "Badminton")
+            // Top row - 4 cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+            ) {
+                SportCategoryPill("🏀", "Basket")
+                SportCategoryPill("⚽", "Football")
+                SportCategoryPill("🎾", "Tennis")
+                SportCategoryPill("🥊", "Boxing")
+            }
+            // Bottom row - 3 cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+            ) {
+                SportCategoryPill("🏐", "Volleyball")
+                SportCategoryPill("🏊", "Swimming")
+                SportCategoryPill("🏃", "Running")
+            }
         }
     }
 }
@@ -734,8 +750,8 @@ private fun OnboardingPage3() {
             horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
         ) {
             GamificationBadge(Icons.Rounded.EmojiEvents, "Champion", Crunch)
-            GamificationBadge(Icons.Rounded.LocalFireDepartment, "Streak", SunsetOrange)
-            GamificationBadge(Icons.Rounded.Star, "MVP", ChineseSilver)
+            GamificationBadge(Icons.Rounded.Whatshot, "Streak", SunsetOrange)
+            GamificationBadge(Icons.Rounded.Star, "MVP", Crunch)
         }
     }
 }
