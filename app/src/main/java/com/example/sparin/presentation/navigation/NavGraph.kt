@@ -13,6 +13,7 @@ import com.example.sparin.presentation.home.HomeScreen
 import com.example.sparin.presentation.community.CommunityScreen
 import com.example.sparin.presentation.discover.DiscoverScreen
 import com.example.sparin.presentation.chat.ChatListScreen
+import com.example.sparin.presentation.chat.ChatRoomScreen
 import com.example.sparin.presentation.profile.ProfileScreen
 
 /**
@@ -84,7 +85,24 @@ fun NavGraph(
             ProfileScreen(navController = navController)
         }
         
-        // Detail Screens with arguments (will be added later)
-        // Room Detail, Chat Room, Campaign Detail, etc.
+        // Detail Screens with arguments
+        
+        // Chat Room Detail
+        composable(
+            route = Screen.ChatRoom.route,
+            arguments = listOf(
+                navArgument("roomId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val roomId = backStackEntry.arguments?.getString("roomId")
+            ChatRoomScreen(
+                navController = navController,
+                roomId = roomId
+            )
+        }
+        
+        // Room Detail, Campaign Detail, etc. (will be added later)
     }
 }
