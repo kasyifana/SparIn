@@ -12,7 +12,9 @@ sealed class Screen(val route: String) {
     // Bottom Nav Screens
     object Home : Screen("home")
     object Community : Screen("community")
-    object Discover : Screen("discover")
+    object Discover : Screen("discover") // Now points to ModeSelector
+    object DiscoverCasual : Screen("discover_casual")
+    object DiscoverCompetitive : Screen("discover_competitive")
     object Chat : Screen("chat")
     object Profile : Screen("profile")
     
