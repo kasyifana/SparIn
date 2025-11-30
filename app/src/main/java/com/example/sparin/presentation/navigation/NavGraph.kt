@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.compose.ui.Modifier
 import com.example.sparin.presentation.auth.SignInScreen
 import com.example.sparin.presentation.onboarding.OnboardingScreen
 import com.example.sparin.presentation.personalization.PersonalizationScreen
@@ -18,6 +19,7 @@ import com.example.sparin.presentation.discover.RoomMode
 import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
 import com.example.sparin.presentation.community.feed.CommunityFeedScreen
+import com.example.sparin.presentation.community.CreateCommunityScreen
 import com.example.sparin.presentation.profile.ProfileScreen
 
 /**
@@ -26,11 +28,13 @@ import com.example.sparin.presentation.profile.ProfileScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String
+    startDestination: String,
+    modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        modifier = modifier
     ) {
         // Onboarding & Auth Flow
         composable(Screen.Onboarding.route) {
@@ -75,6 +79,11 @@ fun NavGraph(
         
         composable(Screen.Community.route) {
             CommunityScreen(navController = navController)
+        }
+        
+        // Create Community Screen
+        composable("create_community") {
+            CreateCommunityScreen(navController = navController)
         }
         
         composable(Screen.Discover.route) {
@@ -124,9 +133,11 @@ fun NavGraph(
         }
         
         // Community Feed (Posts & Comments)
+        // Community Feed (Posts & Comments)
         composable(
-            route = "chat/{communityName}/{communityEmoji}",
+            route = Screen.CommunityFeed.route,
             arguments = listOf(
+                navArgument("communityId") { type = NavType.StringType },
                 navArgument("communityName") { 
                     type = NavType.StringType
                     defaultValue = "Community"
@@ -137,11 +148,13 @@ fun NavGraph(
                 }
             )
         ) { backStackEntry ->
+            val communityId = backStackEntry.arguments?.getString("communityId") ?: ""
             val communityName = backStackEntry.arguments?.getString("communityName") ?: "Community"
             val communityEmoji = backStackEntry.arguments?.getString("communityEmoji") ?: "🏸"
             
             CommunityFeedScreen(
                 navController = navController,
+                communityId = communityId,
                 communityName = communityName,
                 communityEmoji = communityEmoji
             )

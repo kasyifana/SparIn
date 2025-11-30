@@ -95,7 +95,8 @@ class MainActivity : ComponentActivity() {
         ) { paddingValues ->
             NavGraph(
                 navController = navController,
-                startDestination = startDestination
+                startDestination = startDestination,
+                modifier = Modifier.padding(paddingValues)
             )
         }
     }

@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.sparin.ui.theme.*
@@ -46,12 +45,18 @@ import kotlin.math.sin
 /**
  * Community Feed Screen - untuk membuat dan melihat postingan
  */
+import org.koin.androidx.compose.koinViewModel
+
+/**
+ * Community Feed Screen - untuk membuat dan melihat postingan
+ */
 @Composable
 fun CommunityFeedScreen(
     navController: NavHostController,
+    communityId: String,
     communityName: String,
     communityEmoji: String,
-    viewModel: CommunityFeedViewModel = viewModel()
+    viewModel: CommunityFeedViewModel = koinViewModel()
 ) {
     // Decode parameters
     val decodedName = remember {
@@ -72,132 +77,153 @@ fun CommunityFeedScreen(
     
     val feedState = viewModel.feedState
     var showCreatePost by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(decodedName) {
-        viewModel.loadCommunityFeed(decodedName)
+    LaunchedEffect(communityId) {
+        viewModel.loadCommunityFeed(communityId)
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        CascadingWhite,
-                        SoftLavender.copy(alpha = 0.08f),
-                        PeachGlow.copy(alpha = 0.05f)
-                    )
-                )
+    // Show error message if any
+    LaunchedEffect(viewModel.feedState.error) {
+        viewModel.feedState.error?.let { error ->
+            snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Short
             )
-    ) {
-        // Background blobs
-        FeedBackgroundBlobs()
-
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Header
-            FeedHeader(
-                communityName = decodedName,
-                communityEmoji = decodedEmoji,
-                onBackClick = { navController.navigateUp() }
-            )
-
-            // Posts List with better spacing
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    horizontal = 20.dp,
-                    vertical = 16.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                items(feedState.posts) { post ->
-                    PostCard(
-                        post = post,
-                        onLikeClick = { viewModel.toggleLike(post.id) },
-                        onCommentSubmit = { comment ->
-                            viewModel.addComment(post.id, comment)
-                        }
-                    )
-                }
-                
-                // Bottom spacer for FAB
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
-            }
         }
-        
-        // Floating Create Post Button with premium design
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Black
+    ) { paddingValues ->
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp)
-                .navigationBarsPadding(),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            // Glow effect
+            // Background gradient
             Box(
                 modifier = Modifier
-                    .size(70.dp)
+                    .fillMaxSize()
                     .background(
-                        brush = Brush.radialGradient(
+                        brush = Brush.verticalGradient(
                             colors = listOf(
-                                Crunch.copy(alpha = 0.3f),
-                                Crunch.copy(alpha = 0f)
+                                Color.Black,
+                                Color.DarkGray
                             )
-                        ),
-                        shape = CircleShape
+                        )
                     )
             )
-            
-            Surface(
-                modifier = Modifier
-                    .size(64.dp)
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = CircleShape,
-                        ambientColor = Crunch.copy(alpha = 0.4f),
-                        spotColor = Crunch.copy(alpha = 0.4f)
-                    )
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { showCreatePost = true }
-                    ),
-                shape = CircleShape,
-                color = Crunch
+
+            // Background blobs
+            FeedBackgroundBlobs()
+
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Box(
-                    contentAlignment = Alignment.Center
+                // Header
+                FeedHeader(
+                    communityName = decodedName,
+                    communityEmoji = decodedEmoji,
+                    onBackClick = { navController.navigateUp() }
+                )
+
+                // Posts List
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        horizontal = 20.dp,
+                        vertical = 16.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Add,
-                        contentDescription = "Create post",
-                        modifier = Modifier.size(28.dp),
-                        tint = Lead
-                    )
+                    items(feedState.posts) { post ->
+                        PostCard(
+                            post = post,
+                            onLikeClick = { viewModel.toggleLike(post.id) },
+                            onCommentSubmit = { comment ->
+                                viewModel.addComment(post.id, comment)
+                            }
+                        )
+                    }
+                    
+                    // Bottom spacer for FAB
+                    item {
+                        Spacer(modifier = Modifier.height(80.dp))
+                    }
                 }
             }
-        }
-
-        // Create Post Dialog
-        if (showCreatePost) {
-            CreatePostDialog(
-                onDismiss = { showCreatePost = false },
-                onPostCreated = { content, imageUrl ->
-                    viewModel.createPost(content, imageUrl)
-                    showCreatePost = false
+            
+            // Floating Create Post Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 20.dp)
+                    .navigationBarsPadding(),
+                contentAlignment = Alignment.Center
+            ) {
+                // Glow effect
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Crunch.copy(alpha = 0.3f),
+                                    Crunch.copy(alpha = 0f)
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                )
+                
+                Surface(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .shadow(
+                            elevation = 16.dp,
+                            shape = CircleShape,
+                            ambientColor = Crunch.copy(alpha = 0.4f),
+                            spotColor = Crunch.copy(alpha = 0.4f)
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { showCreatePost = true }
+                        ),
+                    shape = CircleShape,
+                    color = Crunch
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            contentDescription = "Create post",
+                            modifier = Modifier.size(28.dp),
+                            tint = Lead
+                        )
+                    }
                 }
-            )
+            }
+
+            // Create Post Dialog
+            if (showCreatePost) {
+                CreatePostDialog(
+                    onDismiss = { showCreatePost = false },
+                    onPostCreated = { content, imageUrl ->
+                        viewModel.createPost(content, imageUrl)
+                        showCreatePost = false
+                    }
+                )
+            }
         }
     }
 }
-
 // ==================== BACKGROUND ====================
 
 @Composable

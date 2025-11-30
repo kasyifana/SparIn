@@ -13,6 +13,6 @@ data class Community(
     val members: List<String> = emptyList(), // List of user IDs
     val admins: List<String> = emptyList(), // List of user IDs
     val createdBy: String = "",
-    val createdAt: Long = System.currentTimeMillis(),
+    val createdAt: com.google.firebase.Timestamp = com.google.firebase.Timestamp.now(),
     val isPublic: Boolean = true
 )

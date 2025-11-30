@@ -1,139 +1,144 @@
 package com.example.sparin.presentation.community.feed
 
 import androidx.compose.runtime.*
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.sparin.data.repository.FeedRepository
+import kotlinx.coroutines.launch
 
-class CommunityFeedViewModel : ViewModel() {
+class CommunityFeedViewModel(
+    private val feedRepository: FeedRepository,
+    private val authRepository: com.example.sparin.data.repository.AuthRepository
+) : ViewModel() {
 
     var feedState by mutableStateOf(FeedState())
         private set
 
-    fun loadCommunityFeed(communityName: String) {
-        // Sample data - nanti bisa diganti dengan API call
-        feedState = FeedState(
-            posts = listOf(
-                Post(
-                    id = "1",
-                    authorId = "user1",
-                    authorName = "Andi Pratama",
-                    authorEmoji = "🏸",
-                    content = "Hari ini latihan badminton seru banget! Ada yang mau ikut besok pagi?",
-                    imageUrl = null,
-                    timestamp = System.currentTimeMillis() - 3600000,
-                    likes = 12,
-                    isLikedByCurrentUser = true,
-                    comments = listOf(
-                        Comment(
-                            id = "c1",
-                            authorId = "user2",
-                            authorName = "Budi",
-                            authorEmoji = "⚽",
-                            content = "Wah seru! Jam berapa?",
-                            timestamp = System.currentTimeMillis() - 3000000,
-                            likes = 3
-                        ),
-                        Comment(
-                            id = "c2",
-                            authorId = "user1",
-                            authorName = "Andi Pratama",
-                            authorEmoji = "🏸",
-                            content = "Jam 7 pagi di GOR!",
-                            timestamp = System.currentTimeMillis() - 2700000,
-                            likes = 1
-                        )
+    private var currentCommunityId: String = ""
+
+    fun loadCommunityFeed(communityId: String) {
+        currentCommunityId = communityId
+        feedState = feedState.copy(isLoading = true)
+        
+        viewModelScope.launch {
+            val currentUserId = authRepository.getCurrentUserId() ?: return@launch
+            
+            when (val result = feedRepository.getPosts(communityId, currentUserId)) {
+                is com.example.sparin.domain.util.Resource.Success -> {
+                    feedState = feedState.copy(
+                        posts = result.data ?: emptyList(),
+                        isLoading = false
                     )
-                ),
-                Post(
-                    id = "2",
-                    authorId = "user3",
-                    authorName = "Siti Nurhaliza",
-                    authorEmoji = "🎾",
-                    content = "Tips untuk pemula yang baru mulai main badminton?",
-                    imageUrl = null,
-                    timestamp = System.currentTimeMillis() - 7200000,
-                    likes = 8,
-                    isLikedByCurrentUser = false,
-                    comments = listOf(
-                        Comment(
-                            id = "c3",
-                            authorId = "user4",
-                            authorName = "Rudi",
-                            authorEmoji = "🏀",
-                            content = "Latihan footwork dulu, itu yang paling penting!",
-                            timestamp = System.currentTimeMillis() - 6000000,
-                            likes = 5
-                        )
-                    )
-                ),
-                Post(
-                    id = "3",
-                    authorId = "user5",
-                    authorName = "Joko Widodo",
-                    authorEmoji = "⚽",
-                    content = "Turnamen bulan depan siapa yang ikut? Yuk daftar bareng!",
-                    imageUrl = null,
-                    timestamp = System.currentTimeMillis() - 10800000,
-                    likes = 15,
-                    isLikedByCurrentUser = false,
-                    comments = emptyList()
-                )
-            )
-        )
+                }
+                is com.example.sparin.domain.util.Resource.Error -> {
+                    feedState = feedState.copy(isLoading = false)
+                    // Handle error (maybe add error message to state)
+                }
+                else -> {
+                    feedState = feedState.copy(isLoading = false)
+                }
+            }
+        }
     }
 
     fun createPost(content: String, imageUrl: String?) {
-        val newPost = Post(
-            id = "new_${System.currentTimeMillis()}",
-            authorId = "current_user",
-            authorName = "You",
-            authorEmoji = "😊",
-            content = content,
-            imageUrl = imageUrl,
-            timestamp = System.currentTimeMillis(),
-            likes = 0,
-            isLikedByCurrentUser = false,
-            comments = emptyList()
-        )
+        if (currentCommunityId.isEmpty()) return
         
-        feedState = feedState.copy(
-            posts = listOf(newPost) + feedState.posts
-        )
+        viewModelScope.launch {
+            val currentUser = authRepository.getCurrentUser() ?: return@launch
+            
+            val newPost = Post(
+                authorId = currentUser.uid,
+                authorName = currentUser.name ?: "User",
+                authorEmoji = "👤", // TODO: Get user emoji/avatar
+                content = content,
+                imageUrl = imageUrl,
+                timestamp = System.currentTimeMillis()
+            )
+            
+            // Optimistic update
+            feedState = feedState.copy(
+                posts = listOf(newPost.copy(id = "temp_${System.currentTimeMillis()}")) + feedState.posts
+            )
+            
+            Log.d("CommunityFeedVM", "Creating post for community: $currentCommunityId")
+            
+            when (val result = feedRepository.createPost(currentCommunityId, newPost)) {
+                is com.example.sparin.domain.util.Resource.Success -> {
+                    Log.d("CommunityFeedVM", "Post created successfully: ${result.data}")
+                    // Reload feed to ensure we have the latest data and correct ordering
+                    loadCommunityFeed(currentCommunityId)
+                }
+                is com.example.sparin.domain.util.Resource.Error -> {
+                    Log.e("CommunityFeedVM", "Failed to create post: ${result.message}")
+                    // Revert optimistic update on error
+                    feedState = feedState.copy(
+                        posts = feedState.posts.filter { !it.id.startsWith("temp_") },
+                        error = result.message // Assuming FeedState has an error field, if not I'll check
+                    )
+                }
+                else -> {}
+            }
+        }
     }
 
     fun addComment(postId: String, commentContent: String) {
-        val newComment = Comment(
-            id = "comment_${System.currentTimeMillis()}",
-            authorId = "current_user",
-            authorName = "You",
-            authorEmoji = "😊",
-            content = commentContent,
-            timestamp = System.currentTimeMillis(),
-            likes = 0
-        )
+        if (currentCommunityId.isEmpty()) return
 
-        feedState = feedState.copy(
-            posts = feedState.posts.map { post ->
-                if (post.id == postId) {
-                    post.copy(comments = post.comments + newComment)
-                } else {
-                    post
+        viewModelScope.launch {
+            val currentUser = authRepository.getCurrentUser() ?: return@launch
+
+            val newComment = Comment(
+                postId = postId,
+                authorId = currentUser.uid,
+                authorName = currentUser.name ?: "User",
+                authorEmoji = "👤",
+                content = commentContent,
+                timestamp = System.currentTimeMillis()
+            )
+
+            // Optimistic update (add to local list of the specific post)
+            feedState = feedState.copy(
+                posts = feedState.posts.map { post ->
+                    if (post.id == postId) {
+                        post.copy(
+                            comments = post.comments + newComment,
+                            commentCount = post.commentCount + 1
+                        )
+                    } else {
+                        post
+                    }
                 }
-            }
-        )
+            )
+            
+            feedRepository.addComment(currentCommunityId, postId, newComment)
+            // Error handling for comment failure could be added here (revert)
+        }
     }
 
     fun toggleLike(postId: String) {
-        feedState = feedState.copy(
-            posts = feedState.posts.map { post ->
-                if (post.id == postId) {
-                    post.copy(
-                        isLikedByCurrentUser = !post.isLikedByCurrentUser,
-                        likes = if (post.isLikedByCurrentUser) post.likes - 1 else post.likes + 1
-                    )
-                } else {
-                    post
+        if (currentCommunityId.isEmpty()) return
+        
+        viewModelScope.launch {
+            val currentUserId = authRepository.getCurrentUserId() ?: return@launch
+
+            // Optimistic update
+            feedState = feedState.copy(
+                posts = feedState.posts.map { post ->
+                    if (post.id == postId) {
+                        val isLiked = !post.isLikedByCurrentUser
+                        post.copy(
+                            isLikedByCurrentUser = isLiked,
+                            likes = if (isLiked) post.likes + 1 else post.likes - 1
+                        )
+                    } else {
+                        post
+                    }
                 }
-            }
-        )
+            )
+            
+            feedRepository.toggleLike(currentCommunityId, postId, currentUserId)
+        }
     }
 }

@@ -7,9 +7,14 @@ import com.example.sparin.data.repository.CommunityRepository
 import com.example.sparin.data.repository.CampaignRepository
 import com.example.sparin.data.repository.ChatRepository
 import com.example.sparin.data.repository.MatchRepository
+import com.example.sparin.data.repository.FeedRepository
 import com.example.sparin.presentation.auth.SignInViewModel
 import com.example.sparin.presentation.home.HomeViewModel
 import com.example.sparin.presentation.personalization.PersonalizationViewModel
+import com.example.sparin.presentation.discover.DiscoverViewModel
+import com.example.sparin.presentation.community.CommunityViewModel
+import com.example.sparin.presentation.community.feed.CommunityFeedViewModel
+import com.example.sparin.presentation.profile.ProfileViewModel
 import org.koin.dsl.module
 
 /**
@@ -27,7 +32,7 @@ val repositoryModule = module {
     single { RoomRepository(get(), get()) }
     
     // Community Repository
-    single { CommunityRepository(get()) }
+    single { CommunityRepository(get(), get()) }
     
     // Campaign Repository
     single { CampaignRepository(get()) }
@@ -37,9 +42,16 @@ val repositoryModule = module {
     
     // Match Repository
     single { MatchRepository(get()) }
+
+    // Feed Repository
+    single { FeedRepository(get(), get()) }
     
     // ViewModels
     factory { SignInViewModel(get()) }
-    factory { HomeViewModel(get()) }
+    factory { HomeViewModel(get(), get(), get(), get()) } // UserRepo, RoomRepo, MatchRepo, CampaignRepo
     factory { PersonalizationViewModel(get(), get()) }
+    factory { DiscoverViewModel(get()) } // RoomRepo
+    factory { CommunityViewModel(get(), get()) } // CommunityRepo + FirestoreService
+    factory { CommunityFeedViewModel(get(), get()) } // FeedRepo + AuthRepo
+    // ProfileViewModel uses mock data for now - no DI needed
 }
