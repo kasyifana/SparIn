@@ -85,7 +85,8 @@ class UserRepository(
         age: Int?,
         sportInterests: List<String>,
         skillLevel: String,
-        bio: String
+        bio: String,
+        playFrequency: String = ""
     ): Resource<Unit> {
         return try {
             val updates = mapOf(
@@ -95,7 +96,9 @@ class UserRepository(
                 "age" to (age ?: 0),
                 "sportInterests" to sportInterests,
                 "skillLevel" to skillLevel,
-                "bio" to bio
+                "bio" to bio,
+                "playFrequency" to playFrequency,
+                "hasCompletedPersonalization" to true  // Mark personalization as complete
             )
             
             firestoreService.updateDocument(

@@ -17,10 +17,12 @@ data class User(
     val skillLevel: String = "",
     val profilePhoto: String = "",
     val bio: String = "",
+    val playFrequency: String = "",  // How often user plays: "1-2", "3-5", "daily"
     val stats: UserStats = UserStats(),
     val joinedCommunities: List<String> = emptyList(),
     val joinedRooms: List<String> = emptyList(),
     val subscription: String = "free",
+    val hasCompletedPersonalization: Boolean = false,  // Track personalization status
     val createdAt: Long = System.currentTimeMillis(),
     val lastSeen: Long = System.currentTimeMillis()
 )

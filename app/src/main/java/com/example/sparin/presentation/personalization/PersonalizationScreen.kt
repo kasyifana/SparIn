@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sparin.ui.theme.*
+import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -82,7 +83,8 @@ val sportsList = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonalizationScreen(
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    viewModel: PersonalizationViewModel = org.koin.androidx.compose.koinViewModel()
 ) {
     var name by remember { mutableStateOf("") }
     var age by remember { mutableFloatStateOf(20f) }
@@ -93,98 +95,257 @@ fun PersonalizationScreen(
     var playFrequency by remember { mutableStateOf("") }
 
     val scrollState = rememberScrollState()
+    val personalizationState by viewModel.personalizationState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Handle personalization state
+    LaunchedEffect(personalizationState) {
+        when (personalizationState) {
+            is PersonalizationState.Success -> {
+                android.util.Log.d("PersonalizationScreen", "Personalization successful - navigating to Home")
+                onNavigateToHome()
+            }
+            is PersonalizationState.Error -> {
+                val message = (personalizationState as PersonalizationState.Error).message
+                android.util.Log.e("PersonalizationScreen", "Personalization error: $message")
+                snackbarHostState.showSnackbar(message)
+            }
+            else -> { /* Idle or Loading */ }
+        }
+    }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(CascadingWhite, SoftLavender.copy(alpha = 0.3f))
-                )
-            )
-    ) {
-        // Animated floating blobs background
-        FloatingBlobsBackground()
-
-        Column(
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp)
-        ) {
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // 3D Hero Illustration
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                FloatingHeroElements()
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Title
-            Text(
-                text = "Setup Your\nSport Profile",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    lineHeight = 36.sp
-                ),
-                color = Lead,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Subtitle
-            Text(
-                text = "Let's make recommendations & matchmaking more accurate for you.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = WarmHaze,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // ==================== SECTION 1: Basic Info ====================
-            SectionCard(title = "Basic Info") {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Name Input
-                    NeumorphicTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = "Full Name",
-                        leadingIcon = Icons.Rounded.Person
+                .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(CascadingWhite, SoftLavender.copy(alpha = 0.3f))
                     )
+                )
+        ) {
+            // Animated floating blobs background
+            FloatingBlobsBackground()
 
-                    // Age Slider
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp)
+            ) {
+                Spacer(modifier = Modifier.height(48.dp))
+
+                // 3D Hero Illustration
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    FloatingHeroElements()
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Title
+                Text(
+                    text = "Setup Your\nSport Profile",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp,
+                        lineHeight = 36.sp
+                    ),
+                    color = Lead,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Subtitle
+                Text(
+                    text = "Let's make recommendations & matchmaking more accurate for you.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = WarmHaze,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // ==================== SECTION 1: Basic Info ====================
+                SectionCard(title = "Basic Info") {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Name Input
+                        NeumorphicTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = "Full Name",
+                            leadingIcon = Icons.Rounded.Person
+                        )
+
+                        // Age Slider
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Age",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = WarmHaze
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Crunch.copy(alpha = 0.15f)
+                                ) {
+                                    Text(
+                                        text = "${age.roundToInt()} years",
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = Lead
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Slider(
+                                value = age,
+                                onValueChange = { age = it },
+                                valueRange = 17f..60f,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Crunch,
+                                    activeTrackColor = Crunch,
+                                    inactiveTrackColor = ChineseSilver.copy(alpha = 0.5f)
+                                )
+                            )
+                        }
+
+                        // Gender Selector
+                        Column {
+                            Text(
+                                text = "Gender",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = WarmHaze
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                GenderPill(
+                                    text = "Male",
+                                    emoji = "👨",
+                                    isSelected = selectedGender == "Male",
+                                    onClick = { selectedGender = "Male" },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                GenderPill(
+                                    text = "Female",
+                                    emoji = "👩",
+                                    isSelected = selectedGender == "Female",
+                                    onClick = { selectedGender = "Female" },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ==================== SECTION 2: Sport Interests ====================
+                SectionCard(title = "Sport Interests") {
                     Column {
+                        Text(
+                            text = "Select sports you love (multiple allowed)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = WarmHaze.copy(alpha = 0.8f)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Sports Grid
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(3),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(420.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            userScrollEnabled = true
+                        ) {
+                            items(sportsList) { sport ->
+                                SportTile(
+                                    sport = sport,
+                                    isSelected = selectedSports.contains(sport.name),
+                                    onClick = {
+                                        selectedSports = if (selectedSports.contains(sport.name)) {
+                                            selectedSports - sport.name
+                                        } else {
+                                            selectedSports + sport.name
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        if (selectedSports.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "${selectedSports.size} sports selected",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Crunch,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ==================== SECTION 3: Skill Level ====================
+                SectionCard(title = "Skill Level") {
+                    Column {
+                        val skillLabels = listOf("Beginner", "Intermediate", "Semi-pro", "Expert")
+                        val currentSkillLabel = skillLabels[(skillLevel * 3).roundToInt().coerceIn(0, 3)]
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Age",
+                                text = "Your Level",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = WarmHaze
                             )
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = Crunch.copy(alpha = 0.15f)
+                                color = when (currentSkillLabel) {
+                                    "Beginner" -> MintBreeze
+                                    "Intermediate" -> SkyMist
+                                    "Semi-pro" -> PeachGlow
+                                    else -> Crunch.copy(alpha = 0.3f)
+                                }
                             ) {
                                 Text(
-                                    text = "${age.roundToInt()} years",
+                                    text = currentSkillLabel,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                     style = MaterialTheme.typography.labelLarge.copy(
                                         fontWeight = FontWeight.SemiBold
@@ -194,280 +355,191 @@ fun PersonalizationScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        Slider(
-                            value = age,
-                            onValueChange = { age = it },
-                            valueRange = 17f..60f,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = SliderDefaults.colors(
-                                thumbColor = Crunch,
-                                activeTrackColor = Crunch,
-                                inactiveTrackColor = ChineseSilver.copy(alpha = 0.5f)
+                        // Custom skill slider
+                        Column {
+                            Slider(
+                                value = skillLevel,
+                                onValueChange = { skillLevel = it },
+                                valueRange = 0f..1f,
+                                steps = 2,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Crunch,
+                                    activeTrackColor = Crunch,
+                                    inactiveTrackColor = ChineseSilver.copy(alpha = 0.5f)
+                                )
                             )
-                        )
-                    }
 
-                    // Gender Selector
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                skillLabels.forEach { label ->
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = WarmHaze.copy(alpha = 0.6f),
+                                        fontSize = 9.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ==================== SECTION 4: Location ====================
+                SectionCard(title = "Location") {
+                    NeumorphicTextField(
+                        value = location,
+                        onValueChange = { location = it },
+                        label = "Search your city",
+                        leadingIcon = Icons.Rounded.LocationOn
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // ==================== SECTION 5: Play Frequency ====================
+                SectionCard(title = "Play Frequency") {
                     Column {
                         Text(
-                            text = "Gender",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = WarmHaze
+                            text = "How often do you play?",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = WarmHaze.copy(alpha = 0.8f)
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            GenderPill(
-                                text = "Male",
-                                emoji = "👨",
-                                isSelected = selectedGender == "Male",
-                                onClick = { selectedGender = "Male" },
+                            FrequencyChip(
+                                text = "1–2x/week",
+                                emoji = "🌱",
+                                isSelected = playFrequency == "1-2",
+                                onClick = { playFrequency = "1-2" },
                                 modifier = Modifier.weight(1f)
                             )
-                            GenderPill(
-                                text = "Female",
-                                emoji = "👩",
-                                isSelected = selectedGender == "Female",
-                                onClick = { selectedGender = "Female" },
+                            FrequencyChip(
+                                text = "3–5x/week",
+                                emoji = "🔥",
+                                isSelected = playFrequency == "3-5",
+                                onClick = { playFrequency = "3-5" },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FrequencyChip(
+                                text = "Daily",
+                                emoji = "⚡",
+                                isSelected = playFrequency == "daily",
+                                onClick = { playFrequency = "daily" },
                                 modifier = Modifier.weight(1f)
                             )
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            // ==================== SECTION 2: Sport Interests ====================
-            SectionCard(title = "Sport Interests") {
-                Column {
-                    Text(
-                        text = "Select sports you love (multiple allowed)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = WarmHaze.copy(alpha = 0.8f)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Sports Grid
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(3),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(420.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        userScrollEnabled = true
-                    ) {
-                        items(sportsList) { sport ->
-                            SportTile(
-                                sport = sport,
-                                isSelected = selectedSports.contains(sport.name),
-                                onClick = {
-                                    selectedSports = if (selectedSports.contains(sport.name)) {
-                                        selectedSports - sport.name
-                                    } else {
-                                        selectedSports + sport.name
-                                    }
-                                }
-                            )
-                        }
-                    }
-
-                    if (selectedSports.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "${selectedSports.size} sports selected",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Crunch,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // ==================== SECTION 3: Skill Level ====================
-            SectionCard(title = "Skill Level") {
-                Column {
-                    val skillLabels = listOf("Beginner", "Intermediate", "Semi-pro", "Expert")
-                    val currentSkillLabel = skillLabels[(skillLevel * 3).roundToInt().coerceIn(0, 3)]
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Your Level",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = WarmHaze
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = when (currentSkillLabel) {
-                                "Beginner" -> MintBreeze
-                                "Intermediate" -> SkyMist
-                                "Semi-pro" -> PeachGlow
-                                else -> Crunch.copy(alpha = 0.3f)
+                // ==================== Continue Button ====================
+                Button(
+                    onClick = {
+                        android.util.Log.d("PersonalizationScreen", "Continue button clicked")
+                        
+                        // Validate required fields
+                        if (name.isBlank()) {
+                            android.util.Log.e("PersonalizationScreen", "Name is blank")
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Please enter your name")
                             }
+                            return@Button
+                        }
+                        
+                        if (selectedSports.isEmpty()) {
+                            android.util.Log.e("PersonalizationScreen", "No sports selected")
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Please select at least one sport")
+                            }
+                            return@Button
+                        }
+                        
+                        // Convert skill level to label
+                        val skillLabels = listOf("Beginner", "Intermediate", "Semi-pro", "Expert")
+                        val skillLevelLabel = skillLabels[(skillLevel * 3).roundToInt().coerceIn(0, 3)]
+                        
+                        android.util.Log.d("PersonalizationScreen", "Submitting personalization data")
+                        
+                        // Submit personalization
+                        viewModel.submitPersonalization(
+                            name = name.trim(),
+                            age = age.roundToInt(),
+                            gender = selectedGender,
+                            city = location.trim(),
+                            sportInterests = selectedSports.toList(),
+                            skillLevel = skillLevelLabel,
+                            playFrequency = playFrequency,
+                            bio = ""
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .shadow(
+                            elevation = 12.dp,
+                            shape = RoundedCornerShape(28.dp),
+                            ambientColor = Crunch.copy(alpha = 0.4f),
+                            spotColor = Crunch.copy(alpha = 0.4f)
+                        ),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Crunch
+                    ),
+                    enabled = personalizationState !is PersonalizationState.Loading
+                ) {
+                    if (personalizationState is PersonalizationState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Lead,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = currentSkillLabel,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelLarge.copy(
+                                text = "Continue",
+                                style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.SemiBold
                                 ),
                                 color = Lead
                             )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Custom skill slider
-                    Column {
-                        Slider(
-                            value = skillLevel,
-                            onValueChange = { skillLevel = it },
-                            valueRange = 0f..1f,
-                            steps = 2,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = SliderDefaults.colors(
-                                thumbColor = Crunch,
-                                activeTrackColor = Crunch,
-                                inactiveTrackColor = ChineseSilver.copy(alpha = 0.5f)
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                contentDescription = null,
+                                tint = Lead
                             )
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            skillLabels.forEach { label ->
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = WarmHaze.copy(alpha = 0.6f),
-                                    fontSize = 9.sp
-                                )
-                            }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // ==================== SECTION 4: Location ====================
-            SectionCard(title = "Location") {
-                NeumorphicTextField(
-                    value = location,
-                    onValueChange = { location = it },
-                    label = "Search your city",
-                    leadingIcon = Icons.Rounded.LocationOn
+                // Footer helper text
+                Text(
+                    text = "You can change this anytime in your profile.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = WarmHaze.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // ==================== SECTION 5: Play Frequency ====================
-            SectionCard(title = "Play Frequency") {
-                Column {
-                    Text(
-                        text = "How often do you play?",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = WarmHaze.copy(alpha = 0.8f)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        FrequencyChip(
-                            text = "1–2x/week",
-                            emoji = "🌱",
-                            isSelected = playFrequency == "1-2",
-                            onClick = { playFrequency = "1-2" },
-                            modifier = Modifier.weight(1f)
-                        )
-                        FrequencyChip(
-                            text = "3–5x/week",
-                            emoji = "🔥",
-                            isSelected = playFrequency == "3-5",
-                            onClick = { playFrequency = "3-5" },
-                            modifier = Modifier.weight(1f)
-                        )
-                        FrequencyChip(
-                            text = "Daily",
-                            emoji = "⚡",
-                            isSelected = playFrequency == "daily",
-                            onClick = { playFrequency = "daily" },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // ==================== Continue Button ====================
-            Button(
-                onClick = onNavigateToHome,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .shadow(
-                        elevation = 12.dp,
-                        shape = RoundedCornerShape(28.dp),
-                        ambientColor = Crunch.copy(alpha = 0.4f),
-                        spotColor = Crunch.copy(alpha = 0.4f)
-                    ),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Crunch
-                )
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Continue",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = Lead
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                        contentDescription = null,
-                        tint = Lead
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Footer helper text
-            Text(
-                text = "You can change this anytime in your profile.",
-                style = MaterialTheme.typography.bodySmall,
-                color = WarmHaze.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

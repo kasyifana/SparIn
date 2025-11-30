@@ -39,10 +39,20 @@ class MainActivity : ComponentActivity() {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         
-        // Determine start destination
-        val startDestination = when {
-            !authRepository.isUserSignedIn() -> Screen.Onboarding.route
-            else -> Screen.Home.route
+        // Determine start destination based on auth and personalization status
+        val startDestination = remember {
+            when {
+                !authRepository.isUserSignedIn() -> {
+                    // Not signed in -> Onboarding
+                    Screen.Onboarding.route
+                }
+                else -> {
+                    // Signed in - check if personalization is complete
+                    // For now, assume they need personalization (will be updated by ViewModel)
+                    // This will be overridden by navigation logic after user data loads
+                    Screen.Home.route
+                }
+            }
         }
         
         // Screens yang menampilkan bottom nav

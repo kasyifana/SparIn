@@ -22,6 +22,9 @@ class HomeViewModel(
     private val _userState = MutableStateFlow<UserState>(UserState.Loading)
     val userState: StateFlow<UserState> = _userState.asStateFlow()
     
+    private val _navigationEvent = MutableStateFlow<NavigationEvent?>(null)
+    val navigationEvent: StateFlow<NavigationEvent?> = _navigationEvent.asStateFlow()
+    
     init {
         loadUserProfile()
     }
@@ -35,8 +38,17 @@ class HomeViewModel(
             
             when (result) {
                 is Resource.Success -> {
-                    Log.d(TAG, "User profile loaded: ${result.data?.name}")
-                    _userState.value = UserState.Success(result.data!!)
+                    val user = result.data!!
+                    Log.d(TAG, "User profile loaded: ${user.name}")
+                    Log.d(TAG, "Has completed personalization: ${user.hasCompletedPersonalization}")
+                    
+                    // Check if user needs to complete personalization
+                    if (!user.hasCompletedPersonalization) {
+                        Log.d(TAG, "User needs personalization - triggering navigation")
+                        _navigationEvent.value = NavigationEvent.NavigateToPersonalization
+                    }
+                    
+                    _userState.value = UserState.Success(user)
                 }
                 is Resource.Error -> {
                     Log.e(TAG, "Failed to load user profile: ${result.message}")
@@ -48,6 +60,10 @@ class HomeViewModel(
                 }
             }
         }
+    }
+    
+    fun onNavigationHandled() {
+        _navigationEvent.value = null
     }
     
     companion object {
@@ -62,4 +78,11 @@ sealed class UserState {
     object Loading : UserState()
     data class Success(val user: User) : UserState()
     data class Error(val message: String) : UserState()
+}
+
+/**
+ * Navigation Event
+ */
+sealed class NavigationEvent {
+    object NavigateToPersonalization : NavigationEvent()
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.sparin.presentation.navigation.Screen
 import com.example.sparin.ui.theme.*
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.cos
@@ -47,6 +48,21 @@ fun HomeScreen(
 ) {
     val scrollState = rememberScrollState()
     val userState by viewModel.userState.collectAsState()
+    val navigationEvent by viewModel.navigationEvent.collectAsState()
+    
+    // Handle navigation events
+    LaunchedEffect(navigationEvent) {
+        navigationEvent?.let { event ->
+            when (event) {
+                is NavigationEvent.NavigateToPersonalization -> {
+                    navController.navigate(Screen.Personalization.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                    viewModel.onNavigationHandled()
+                }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier

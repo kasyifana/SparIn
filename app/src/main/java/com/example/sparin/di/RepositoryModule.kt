@@ -9,6 +9,7 @@ import com.example.sparin.data.repository.ChatRepository
 import com.example.sparin.data.repository.MatchRepository
 import com.example.sparin.presentation.auth.SignInViewModel
 import com.example.sparin.presentation.home.HomeViewModel
+import com.example.sparin.presentation.personalization.PersonalizationViewModel
 import org.koin.dsl.module
 
 /**
@@ -40,4 +41,5 @@ val repositoryModule = module {
     // ViewModels
     factory { SignInViewModel(get()) }
     factory { HomeViewModel(get()) }
+    factory { PersonalizationViewModel(get(), get()) }
 }
