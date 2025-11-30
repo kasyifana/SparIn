@@ -14,6 +14,7 @@ import com.example.sparin.presentation.community.CommunityScreen
 import com.example.sparin.presentation.discover.DiscoverScreen
 import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
+import com.example.sparin.presentation.community.feed.CommunityFeedScreen
 import com.example.sparin.presentation.profile.ProfileScreen
 
 /**
@@ -100,6 +101,30 @@ fun NavGraph(
             ChatRoomScreen(
                 navController = navController,
                 roomId = roomId
+            )
+        }
+        
+        // Community Feed (Posts & Comments)
+        composable(
+            route = "chat/{communityName}/{communityEmoji}",
+            arguments = listOf(
+                navArgument("communityName") { 
+                    type = NavType.StringType
+                    defaultValue = "Community"
+                },
+                navArgument("communityEmoji") { 
+                    type = NavType.StringType
+                    defaultValue = "🏸"
+                }
+            )
+        ) { backStackEntry ->
+            val communityName = backStackEntry.arguments?.getString("communityName") ?: "Community"
+            val communityEmoji = backStackEntry.arguments?.getString("communityEmoji") ?: "🏸"
+            
+            CommunityFeedScreen(
+                navController = navController,
+                communityName = communityName,
+                communityEmoji = communityEmoji
             )
         }
         

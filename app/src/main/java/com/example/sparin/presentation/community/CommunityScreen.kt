@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.sparin.ui.theme.*
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -133,6 +135,18 @@ val suggestedCommunities = listOf(
 fun CommunityScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("All") }
     val scrollState = rememberScrollState()
+    
+    // State untuk menyimpan komunitas yang sudah di-join
+    var joinedCommunities by remember { mutableStateOf<Set<String>>(emptySet()) }
+    
+    // State untuk dialog konfirmasi join
+    var showJoinDialog by remember { mutableStateOf(false) }
+    var selectedCommunityToJoin by remember { mutableStateOf<CommunityItem?>(null) }
+    
+    // Fungsi untuk join komunitas
+    val onJoinCommunity: (String) -> Unit = { communityName ->
+        joinedCommunities = joinedCommunities + communityName
+    }
 
     Box(
         modifier = Modifier
@@ -164,15 +178,40 @@ fun CommunityScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Main Community List
-            CommunityListSection(selectedCategory = selectedCategory)
+            // My Communities (yang sudah di-join)
+            MyCommunitiesSection(
+                joinedCommunities = joinedCommunities,
+                navController = navController
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Suggested Communities
-            SuggestedCommunitiesSection()
+            // Popular Communities (yang belum di-join)
+            PopularCommunitiesSection(
+                joinedCommunities = joinedCommunities,
+                onJoinClick = { community ->
+                    selectedCommunityToJoin = community
+                    showJoinDialog = true
+                }
+            )
 
             Spacer(modifier = Modifier.height(100.dp)) // Bottom padding for nav bar
+        }
+        
+        // Join Confirmation Dialog
+        if (showJoinDialog && selectedCommunityToJoin != null) {
+            JoinCommunityDialog(
+                community = selectedCommunityToJoin!!,
+                onConfirm = {
+                    onJoinCommunity(selectedCommunityToJoin!!.name)
+                    showJoinDialog = false
+                    selectedCommunityToJoin = null
+                },
+                onDismiss = {
+                    showJoinDialog = false
+                    selectedCommunityToJoin = null
+                }
+            )
         }
     }
 }
@@ -466,43 +505,56 @@ private fun CategoryPill(
     }
 }
 
-// ==================== COMMUNITY LIST ====================
+// ==================== MY COMMUNITIES (JOINED) ====================
 
 @Composable
-private fun CommunityListSection(selectedCategory: String) {
-    val filteredCommunities = if (selectedCategory == "All") {
-        communityList
-    } else {
-        communityList.filter { it.sport.contains(selectedCategory, ignoreCase = true) }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-    ) {
-        Text(
-            text = "Popular Communities",
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold
-            ),
-            color = Lead
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+private fun MyCommunitiesSection(
+    joinedCommunities: Set<String>,
+    navController: NavHostController
+) {
+    // Filter komunitas yang sudah di-join
+    val myJoinedCommunities = communityList.filter { it.name in joinedCommunities }
+    
+    if (myJoinedCommunities.isNotEmpty()) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
         ) {
-            (if (filteredCommunities.isEmpty()) communityList else filteredCommunities).forEach { community ->
-                CommunityCard(community = community)
+            Text(
+                text = "My Communities",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = Lead
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                myJoinedCommunities.forEach { community ->
+                    JoinedCommunityCard(
+                        community = community,
+                        onOpenClick = {
+                            // Encode emoji dan nama untuk menghindari error navigasi
+                            val encodedName = URLEncoder.encode(community.name, StandardCharsets.UTF_8.toString())
+                            val encodedEmoji = URLEncoder.encode(community.emoji, StandardCharsets.UTF_8.toString())
+                            navController.navigate("chat/$encodedName/$encodedEmoji")
+                        }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CommunityCard(community: CommunityItem) {
+private fun JoinedCommunityCard(
+    community: CommunityItem,
+    onOpenClick: () -> Unit = {}
+) {
     var isPressed by remember { mutableStateOf(false) }
 
     Surface(
@@ -633,7 +685,7 @@ private fun CommunityCard(community: CommunityItem) {
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Join Button
+                // Open Button
                 Surface(
                     modifier = Modifier
                         .shadow(
@@ -645,12 +697,15 @@ private fun CommunityCard(community: CommunityItem) {
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
-                        ) { isPressed = !isPressed },
+                        ) { 
+                            isPressed = !isPressed
+                            onOpenClick()
+                        },
                     shape = RoundedCornerShape(14.dp),
                     color = Crunch
                 ) {
                     Text(
-                        text = "Join",
+                        text = "Open",
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.SemiBold
@@ -663,54 +718,69 @@ private fun CommunityCard(community: CommunityItem) {
     }
 }
 
-// ==================== SUGGESTED COMMUNITIES ====================
+// ==================== POPULAR COMMUNITIES (NOT JOINED) ====================
 
 @Composable
-private fun SuggestedCommunitiesSection() {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+private fun PopularCommunitiesSection(
+    joinedCommunities: Set<String>,
+    onJoinClick: (CommunityItem) -> Unit
+) {
+    // Gabungkan semua komunitas yang belum di-join
+    val allCommunities = communityList + suggestedCommunities
+    val notJoinedCommunities = allCommunities.filter { it.name !in joinedCommunities }
+    
+    if (notJoinedCommunities.isNotEmpty()) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Suggested for You",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = Lead
-            )
-            TextButton(onClick = { }) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "See All",
-                    color = Crunch,
-                    fontWeight = FontWeight.Medium
+                    text = "Popular Communities",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Lead
                 )
+                TextButton(onClick = { }) {
+                    Text(
+                        text = "See All",
+                        color = Crunch,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            suggestedCommunities.forEach { community ->
-                SuggestedCommunityCard(community = community)
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                notJoinedCommunities.forEach { community ->
+                    PopularCommunityCard(
+                        community = community,
+                        onJoinClick = { onJoinClick(community) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SuggestedCommunityCard(community: CommunityItem) {
-    val infiniteTransition = rememberInfiniteTransition(label = "suggested_float")
+private fun PopularCommunityCard(
+    community: CommunityItem,
+    onJoinClick: () -> Unit = {}
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "popular_float")
 
     val floatAnim by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -725,7 +795,7 @@ private fun SuggestedCommunityCard(community: CommunityItem) {
     Surface(
         modifier = Modifier
             .width(130.dp)
-            .height(160.dp)
+            .height(180.dp)
             .offset(y = floatAnim.dp)
             .shadow(
                 elevation = 10.dp,
@@ -815,7 +885,182 @@ private fun SuggestedCommunityCard(community: CommunityItem) {
                         color = WarmHaze
                     )
                 }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Join Button
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(12.dp),
+                            ambientColor = Crunch.copy(alpha = 0.3f)
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onJoinClick
+                        ),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Crunch
+                ) {
+                    Text(
+                        text = "Join",
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = Lead,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             }
         }
     }
+}
+
+// ==================== JOIN CONFIRMATION DIALOG ====================
+
+@Composable
+private fun JoinCommunityDialog(
+    community: CommunityItem,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = NeumorphLight,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Community Icon
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    community.accentColor.copy(alpha = 0.4f),
+                                    community.accentColor.copy(alpha = 0.2f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = community.emoji, fontSize = 32.sp)
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = "Join Community?",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Lead
+                )
+            }
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = community.name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Lead,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.People,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = WarmHaze
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${community.memberCount} members",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = WarmHaze
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = "You will be able to chat and connect with other members.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = WarmHaze,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        },
+        confirmButton = {
+            Surface(
+                modifier = Modifier
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(14.dp),
+                        ambientColor = Crunch.copy(alpha = 0.3f)
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onConfirm
+                    ),
+                shape = RoundedCornerShape(14.dp),
+                color = Crunch
+            ) {
+                Text(
+                    text = "Join",
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = Lead
+                )
+            }
+        },
+        dismissButton = {
+            Surface(
+                modifier = Modifier
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(14.dp),
+                        ambientColor = NeumorphDark.copy(alpha = 0.1f)
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onDismiss
+                    ),
+                shape = RoundedCornerShape(14.dp),
+                color = Dreamland.copy(alpha = 0.5f)
+            ) {
+                Text(
+                    text = "Cancel",
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = WarmHaze
+                )
+            }
+        }
+    )
 }
