@@ -11,7 +11,10 @@ import com.example.sparin.presentation.onboarding.OnboardingScreen
 import com.example.sparin.presentation.personalization.PersonalizationScreen
 import com.example.sparin.presentation.home.HomeScreen
 import com.example.sparin.presentation.community.CommunityScreen
-import com.example.sparin.presentation.discover.DiscoverScreen
+import com.example.sparin.presentation.discover.ModeSelectorScreen
+import com.example.sparin.presentation.discover.DiscoverCasualScreen
+import com.example.sparin.presentation.discover.DiscoverCompetitiveScreen
+import com.example.sparin.presentation.discover.RoomMode
 import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
 import com.example.sparin.presentation.community.feed.CommunityFeedScreen
@@ -75,7 +78,23 @@ fun NavGraph(
         }
         
         composable(Screen.Discover.route) {
-            DiscoverScreen(navController = navController)
+            ModeSelectorScreen(
+                navController = navController,
+                onModeSelected = { mode ->
+                    when (mode) {
+                        RoomMode.CASUAL -> navController.navigate(Screen.DiscoverCasual.route)
+                        RoomMode.COMPETITIVE -> navController.navigate(Screen.DiscoverCompetitive.route)
+                    }
+                }
+            )
+        }
+
+        composable(Screen.DiscoverCasual.route) {
+            DiscoverCasualScreen(navController = navController)
+        }
+
+        composable(Screen.DiscoverCompetitive.route) {
+            DiscoverCompetitiveScreen(navController = navController)
         }
         
         composable(Screen.Chat.route) {
