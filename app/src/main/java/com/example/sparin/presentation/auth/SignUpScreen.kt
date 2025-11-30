@@ -1,5 +1,6 @@
 package com.example.sparin.presentation.auth
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -21,7 +22,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
@@ -43,17 +43,22 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Modern Sign In Screen for SparIN
- * Matches the onboarding design: soft-neumorphism, floating 3D shapes, Gen-Z aesthetic
+ * Modern Sign Up Screen for SparIN
+ * Perfectly synchronized with Sign In page: soft-neumorphism, floating 3D shapes, Gen-Z aesthetic
  */
 @Composable
-fun SignInScreen(
-    onNavigateToHome: () -> Unit,
+fun SignUpScreen(
+    onNavigateToSignIn: () -> Unit,
     onNavigateToPersonalization: () -> Unit
 ) {
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var selectedGender by remember { mutableStateOf("") }
+    var age by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
 
@@ -76,23 +81,23 @@ fun SignInScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             // 3D Hero Illustration
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(160.dp),
                 contentAlignment = Alignment.Center
             ) {
                 FloatingSportElements()
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Welcome Text
+            // Title
             Text(
-                text = "Welcome Back",
+                text = "Create Account",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 32.sp
@@ -102,14 +107,32 @@ fun SignInScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Subtitle
             Text(
-                text = "Sign in to continue your sport journey",
+                text = "Join SparIN and find your sport partners",
                 style = MaterialTheme.typography.bodyLarge,
                 color = WarmHaze,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Name Input Field
+            NeumorphicTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = "Full Name",
+                leadingIcon = Icons.Rounded.Person,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Email Input Field
             NeumorphicTextField(
@@ -139,18 +162,53 @@ fun SignInScreen(
                         onClick = { passwordVisible = !passwordVisible }
                     ) {
                         Icon(
-                            imageVector = if (passwordVisible) 
-                                Icons.Rounded.Visibility 
-                            else 
+                            imageVector = if (passwordVisible)
+                                Icons.Rounded.Visibility
+                            else
                                 Icons.Rounded.VisibilityOff,
                             contentDescription = if (passwordVisible) "Hide password" else "Show password",
                             tint = WarmHaze
                         )
                     }
                 },
-                visualTransformation = if (passwordVisible) 
-                    VisualTransformation.None 
-                else 
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Confirm Password Input Field
+            NeumorphicTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = "Confirm Password",
+                leadingIcon = Icons.Rounded.LockReset,
+                trailingIcon = {
+                    IconButton(
+                        onClick = { confirmPasswordVisible = !confirmPasswordVisible }
+                    ) {
+                        Icon(
+                            imageVector = if (confirmPasswordVisible)
+                                Icons.Rounded.Visibility
+                            else
+                                Icons.Rounded.VisibilityOff,
+                            contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
+                            tint = WarmHaze
+                        )
+                    }
+                },
+                visualTransformation = if (confirmPasswordVisible)
+                    VisualTransformation.None
+                else
                     PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
@@ -161,31 +219,70 @@ fun SignInScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Forgot Password Link
+            // Optional: Gender & Age Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "Forgot Password?",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium
-                    ),
-                    color = Crunch,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { /* Handle forgot password */ }
-                )
+                // Gender Selector
+                Column(
+                    modifier = Modifier.weight(1.5f)
+                ) {
+                    Text(
+                        text = "Gender (optional)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = WarmHaze,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        GenderPill(
+                            text = "M",
+                            emoji = "👨",
+                            isSelected = selectedGender == "Male",
+                            onClick = { selectedGender = "Male" },
+                            modifier = Modifier.weight(1f)
+                        )
+                        GenderPill(
+                            text = "F",
+                            emoji = "👩",
+                            isSelected = selectedGender == "Female",
+                            onClick = { selectedGender = "Female" },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                // Age Input
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Age (optional)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = WarmHaze,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                    )
+                    SmallNeumorphicTextField(
+                        value = age,
+                        onValueChange = { if (it.length <= 2 && it.all { c -> c.isDigit() }) age = it },
+                        placeholder = "Age",
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        )
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Sign In Button
+            // Create Account Button
             Button(
-                onClick = onNavigateToHome,
+                onClick = onNavigateToPersonalization,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -205,7 +302,7 @@ fun SignInScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Sign In",
+                        text = "Create Account",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
@@ -232,7 +329,7 @@ fun SignInScreen(
                     color = Dreamland.copy(alpha = 0.5f)
                 )
                 Text(
-                    text = "or continue with",
+                    text = "or sign up with",
                     style = MaterialTheme.typography.bodySmall,
                     color = WarmHaze
                 )
@@ -244,25 +341,25 @@ fun SignInScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Google Sign In Button
-            GoogleSignInButton(
+            // Google Sign Up Button
+            GoogleSignUpButton(
                 onClick = onNavigateToPersonalization
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Sign Up Link
+            // Sign In Link
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Don't have an account? ",
+                    text = "Already have an account? ",
                     style = MaterialTheme.typography.bodyMedium,
                     color = WarmHaze
                 )
                 Text(
-                    text = "Sign Up",
+                    text = "Sign In",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         textDecoration = TextDecoration.Underline
@@ -271,7 +368,7 @@ fun SignInScreen(
                     modifier = Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { /* Handle sign up navigation */ }
+                    ) { onNavigateToSignIn() }
                 )
             }
 
@@ -279,6 +376,8 @@ fun SignInScreen(
         }
     }
 }
+
+// ==================== BACKGROUND COMPONENTS ====================
 
 @Composable
 private fun FloatingBlobsBackground() {
@@ -325,7 +424,7 @@ private fun FloatingBlobsBackground() {
             radius = 140f,
             center = Offset(
                 x = size.width * 0.85f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 35f,
-                y = size.height * 0.25f + sin(Math.toRadians(offset2.toDouble())).toFloat() * 40f
+                y = size.height * 0.2f + sin(Math.toRadians(offset2.toDouble())).toFloat() * 40f
             )
         )
 
@@ -335,7 +434,7 @@ private fun FloatingBlobsBackground() {
             radius = 160f,
             center = Offset(
                 x = size.width * 0.3f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 50f,
-                y = size.height * 0.75f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 35f
+                y = size.height * 0.65f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 35f
             )
         )
 
@@ -345,11 +444,23 @@ private fun FloatingBlobsBackground() {
             radius = 120f,
             center = Offset(
                 x = size.width * 0.8f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 30f,
-                y = size.height * 0.6f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 40f
+                y = size.height * 0.5f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 40f
+            )
+        )
+
+        // Floating blob 5 - Rose
+        drawCircle(
+            color = RoseDust.copy(alpha = 0.2f),
+            radius = 100f,
+            center = Offset(
+                x = size.width * 0.5f + sin(Math.toRadians(offset2.toDouble())).toFloat() * 35f,
+                y = size.height * 0.85f + cos(Math.toRadians(offset1.toDouble())).toFloat() * 25f
             )
         )
     }
 }
+
+// ==================== HERO ELEMENTS ====================
 
 @Composable
 private fun FloatingSportElements() {
@@ -396,76 +507,76 @@ private fun FloatingSportElements() {
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Central SparIN Logo/Icon element
+        // Central SparIN element - Person with plus (create account theme)
         NeumorphicCircle(
             modifier = Modifier
-                .size(100.dp)
+                .size(90.dp)
                 .align(Alignment.Center)
                 .offset(y = float1.dp),
             color = ChineseSilver.copy(alpha = 0.7f)
         ) {
             Icon(
-                imageVector = Icons.Rounded.Sports,
+                imageVector = Icons.Rounded.PersonAdd,
                 contentDescription = null,
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(44.dp),
                 tint = Crunch
+            )
+        }
+
+        // Floating soccer ball
+        NeumorphicCircle(
+            modifier = Modifier
+                .size(55.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = (-25).dp, y = (15 + float2).dp),
+            color = PeachGlow.copy(alpha = 0.6f)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.SportsSoccer,
+                contentDescription = null,
+                modifier = Modifier.size(26.dp),
+                tint = SunsetOrange
             )
         }
 
         // Floating basketball
         NeumorphicCircle(
             modifier = Modifier
-                .size(60.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = (-30).dp, y = (20 + float2).dp),
-            color = PeachGlow.copy(alpha = 0.6f)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.SportsBasketball,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                tint = SunsetOrange
-            )
-        }
-
-        // Floating tennis
-        NeumorphicCircle(
-            modifier = Modifier
-                .size(50.dp)
+                .size(48.dp)
                 .align(Alignment.BottomStart)
-                .offset(x = 40.dp, y = (-20 + float3).dp),
+                .offset(x = 35.dp, y = (-15 + float3).dp),
             color = MintBreeze.copy(alpha = 0.6f)
         ) {
             Icon(
-                imageVector = Icons.Rounded.SportsTennis,
+                imageVector = Icons.Rounded.SportsBasketball,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
                 tint = WarmHaze
             )
         }
 
-        // Floating person running
+        // Floating tennis
         NeumorphicCircle(
             modifier = Modifier
-                .size(45.dp)
+                .size(42.dp)
                 .align(Alignment.TopStart)
-                .offset(x = 50.dp, y = (40 + float1).dp),
+                .offset(x = 45.dp, y = (30 + float1).dp),
             color = SkyMist.copy(alpha = 0.6f)
         ) {
             Icon(
-                imageVector = Icons.Rounded.DirectionsRun,
+                imageVector = Icons.Rounded.SportsTennis,
                 contentDescription = null,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(20.dp),
                 tint = Lead
             )
         }
 
-        // Decorative ring
+        // Decorative rotating ring
         Box(
             modifier = Modifier
-                .size(70.dp)
+                .size(65.dp)
                 .align(Alignment.CenterEnd)
-                .offset(x = (-10).dp, y = (30 + float2).dp)
+                .offset(x = (-8).dp, y = (25 + float2).dp)
                 .graphicsLayer { rotationZ = rotation }
                 .border(
                     width = 3.dp,
@@ -485,28 +596,38 @@ private fun FloatingSportElements() {
         FloatingDot(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(x = (-40).dp, y = (10 + float3).dp),
+                .offset(x = (-35).dp, y = (8 + float3).dp),
             color = Crunch.copy(alpha = 0.7f),
-            size = 12.dp
+            size = 10.dp
         )
 
         FloatingDot(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .offset(x = (-60).dp, y = (-30 + float1).dp),
+                .offset(x = (-55).dp, y = (-25 + float1).dp),
             color = ChineseSilver,
-            size = 16.dp
+            size = 14.dp
         )
 
         FloatingDot(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .offset(x = 20.dp, y = (-20 + float2).dp),
+                .offset(x = 18.dp, y = (-15 + float2).dp),
             color = MintBreeze,
-            size = 10.dp
+            size = 8.dp
+        )
+
+        FloatingDot(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .offset(x = 40.dp, y = (-5 + float3).dp),
+            color = PeachGlow.copy(alpha = 0.8f),
+            size = 12.dp
         )
     }
 }
+
+// ==================== INPUT COMPONENTS ====================
 
 @Composable
 private fun NeumorphicTextField(
@@ -585,7 +706,132 @@ private fun NeumorphicTextField(
 }
 
 @Composable
-private fun GoogleSignInButton(
+private fun SmallNeumorphicTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(16.dp),
+                ambientColor = NeumorphDark.copy(alpha = 0.12f),
+                spotColor = NeumorphDark.copy(alpha = 0.12f)
+            ),
+        shape = RoundedCornerShape(16.dp),
+        color = NeumorphLight
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            NeumorphLight,
+                            ChineseSilver.copy(alpha = 0.3f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            TextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        text = placeholder,
+                        color = WarmHaze.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    textAlign = TextAlign.Center
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedTextColor = Lead,
+                    unfocusedTextColor = Lead,
+                    cursorColor = Crunch,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                ),
+                keyboardOptions = keyboardOptions
+            )
+        }
+    }
+}
+
+@Composable
+private fun GenderPill(
+    text: String,
+    emoji: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isSelected) Crunch.copy(alpha = 0.2f) else CascadingWhite,
+        animationSpec = tween(200),
+        label = "gender_bg"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) Crunch else ChineseSilver.copy(alpha = 0.5f),
+        animationSpec = tween(200),
+        label = "gender_border"
+    )
+
+    Surface(
+        modifier = modifier
+            .height(48.dp)
+            .shadow(
+                elevation = if (isSelected) 6.dp else 2.dp,
+                shape = RoundedCornerShape(24.dp),
+                ambientColor = if (isSelected) Crunch.copy(alpha = 0.2f) else NeumorphDark.copy(alpha = 0.1f)
+            )
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(24.dp)
+            )
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(24.dp),
+        color = backgroundColor
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = emoji, fontSize = 16.sp)
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
+                ),
+                color = if (isSelected) Lead else WarmHaze
+            )
+        }
+    }
+}
+
+// ==================== GOOGLE BUTTON ====================
+
+@Composable
+private fun GoogleSignUpButton(
     onClick: () -> Unit
 ) {
     Surface(
@@ -650,6 +896,8 @@ private fun GoogleSignInButton(
         }
     }
 }
+
+// ==================== SHARED COMPONENTS ====================
 
 @Composable
 private fun NeumorphicCircle(
