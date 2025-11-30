@@ -34,6 +34,25 @@ class FirebaseAuthService(
     }
     
     /**
+     * Sign in dengan Google ID Token (dari Credential Manager)
+     */
+    suspend fun signInWithGoogleIdToken(idToken: String): Resource<FirebaseUser> {
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val result = firebaseAuth.signInWithCredential(credential).await()
+            val user = result.user
+            
+            if (user != null) {
+                Resource.Success(user)
+            } else {
+                Resource.Error("Sign in failed: User is null")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Sign in failed")
+        }
+    }
+    
+    /**
      * Get current user
      */
     fun getCurrentUser(): FirebaseUser? {

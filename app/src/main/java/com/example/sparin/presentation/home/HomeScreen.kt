@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.sparin.ui.theme.*
+import org.koin.androidx.compose.koinViewModel
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -40,8 +41,12 @@ import kotlin.math.sin
  * Gen-Z aesthetic: pastel gradients, soft-neumorphism, frosted cards, floating shadows
  */
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    navController: NavHostController,
+    viewModel: HomeViewModel = koinViewModel()
+) {
     val scrollState = rememberScrollState()
+    val userState by viewModel.userState.collectAsState()
 
     Box(
         modifier = Modifier
@@ -60,8 +65,8 @@ fun HomeScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            // SECTION 1: Greeting Header
-            GreetingHeader()
+            // SECTION 1: Greeting Header with dynamic user data
+            GreetingHeader(userState = userState)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -160,7 +165,7 @@ private fun HomeBackgroundBlobs() {
 // ==================== SECTION 1: GREETING HEADER ====================
 
 @Composable
-private fun GreetingHeader() {
+private fun GreetingHeader(userState: UserState) {
     val infiniteTransition = rememberInfiniteTransition(label = "header_blob")
     
     val floatAnim by infiniteTransition.animateFloat(
@@ -172,6 +177,13 @@ private fun GreetingHeader() {
         ),
         label = "float"
     )
+    
+    // Get display name based on user state
+    val displayName = when (userState) {
+        is UserState.Success -> userState.user.name.split(" ").firstOrNull() ?: "User"
+        is UserState.Loading -> "Loading..."
+        is UserState.Error -> "User"
+    }
 
     Box(
         modifier = Modifier
@@ -203,7 +215,7 @@ private fun GreetingHeader() {
         ) {
             Column {
                 Text(
-                    text = "Hi, Avit 👋",
+                    text = "Hi, $displayName 👋",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 28.sp
@@ -247,26 +259,37 @@ private fun GreetingHeader() {
                     Box(
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Person,
-                            contentDescription = "Profile",
-                            modifier = Modifier.size(32.dp),
-                            tint = WarmHaze
-                        )
+                        // Show loading or user icon
+                        if (userState is UserState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Crunch,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Rounded.Person,
+                                contentDescription = "Profile",
+                                modifier = Modifier.size(32.dp),
+                                tint = WarmHaze
+                            )
+                        }
                     }
                 }
 
-                // Online indicator
-                Box(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .align(Alignment.BottomEnd)
-                        .background(
-                            color = MintBreeze,
-                            shape = CircleShape
-                        )
-                        .border(2.dp, NeumorphLight, CircleShape)
-                )
+                // Online indicator (only show when user is loaded)
+                if (userState is UserState.Success) {
+                    Box(
+                        modifier = Modifier
+                            .size(14.dp)
+                            .align(Alignment.BottomEnd)
+                            .background(
+                                color = MintBreeze,
+                                shape = CircleShape
+                            )
+                            .border(2.dp, NeumorphLight, CircleShape)
+                    )
+                }
             }
         }
     }

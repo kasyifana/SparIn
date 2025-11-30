@@ -12,7 +12,20 @@
           "package_name": "com.example.sparin"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "565058219412-n91bc89j2t1v57e9jgjgo95hk0jea7kv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sparin",
+            "certificate_hash": "95111b055a655ed356b3397510ea88ac901d717e"
+          }
+        },
+        {
+          "client_id": "565058219412-9gj8dgjon4cq512oos1noqt227ngo0m6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCf7BU39BTDkqmLmp8HgxLzgZEAL6jrkcM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "565058219412-9gj8dgjon4cq512oos1noqt227ngo0m6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

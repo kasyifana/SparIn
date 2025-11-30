@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import android.util.Log
 
 /**
  * Generic Firestore Service untuk CRUD operations
@@ -38,11 +39,34 @@ class FirestoreService(
      * Get document by ID
      */
     suspend fun <T> getDocument(collection: String, documentId: String, clazz: Class<T>): T? {
-        val snapshot = firestore.collection(collection)
-            .document(documentId)
-            .get()
-            .await()
-        return snapshot.toObject(clazz)
+        Log.d(TAG, "getDocument called - collection: $collection, documentId: $documentId")
+        return try {
+            val snapshot = firestore.collection(collection)
+                .document(documentId)
+                .get()
+                .await()
+            
+            val exists = snapshot.exists()
+            Log.d(TAG, "Document exists: $exists")
+            
+            if (exists) {
+                val data = snapshot.data
+                Log.d(TAG, "Document data: $data")
+                val result = snapshot.toObject(clazz)
+                if (result != null) {
+                    Log.d(TAG, "Successfully converted to ${clazz.simpleName}")
+                } else {
+                    Log.e(TAG, "toObject returned NULL for ${clazz.simpleName}")
+                }
+                result
+            } else {
+                Log.e(TAG, "Document does NOT exist at $collection/$documentId")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception in getDocument: ${e.message}", e)
+            throw e
+        }
     }
     
     /**
@@ -151,5 +175,9 @@ class FirestoreService(
         val batch = firestore.batch()
         operations(batch)
         batch.commit().await()
+    }
+    
+    companion object {
+        private const val TAG = "FirestoreService"
     }
 }

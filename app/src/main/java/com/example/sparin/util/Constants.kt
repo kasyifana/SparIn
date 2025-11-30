@@ -5,6 +5,13 @@ package com.example.sparin.util
  */
 object Constants {
     
+    // Firebase Configuration
+    object Firebase {
+        // Web Client ID dari Firebase Console (client_type: 3 di google-services.json)
+        // Updated: 2025-11-30 - Verified from Firebase Console
+        const val WEB_CLIENT_ID = "565058219412-9gj8dgjon4cq512oos1noqt227ngo0m6.apps.googleusercontent.com"
+    }
+    
     // Firestore Collections
     object Collections {
         const val USERS = "users"

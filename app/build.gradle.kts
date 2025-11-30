@@ -98,6 +98,9 @@ dependencies {
 
     // Image Loading - Coil
     implementation(libs.coil.compose)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 //    implementation(libs.firebase.storage.ktx)
 
     // Testing

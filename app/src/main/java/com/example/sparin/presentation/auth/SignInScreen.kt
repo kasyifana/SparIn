@@ -1,5 +1,10 @@
 package com.example.sparin.presentation.auth
 
+import android.app.Activity
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -27,6 +32,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -38,9 +44,18 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import com.example.sparin.ui.theme.*
+import com.example.sparin.util.Constants
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import kotlin.math.cos
 import kotlin.math.sin
+
+private const val TAG = "SignInScreen"
 
 /**
  * Modern Sign In Screen for SparIN
@@ -49,233 +64,320 @@ import kotlin.math.sin
 @Composable
 fun SignInScreen(
     onNavigateToHome: () -> Unit,
-    onNavigateToPersonalization: () -> Unit
+    onNavigateToPersonalization: () -> Unit,
+    viewModel: SignInViewModel = koinViewModel()
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val credentialManager = remember { CredentialManager.create(context) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(CascadingWhite, SoftLavender.copy(alpha = 0.3f))
+    
+    val signInState by viewModel.signInState.collectAsState()
+    
+    // Handle sign in state changes
+    LaunchedEffect(signInState) {
+        Log.d(TAG, "State changed: ${signInState::class.simpleName}")
+        when (val state = signInState) {
+            is SignInState.Success -> {
+                Log.d(TAG, "SUCCESS - Navigating... isNewUser: ${state.isNewUser}")
+                if (state.isNewUser) {
+                    Log.d(TAG, "Navigating to Personalization")
+                    onNavigateToPersonalization()
+                } else {
+                    Log.d(TAG, "Navigating to Home")
+                    onNavigateToHome()
+                }
+                viewModel.resetState()
+            }
+            is SignInState.Error -> {
+                Log.e(TAG, "ERROR state: ${state.message}")
+                snackbarHostState.showSnackbar(
+                    message = state.message,
+                    duration = SnackbarDuration.Long
                 )
-            )
-    ) {
-        // Animated floating blobs background
-        FloatingBlobsBackground()
+            }
+            is SignInState.Loading -> {
+                Log.d(TAG, "LOADING state")
+            }
+            is SignInState.Idle -> {
+                Log.d(TAG, "IDLE state")
+            }
+        }
+    }
 
-        Column(
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // 3D Hero Illustration
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                FloatingSportElements()
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Welcome Text
-            Text(
-                text = "Welcome Back",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp
-                ),
-                color = Lead
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Sign in to continue your sport journey",
-                style = MaterialTheme.typography.bodyLarge,
-                color = WarmHaze,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Email Input Field
-            NeumorphicTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = "Email",
-                leadingIcon = Icons.Rounded.Email,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(CascadingWhite, SoftLavender.copy(alpha = 0.3f))
+                    )
                 )
-            )
+        ) {
+            // Loading overlay
+            if (signInState is SignInState.Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Crunch)
+                }
+            }
+            
+            // Animated floating blobs background
+            FloatingBlobsBackground()
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(48.dp))
 
-            // Password Input Field
-            NeumorphicTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = "Password",
-                leadingIcon = Icons.Rounded.Lock,
-                trailingIcon = {
-                    IconButton(
-                        onClick = { passwordVisible = !passwordVisible }
+                // 3D Hero Illustration
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    FloatingSportElements()
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Welcome Text
+                Text(
+                    text = "Welcome Back",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 32.sp
+                    ),
+                    color = Lead
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Sign in to continue your sport journey",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = WarmHaze,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(40.dp))
+
+                // Email Input Field
+                NeumorphicTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = "Email",
+                    leadingIcon = Icons.Rounded.Email,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Password Input Field
+                NeumorphicTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Password",
+                    leadingIcon = Icons.Rounded.Lock,
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { passwordVisible = !passwordVisible }
+                        ) {
+                            Icon(
+                                imageVector = if (passwordVisible) 
+                                    Icons.Rounded.Visibility 
+                                else 
+                                    Icons.Rounded.VisibilityOff,
+                                contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                tint = WarmHaze
+                            )
+                        }
+                    },
+                    visualTransformation = if (passwordVisible) 
+                        VisualTransformation.None 
+                    else 
+                        PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() }
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Forgot Password Link
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "Forgot Password?",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = Crunch,
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { /* Handle forgot password */ }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Sign In Button
+                Button(
+                    onClick = onNavigateToHome,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .shadow(
+                            elevation = 12.dp,
+                            shape = RoundedCornerShape(28.dp),
+                            ambientColor = Crunch.copy(alpha = 0.4f),
+                            spotColor = Crunch.copy(alpha = 0.4f)
+                        ),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Crunch
+                    )
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Text(
+                            text = "Sign In",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Lead
+                        )
                         Icon(
-                            imageVector = if (passwordVisible) 
-                                Icons.Rounded.Visibility 
-                            else 
-                                Icons.Rounded.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                            tint = WarmHaze
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                            contentDescription = null,
+                            tint = Lead
                         )
                     }
-                },
-                visualTransformation = if (passwordVisible) 
-                    VisualTransformation.None 
-                else 
-                    PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { focusManager.clearFocus() }
-                )
-            )
+                }
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Forgot Password Link
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text(
-                    text = "Forgot Password?",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium
-                    ),
-                    color = Crunch,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { /* Handle forgot password */ }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Sign In Button
-            Button(
-                onClick = onNavigateToHome,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .shadow(
-                        elevation = 12.dp,
-                        shape = RoundedCornerShape(28.dp),
-                        ambientColor = Crunch.copy(alpha = 0.4f),
-                        spotColor = Crunch.copy(alpha = 0.4f)
-                    ),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Crunch
-                )
-            ) {
+                // Divider with "or"
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = Dreamland.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        text = "or continue with",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WarmHaze
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = Dreamland.copy(alpha = 0.5f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Google Sign In Button
+                GoogleSignInButton(
+                    onClick = {
+                        Log.d(TAG, "Google Sign-In button clicked")
+                        scope.launch {
+                            try {
+                                Log.d(TAG, "Building GetGoogleIdOption...")
+                                val googleIdOption = GetGoogleIdOption.Builder()
+                                    .setFilterByAuthorizedAccounts(false)
+                                    .setServerClientId(Constants.Firebase.WEB_CLIENT_ID)
+                                    .build()
+                                
+                                Log.d(TAG, "Building GetCredentialRequest...")
+                                val request = GetCredentialRequest.Builder()
+                                    .addCredentialOption(googleIdOption)
+                                    .build()
+                                
+                                Log.d(TAG, "Calling CredentialManager.getCredential()...")
+                                val result = credentialManager.getCredential(
+                                    request = request,
+                                    context = context
+                                )
+                                
+                                Log.d(TAG, "Credential received, calling viewModel.handleSignIn()")
+                                viewModel.handleSignIn(result.credential)
+                            } catch (e: GetCredentialException) {
+                                Log.e(TAG, "GetCredentialException: ${e.message}", e)
+                                viewModel.handleSignInError("Sign in cancelled or failed: ${e.message}")
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Exception: ${e.message}", e)
+                                viewModel.handleSignInError("Unexpected error: ${e.message}")
+                            }
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Sign Up Link
+                Row(
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Sign In",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = Lead
+                        text = "Don't have an account? ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = WarmHaze
                     )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                        contentDescription = null,
-                        tint = Lead
+                    Text(
+                        text = "Sign Up",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            textDecoration = TextDecoration.Underline
+                        ),
+                        color = Crunch,
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { /* Handle sign up navigation */ }
                     )
                 }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Divider with "or"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = Dreamland.copy(alpha = 0.5f)
-                )
-                Text(
-                    text = "or continue with",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = WarmHaze
-                )
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = Dreamland.copy(alpha = 0.5f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Google Sign In Button
-            GoogleSignInButton(
-                onClick = onNavigateToPersonalization
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Sign Up Link
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Don't have an account? ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WarmHaze
-                )
-                Text(
-                    text = "Sign Up",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        textDecoration = TextDecoration.Underline
-                    ),
-                    color = Crunch,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { /* Handle sign up navigation */ }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

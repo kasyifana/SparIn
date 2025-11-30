@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.example.sparin.util.Constants
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -25,7 +26,7 @@ val appModule = module {
 
 private fun provideGoogleSignInClient(context: Context): GoogleSignInClient {
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken("565058219412-uu83h67t8q6k6lpe8s7rp6bb39djqhqa.apps.googleusercontent.com")
+        .requestIdToken(Constants.Firebase.WEB_CLIENT_ID)
         .requestEmail()
         .build()
     return GoogleSignIn.getClient(context, gso)

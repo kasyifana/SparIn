@@ -7,6 +7,8 @@ import com.example.sparin.data.repository.CommunityRepository
 import com.example.sparin.data.repository.CampaignRepository
 import com.example.sparin.data.repository.ChatRepository
 import com.example.sparin.data.repository.MatchRepository
+import com.example.sparin.presentation.auth.SignInViewModel
+import com.example.sparin.presentation.home.HomeViewModel
 import org.koin.dsl.module
 
 /**
@@ -34,4 +36,8 @@ val repositoryModule = module {
     
     // Match Repository
     single { MatchRepository(get()) }
+    
+    // ViewModels
+    factory { SignInViewModel(get()) }
+    factory { HomeViewModel(get()) }
 }

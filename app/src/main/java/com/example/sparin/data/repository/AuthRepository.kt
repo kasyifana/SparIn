@@ -64,6 +64,54 @@ class AuthRepository(
     }
     
     /**
+     * Sign in dengan Google ID Token (untuk Credential Manager API)
+     */
+    suspend fun signInWithGoogleIdToken(idToken: String): Resource<Pair<User, Boolean>> {
+        return try {
+            val result = authService.signInWithGoogleIdToken(idToken)
+            
+            when (result) {
+                is Resource.Success -> {
+                    val firebaseUser = result.data!!
+                    val userId = firebaseUser.uid
+                    
+                    // Check if user exists in Firestore
+                    val existingUser = firestoreService.getDocument(
+                        Constants.Collections.USERS,
+                        userId,
+                        User::class.java
+                    )
+                    
+                    if (existingUser != null) {
+                        // Existing user
+                        Resource.Success(Pair(existingUser, false))
+                    } else {
+                        // New user - create basic profile
+                        val newUser = User(
+                            uid = userId,
+                            name = firebaseUser.displayName ?: "",
+                            email = firebaseUser.email ?: "",
+                            profilePhoto = firebaseUser.photoUrl?.toString() ?: ""
+                        )
+                        
+                        firestoreService.createDocumentWithId(
+                            Constants.Collections.USERS,
+                            userId,
+                            newUser
+                        )
+                        
+                        Resource.Success(Pair(newUser, true))
+                    }
+                }
+                is Resource.Error -> Resource.Error(result.message ?: "Authentication failed")
+                else -> Resource.Error("Unexpected error")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Sign in failed")
+        }
+    }
+    
+    /**
      * Sign out
      */
     fun signOut() {

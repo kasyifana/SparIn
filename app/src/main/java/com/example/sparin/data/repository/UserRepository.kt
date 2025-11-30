@@ -7,6 +7,7 @@ import com.example.sparin.data.remote.FirestoreService
 import com.example.sparin.domain.util.Resource
 import com.example.sparin.util.Constants
 import kotlinx.coroutines.flow.Flow
+import android.util.Log
 
 /**
  * Repository untuk User operations
@@ -20,6 +21,7 @@ class UserRepository(
      * Get user profile by ID
      */
     suspend fun getUserProfile(userId: String): Resource<User> {
+        Log.d(TAG, "getUserProfile called for userId: $userId")
         return try {
             val user = firestoreService.getDocument(
                 Constants.Collections.USERS,
@@ -28,11 +30,14 @@ class UserRepository(
             )
             
             if (user != null) {
+                Log.d(TAG, "User profile found: ${user.name}")
                 Resource.Success(user)
             } else {
+                Log.e(TAG, "User document is NULL for userId: $userId")
                 Resource.Error("User not found")
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Exception in getUserProfile: ${e.message}", e)
             Resource.Error(e.message ?: "Failed to get user profile")
         }
     }
@@ -41,10 +46,14 @@ class UserRepository(
      * Get current user profile
      */
     suspend fun getCurrentUserProfile(): Resource<User> {
+        Log.d(TAG, "getCurrentUserProfile called")
         val userId = authService.getCurrentUserId()
+        Log.d(TAG, "Current userId: $userId")
+        
         return if (userId != null) {
             getUserProfile(userId)
         } else {
+            Log.e(TAG, "User not authenticated - userId is NULL")
             Resource.Error("User not authenticated")
         }
     }
@@ -126,5 +135,9 @@ class UserRepository(
             userId,
             User::class.java
         )
+    }
+    
+    companion object {
+        private const val TAG = "UserRepository"
     }
 }
