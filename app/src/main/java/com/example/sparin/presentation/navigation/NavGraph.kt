@@ -18,6 +18,7 @@ import com.example.sparin.presentation.discover.RoomMode
 import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
 import com.example.sparin.presentation.profile.ProfileScreen
+import com.example.sparin.presentation.profile.EditProfileScreen
 
 /**
  * Navigation Graph untuk aplikasi SparIN
@@ -102,6 +103,10 @@ fun NavGraph(
         
         composable(Screen.Profile.route) {
             ProfileScreen(navController = navController)
+        }
+        
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(navController = navController)
         }
         
         // Detail Screens with arguments

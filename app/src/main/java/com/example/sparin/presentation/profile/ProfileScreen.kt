@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.sparin.presentation.navigation.Screen
 import com.example.sparin.presentation.profile.components.*
 import com.example.sparin.ui.theme.*
 
@@ -62,8 +63,7 @@ fun ProfileScreen(
                     badges = state.badges,
                     aiInsights = state.aiInsights,
                     onEditProfile = {
-                        // Navigate to edit profile screen
-                        // navController.navigate("edit_profile")
+                        navController.navigate(Screen.EditProfile.route)
                     }
                 )
             }
@@ -100,7 +100,10 @@ private fun ProfileContent(
             Spacer(modifier = Modifier.height(48.dp))
 
             // Profile Header
-            ProfileHeader(userProfile = userProfile)
+            ProfileHeader(
+                userProfile = userProfile,
+                onEditClick = onEditProfile
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -257,7 +260,8 @@ private fun ProfileHeaderPreview() {
                     city = "Jakarta",
                     age = 24,
                     gender = "Male"
-                )
+                ),
+                onEditClick = {}
             )
         }
     }

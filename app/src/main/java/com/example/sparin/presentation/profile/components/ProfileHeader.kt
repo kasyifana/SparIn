@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -30,7 +31,8 @@ import com.example.sparin.ui.theme.*
 @Composable
 fun ProfileHeader(
     userProfile: UserProfile,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditClick: () -> Unit = {}
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "profile_header_anim")
 
@@ -92,6 +94,32 @@ fun ProfileHeader(
                     )
                     .blur(15.dp)
             )
+
+            // Edit Button - Top Right Corner
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(40.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = CircleShape,
+                        ambientColor = Crunch.copy(alpha = 0.3f),
+                        spotColor = Crunch.copy(alpha = 0.3f)
+                    )
+                    .background(
+                        color = Crunch,
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Edit,
+                    contentDescription = "Edit Profile",
+                    tint = Lead,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
 
             Column(
                 modifier = Modifier
