@@ -45,7 +45,11 @@ fun StatsSection(
     val animatedStatIncrease by viewModel.animatedStatIncrease.collectAsState()
     
     var showTooltip by remember { mutableStateOf<StatCardType?>(null) }
-    var expandedSection by remember { mutableStateOf<String?>(null) }
+    var expandedWinrateRing by remember { mutableStateOf(false) }
+    var expandedTotalMatches by remember { mutableStateOf(false) }
+    var expandedTotalWins by remember { mutableStateOf(false) }
+    var expandedRank by remember { mutableStateOf(false) }
+    var expandedElo by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         Surface(
@@ -105,15 +109,12 @@ fun StatsSection(
                                 showTooltip = showTooltip,
                                 animatedStatIncrease = animatedStatIncrease,
                                 isComparisonMode = isComparisonMode,
-                                expandedSection = expandedSection,
+                                expandedWinrateRing = expandedWinrateRing,
+                                expandedTotalMatches = expandedTotalMatches,
                                 onTooltipClick = { showTooltip = it },
                                 onDismissTooltip = { showTooltip = null },
-                                onWinrateExpand = { 
-                                    expandedSection = if (expandedSection == "winrate") null else "winrate"
-                                },
-                                onTotalMatchesExpand = { 
-                                    expandedSection = if (expandedSection == "totalMatches") null else "totalMatches"
-                                }
+                                onWinrateExpand = { expandedWinrateRing = !expandedWinrateRing },
+                                onTotalMatchesExpand = { expandedTotalMatches = !expandedTotalMatches }
                             )
                             1 -> StatsCluster2(
                                 stats = statsData,
@@ -121,14 +122,11 @@ fun StatsSection(
                                 showTooltip = showTooltip,
                                 animatedStatIncrease = animatedStatIncrease,
                                 isComparisonMode = isComparisonMode,
-                                expandedSection = expandedSection,
+                                expandedTotalWins = expandedTotalWins,
+                                expandedRank = expandedRank,
                                 onTooltipClick = { statType -> showTooltip = statType },
-                                onTotalWinsExpand = { 
-                                    expandedSection = if (expandedSection == "totalWins") null else "totalWins"
-                                },
-                                onRankExpand = { 
-                                    expandedSection = if (expandedSection == "rank") null else "rank"
-                                }
+                                onTotalWinsExpand = { expandedTotalWins = !expandedTotalWins },
+                                onRankExpand = { expandedRank = !expandedRank }
                             )
                             2 -> StatsCluster3(
                                 stats = statsData,
@@ -136,11 +134,9 @@ fun StatsSection(
                                 showTooltip = showTooltip,
                                 animatedStatIncrease = animatedStatIncrease,
                                 isComparisonMode = isComparisonMode,
-                                expandedSection = expandedSection,
+                                expandedElo = expandedElo,
                                 onTooltipClick = { statType -> showTooltip = statType },
-                                onEloExpand = { 
-                                    expandedSection = if (expandedSection == "elo") null else "elo"
-                                }
+                                onEloExpand = { expandedElo = !expandedElo }
                             )
                         }
                     }
@@ -247,29 +243,14 @@ private fun StatsCluster1(
     showTooltip: StatCardType?,
     animatedStatIncrease: StatCardType?,
     isComparisonMode: Boolean,
-    expandedSection: String?,
+    expandedWinrateRing: Boolean,
+    expandedTotalMatches: Boolean,
     onTooltipClick: (StatCardType) -> Unit,
     onDismissTooltip: () -> Unit,
     onWinrateExpand: () -> Unit,
     onTotalMatchesExpand: () -> Unit
 ) {
-    var isVisible by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-    
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = slideInVertically(
-            initialOffsetY = { it / 2 },
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        ) + fadeIn(animationSpec = tween(400))
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -286,7 +267,6 @@ private fun StatsCluster1(
                     isComparisonMode = isComparisonMode,
                     showTooltip = showTooltip == StatCardType.WINRATE,
                     showAchievement = animatedStatIncrease == StatCardType.WINRATE,
-                    isExpanded = expandedSection == "winrate",
                     onTap = { onWinrateExpand() },
                     onLongPress = { viewModel.toggleComparisonMode() },
                     onTooltipClick = { onTooltipClick(StatCardType.WINRATE) },
@@ -305,7 +285,6 @@ private fun StatsCluster1(
                 isComparisonMode = isComparisonMode,
                 showTooltip = showTooltip == StatCardType.TOTAL_MATCHES,
                 showAchievement = animatedStatIncrease == StatCardType.TOTAL_MATCHES,
-                isExpanded = expandedSection == "totalMatches",
                 onTap = { onTotalMatchesExpand() },
                 onLongPress = { viewModel.toggleComparisonMode() },
                 onTooltipClick = { onTooltipClick(StatCardType.TOTAL_MATCHES) },
@@ -314,23 +293,7 @@ private fun StatsCluster1(
         }
 
         // Winrate Progress Ring (expandable)
-        AnimatedVisibility(
-            visible = expandedSection == "winrate",
-            enter = slideInVertically(
-                initialOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeIn(animationSpec = tween(300)),
-            exit = slideOutVertically(
-                targetOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeOut(animationSpec = tween(200))
-        ) {
+        if (expandedWinrateRing) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -345,23 +308,7 @@ private fun StatsCluster1(
         }
 
         // Total Matches Breakdown (expandable)
-        AnimatedVisibility(
-            visible = expandedSection == "totalMatches",
-            enter = slideInVertically(
-                initialOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeIn(animationSpec = tween(300)),
-            exit = slideOutVertically(
-                targetOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeOut(animationSpec = tween(200))
-        ) {
+        if (expandedTotalMatches) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -370,7 +317,6 @@ private fun StatsCluster1(
             ) {
                 TotalMatchesBreakdown(stats = stats)
             }
-        }
         }
     }
 }
@@ -382,28 +328,13 @@ private fun StatsCluster2(
     showTooltip: StatCardType?,
     animatedStatIncrease: StatCardType?,
     isComparisonMode: Boolean,
-    expandedSection: String?,
+    expandedTotalWins: Boolean,
+    expandedRank: Boolean,
     onTooltipClick: (StatCardType) -> Unit,
     onTotalWinsExpand: () -> Unit,
     onRankExpand: () -> Unit
 ) {
-    var isVisible by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-    
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = slideInVertically(
-            initialOffsetY = { it / 2 },
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        ) + fadeIn(animationSpec = tween(400))
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -419,7 +350,6 @@ private fun StatsCluster2(
             isComparisonMode = isComparisonMode,
             showTooltip = showTooltip == StatCardType.TOTAL_WINS,
             showAchievement = animatedStatIncrease == StatCardType.TOTAL_WINS,
-            isExpanded = expandedSection == "totalWins",
             onTap = { onTotalWinsExpand() },
             onLongPress = { viewModel.toggleComparisonMode() },
             onTooltipClick = { onTooltipClick(StatCardType.TOTAL_WINS) }
@@ -435,7 +365,6 @@ private fun StatsCluster2(
             isComparisonMode = isComparisonMode,
             showTooltip = showTooltip == StatCardType.RANK,
             showAchievement = animatedStatIncrease == StatCardType.RANK,
-            isExpanded = expandedSection == "rank",
             onTap = { onRankExpand() },
             onLongPress = { viewModel.toggleComparisonMode() },
             onTooltipClick = { onTooltipClick(StatCardType.RANK) }
@@ -443,23 +372,7 @@ private fun StatsCluster2(
         }
 
         // Total Wins Breakdown (expandable)
-        AnimatedVisibility(
-            visible = expandedSection == "totalWins",
-            enter = slideInVertically(
-                initialOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeIn(animationSpec = tween(300)),
-            exit = slideOutVertically(
-                targetOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeOut(animationSpec = tween(200))
-        ) {
+        if (expandedTotalWins) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -471,23 +384,7 @@ private fun StatsCluster2(
         }
 
         // Rank Breakdown (expandable)
-        AnimatedVisibility(
-            visible = expandedSection == "rank",
-            enter = slideInVertically(
-                initialOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeIn(animationSpec = tween(300)),
-            exit = slideOutVertically(
-                targetOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeOut(animationSpec = tween(200))
-        ) {
+        if (expandedRank) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -496,7 +393,6 @@ private fun StatsCluster2(
             ) {
                 RankBreakdown(stats = stats)
             }
-        }
         }
     }
 }
@@ -508,27 +404,11 @@ private fun StatsCluster3(
     showTooltip: StatCardType?,
     animatedStatIncrease: StatCardType?,
     isComparisonMode: Boolean,
-    expandedSection: String?,
+    expandedElo: Boolean,
     onTooltipClick: (StatCardType) -> Unit,
     onEloExpand: () -> Unit
 ) {
-    var isVisible by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-    
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = slideInVertically(
-            initialOffsetY = { it / 2 },
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        ) + fadeIn(animationSpec = tween(400))
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         InteractiveStatCard(
             type = StatCardType.ELO,
             icon = "🔥",
@@ -540,30 +420,13 @@ private fun StatsCluster3(
             isComparisonMode = isComparisonMode,
             showTooltip = showTooltip == StatCardType.ELO,
             showAchievement = animatedStatIncrease == StatCardType.ELO,
-            isExpanded = expandedSection == "elo",
             onTap = { onEloExpand() },
             onLongPress = { viewModel.toggleComparisonMode() },
             onTooltipClick = { onTooltipClick(StatCardType.ELO) }
         )
 
         // ELO Breakdown (expandable)
-        AnimatedVisibility(
-            visible = expandedSection == "elo",
-            enter = slideInVertically(
-                initialOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeIn(animationSpec = tween(300)),
-            exit = slideOutVertically(
-                targetOffsetY = { -it / 2 },
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            ) + fadeOut(animationSpec = tween(200))
-        ) {
+        if (expandedElo) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -572,7 +435,6 @@ private fun StatsCluster3(
             ) {
                 EloBreakdown(stats = stats)
             }
-        }
         }
     }
 }

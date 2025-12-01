@@ -45,7 +45,6 @@ fun InteractiveStatCard(
     isComparisonMode: Boolean = false,
     showTooltip: Boolean = false,
     showAchievement: Boolean = false,
-    isExpanded: Boolean = false,
     onTap: () -> Unit = {},
     onLongPress: () -> Unit = {},
     onTooltipClick: () -> Unit = {},
@@ -57,22 +56,12 @@ fun InteractiveStatCard(
     
     // Scale animation for long press
     val scaleAnimation by animateFloatAsState(
-        targetValue = if (isComparisonMode) 1.03f else if (isExpanded) 1.02f else 1f,
+        targetValue = if (isComparisonMode) 1.03f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
         ),
         label = "scale_animation"
-    )
-    
-    // Shadow animation for expansion
-    val shadowElevation by animateDpAsState(
-        targetValue = if (isExpanded || isSelected) 12.dp else 6.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "shadow_elevation"
     )
     
     // Achievement glow animation
@@ -100,7 +89,7 @@ fun InteractiveStatCard(
     Box(
         modifier = modifier
             .scale(scale * scaleAnimation)
-            .zIndex(if (isSelected || isComparisonMode || isExpanded) 10f else 1f)
+            .zIndex(if (isSelected || isComparisonMode) 10f else 1f)
     ) {
         // Achievement glow effect
         if (showAchievement) {
@@ -148,9 +137,9 @@ fun InteractiveStatCard(
                     )
                 }
                 .shadow(
-                    elevation = shadowElevation,
+                    elevation = if (isSelected) 12.dp else 6.dp,
                     shape = RoundedCornerShape(16.dp),
-                    ambientColor = accentColor.copy(alpha = if (isSelected || isExpanded) 0.3f else 0.15f)
+                    ambientColor = accentColor.copy(alpha = if (isSelected) 0.3f else 0.15f)
                 ),
             shape = RoundedCornerShape(16.dp),
             color = NeumorphLight.copy(alpha = 0.9f)
