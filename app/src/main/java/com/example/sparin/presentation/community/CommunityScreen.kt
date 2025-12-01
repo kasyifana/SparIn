@@ -549,7 +549,7 @@ private fun PremiumCommunityCard(
     
     var isPressed by remember { mutableStateOf(false) }
     val cardScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1f,
+        targetValue = if (isPressed) 0.97f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessHigh),
         label = "cardPress"
     )
@@ -560,135 +560,182 @@ private fun PremiumCommunityCard(
             .fillMaxWidth()
             .scale(cardScale)
             .shadow(
-                elevation = 4.dp,
-                shape = RoundedCornerShape(12.dp),
-                spotColor = MistGray.copy(alpha = 0.15f),
-                ambientColor = MistGray.copy(alpha = 0.08f)
+                elevation = 6.dp,
+                shape = RoundedCornerShape(16.dp),
+                spotColor = accentColor.copy(alpha = 0.12f),
+                ambientColor = MistGray.copy(alpha = 0.06f)
             ),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         color = IceWhite,
-        border = BorderStroke(1.dp, ShadowMist.copy(alpha = 0.5f))
+        border = BorderStroke(1.5.dp, accentColor.copy(alpha = 0.08f))
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Left accent stripe
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Premium Header Section with gradient
             Box(
                 modifier = Modifier
-                    .width(4.dp)
-                    .height(IntrinsicSize.Max)
+                    .fillMaxWidth()
                     .background(
-                        brush = Brush.verticalGradient(
+                        brush = Brush.linearGradient(
                             colors = listOf(
-                                accentColor,
-                                accentColor.copy(alpha = 0.6f)
+                                accentColor.copy(alpha = 0.06f),
+                                accentColor.copy(alpha = 0.02f)
                             )
                         )
                     )
-            )
-            
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(16.dp)
+                    .padding(horizontal = 20.dp, vertical = 18.dp)
             ) {
-                // Top Section: Name + Category
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        // Community Name
+                        // Community Name - Premium Typography
                         Text(
                             text = community.name,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = NeutralInk,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            letterSpacing = (-0.2).sp
+                            letterSpacing = (-0.3).sp
                         )
                         
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         
-                        // Category pill
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = accentColor.copy(alpha = 0.12f)
+                        // Category + Creator in elegant row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Category pill - Enhanced
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = accentColor.copy(alpha = 0.14f),
+                                border = BorderStroke(0.8.dp, accentColor.copy(alpha = 0.2f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Text(text = sportIcon, fontSize = 12.sp)
+                                    Text(
+                                        text = community.sportCategory,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = accentColor,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            
+                            // Creator info - Minimal
                             Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Text(text = sportIcon, fontSize = 11.sp)
+                                Icon(
+                                    imageVector = Icons.Outlined.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                    tint = TitaniumGray
+                                )
                                 Text(
-                                    text = community.sportCategory,
+                                    text = creatorName,
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Medium,
-                                    color = accentColor,
+                                    color = TitaniumGray,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     fontSize = 10.sp
                                 )
                             }
                         }
                     }
                     
-                    // Sport Icon Badge
+                    // Premium Sport Icon Badge
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(52.dp)
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        accentColor.copy(alpha = 0.15f),
-                                        accentColor.copy(alpha = 0.08f)
+                                        accentColor.copy(alpha = 0.18f),
+                                        accentColor.copy(alpha = 0.06f)
                                     )
                                 ),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .border(
+                                width = 1.2.dp,
+                                color = accentColor.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(14.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = sportIcon, fontSize = 22.sp)
+                        Text(text = sportIcon, fontSize = 26.sp)
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                // Middle Section: Creator & Date
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            }
+            
+            // Subtle divider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(0.8.dp)
+                    .background(ShadowMist.copy(alpha = 0.3f))
+            )
+            
+            // Bottom Content Section
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left: Members Info
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Created by
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    // Member count badge - Premium variant
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = accentColor.copy(alpha = 0.08f),
+                        border = BorderStroke(0.8.dp, accentColor.copy(alpha = 0.12f))
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = TitaniumGray
-                        )
-                        Text(
-                            text = creatorName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = WarmHaze,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 100.dp)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Group,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp),
+                                tint = accentColor
+                            )
+                            Text(
+                                text = "${formatMemberCount(community.memberCount)} Members",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = NeutralInk,
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                     
                     // Created date
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.CalendarToday,
                             contentDescription = null,
-                            modifier = Modifier.size(12.dp),
+                            modifier = Modifier.size(13.dp),
                             tint = TitaniumGray
                         )
                         Text(
@@ -700,105 +747,35 @@ private fun PremiumCommunityCard(
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 
-                // Divider
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(ShadowMist.copy(alpha = 0.5f))
-                )
-                
-                Spacer(modifier = Modifier.height(14.dp))
-                
-                // Bottom Section: Members & Actions
+                // Right: Avatar Stack + Action
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Member count + Avatar stack
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // Member count badge
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = SmokySilver.copy(alpha = 0.6f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Group,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = TitaniumGray
-                                )
-                                Text(
-                                    text = "${formatMemberCount(community.memberCount)} Members",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Medium,
-                                    color = NeutralInk,
-                                    fontSize = 11.sp
-                                )
-                            }
-                        }
-                        
-                        // Avatar stack preview
-                        MemberAvatarStack(
-                            memberCount = community.memberCount,
-                            accentColor = accentColor
-                        )
-                    }
+                    // Avatar preview
+                    MemberAvatarStack(
+                        memberCount = community.memberCount,
+                        accentColor = accentColor
+                    )
                     
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Share button (disabled)
-                        Surface(
-                            modifier = Modifier.alpha(0.35f),
-                            shape = RoundedCornerShape(8.dp),
-                            color = ShadowMist.copy(alpha = 0.5f)
+                    // Premium Action Button
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = NeutralInk
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(10.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Share,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp),
-                                    tint = TitaniumGray
-                                )
-                                Text(
-                                    text = "Share",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = TitaniumGray,
-                                    fontSize = 10.sp
-                                )
-                            }
-                        }
-                        
-                        // Enter arrow
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = NeutralInk
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.ChevronRight,
-                                    contentDescription = "Open",
-                                    tint = IceWhite,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Rounded.ChevronRight,
+                                contentDescription = "Open",
+                                tint = IceWhite,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 }
@@ -994,135 +971,192 @@ private fun DiscoverCard(
     
     Surface(
         modifier = Modifier
-            .width(200.dp)
+            .width(220.dp)
             .shadow(
-                elevation = 6.dp,
-                shape = RoundedCornerShape(16.dp),
-                spotColor = MistGray.copy(alpha = 0.12f)
+                elevation = 8.dp,
+                shape = RoundedCornerShape(18.dp),
+                spotColor = accentColor.copy(alpha = 0.13f),
+                ambientColor = MistGray.copy(alpha = 0.06f)
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         color = IceWhite,
-        border = BorderStroke(1.dp, ShadowMist.copy(alpha = 0.4f))
+        border = BorderStroke(1.5.dp, accentColor.copy(alpha = 0.09f))
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Sport Icon
+            // Premium Header with gradient background
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .fillMaxWidth()
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                accentColor.copy(alpha = 0.18f),
-                                accentColor.copy(alpha = 0.08f)
+                                accentColor.copy(alpha = 0.08f),
+                                accentColor.copy(alpha = 0.02f)
                             )
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ),
+                        )
+                    )
+                    .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = sportIcon, fontSize = 28.sp)
+                // Premium Sport Icon
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    accentColor.copy(alpha = 0.2f),
+                                    accentColor.copy(alpha = 0.08f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .border(
+                            width = 1.2.dp,
+                            color = accentColor.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = sportIcon, fontSize = 32.sp)
+                }
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Community Name
-            Text(
-                text = community.name,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = NeutralInk,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                lineHeight = 18.sp,
-                modifier = Modifier.height(40.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Category tag
-            Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = accentColor.copy(alpha = 0.12f)
-            ) {
-                Text(
-                    text = community.sportCategory,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = accentColor,
-                    fontSize = 10.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(10.dp))
-            
-            // Member count
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Group,
-                    contentDescription = null,
-                    modifier = Modifier.size(13.dp),
-                    tint = TitaniumGray
-                )
-                Text(
-                    text = "${formatMemberCount(community.memberCount)} members",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TitaniumGray,
-                    fontSize = 11.sp
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(6.dp))
-            
-            // Creator
-            Text(
-                text = "by $creatorName",
-                style = MaterialTheme.typography.labelSmall,
-                color = MistGray,
-                fontSize = 10.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            
-            Spacer(modifier = Modifier.height(14.dp))
-            
-            // Join Button
-            Button(
-                onClick = onJoinClick,
+            // Subtle divider
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NeutralInk,
-                    contentColor = IceWhite
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 2.dp,
-                    pressedElevation = 0.dp
-                )
+                    .height(0.8.dp)
+                    .background(ShadowMist.copy(alpha = 0.25f))
+            )
+            
+            // Content Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                // Community Name - Premium Typography
+                Text(
+                    text = community.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = NeutralInk,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp,
+                    letterSpacing = (-0.2).sp,
+                    modifier = Modifier.height(44.dp)
+                )
+                
+                // Category tag - Enhanced with border
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = accentColor.copy(alpha = 0.14f),
+                    border = BorderStroke(0.8.dp, accentColor.copy(alpha = 0.2f))
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.PersonAdd,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(text = sportIcon, fontSize = 11.sp)
+                        Text(
+                            text = community.sportCategory,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = accentColor,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+                
+                // Stats Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = SmokySilver.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Group,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = accentColor
+                        )
+                        Text(
+                            text = "${formatMemberCount(community.memberCount)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = NeutralInk,
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            text = "members",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TitaniumGray,
+                            fontSize = 9.sp
+                        )
+                    }
+                }
+                
+                // Creator info
+                Text(
+                    text = "by $creatorName",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TitaniumGray,
+                    fontSize = 9.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                // Premium Join Button
+                Button(
+                    onClick = onJoinClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(11.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = NeutralInk,
+                        contentColor = IceWhite
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 3.dp,
+                        pressedElevation = 0.dp
                     )
-                    Text(
-                        text = "Join",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.PersonAdd,
+                            contentDescription = null,
+                            modifier = Modifier.size(17.dp)
+                        )
+                        Text(
+                            text = "Join Now",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
         }
@@ -1373,8 +1407,8 @@ private fun CommunityDetailSheet(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            SlateCharcoal,
-                            NeutralInk
+                            SlateCharcoal.copy(alpha = 0.95f),
+                            NeutralInk.copy(alpha = 0.98f)
                         )
                     )
                 )
@@ -1384,7 +1418,7 @@ private fun CommunityDetailSheet(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
-                // Header with close button
+                // Premium Header with close button
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1395,10 +1429,16 @@ private fun CommunityDetailSheet(
                 ) {
                     Surface(
                         onClick = onDismiss,
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier
+                            .size(40.dp)
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = CircleShape,
+                                spotColor = accentColor.copy(alpha = 0.2f)
+                            ),
                         shape = CircleShape,
-                        color = IceWhite.copy(alpha = 0.1f),
-                        border = BorderStroke(1.dp, IceWhite.copy(alpha = 0.2f))
+                        color = IceWhite.copy(alpha = 0.12f),
+                        border = BorderStroke(1.2.dp, IceWhite.copy(alpha = 0.25f))
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
@@ -1411,146 +1451,179 @@ private fun CommunityDetailSheet(
                     }
                     
                     Text(
-                        text = "Community",
+                        text = "Community Info",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = IceWhite
+                        color = IceWhite,
+                        letterSpacing = (-0.2).sp
                     )
                     
                     Spacer(modifier = Modifier.size(40.dp))
                 }
                 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(28.dp))
                 
-                // Main content card
+                // Main Premium Content Card
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp)
                         .shadow(
-                            elevation = 12.dp,
-                            shape = RoundedCornerShape(24.dp),
-                            spotColor = accentColor.copy(alpha = 0.15f)
+                            elevation = 14.dp,
+                            shape = RoundedCornerShape(26.dp),
+                            spotColor = accentColor.copy(alpha = 0.18f),
+                            ambientColor = NeutralInk.copy(alpha = 0.1f)
                         ),
-                    shape = RoundedCornerShape(24.dp),
-                    color = IceWhite.copy(alpha = 0.08f),
-                    border = BorderStroke(1.dp, IceWhite.copy(alpha = 0.15f))
+                    shape = RoundedCornerShape(26.dp),
+                    color = IceWhite.copy(alpha = 0.09f),
+                    border = BorderStroke(1.2.dp, IceWhite.copy(alpha = 0.16f))
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp),
+                        modifier = Modifier.padding(28.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Sport Icon
+                        // Premium Sport Icon with gradient background
                         Box(
                             modifier = Modifier
-                                .size(88.dp)
+                                .size(100.dp)
                                 .background(
                                     brush = Brush.linearGradient(
                                         colors = listOf(
-                                            accentColor.copy(alpha = 0.3f),
-                                            accentColor.copy(alpha = 0.1f)
+                                            accentColor.copy(alpha = 0.32f),
+                                            accentColor.copy(alpha = 0.12f)
                                         )
                                     ),
-                                    shape = RoundedCornerShape(24.dp)
+                                    shape = RoundedCornerShape(28.dp)
+                                )
+                                .border(
+                                    width = 1.5.dp,
+                                    color = accentColor.copy(alpha = 0.25f),
+                                    shape = RoundedCornerShape(28.dp)
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = sportIcon, fontSize = 44.sp)
+                            Text(text = sportIcon, fontSize = 48.sp)
                         }
                         
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
                         
-                        // Community Name
+                        // Community Name - Premium Typography
                         Text(
                             text = community.name,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = IceWhite,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            letterSpacing = (-0.3).sp
                         )
                         
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         
-                        // Category tag
+                        // Category tag - Premium variant
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = accentColor.copy(alpha = 0.25f)
+                            shape = RoundedCornerShape(10.dp),
+                            color = accentColor.copy(alpha = 0.28f),
+                            border = BorderStroke(1.dp, accentColor.copy(alpha = 0.35f))
                         ) {
-                            Text(
-                                text = community.sportCategory,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = IceWhite,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Stats row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(text = sportIcon, fontSize = 12.sp)
                                 Text(
-                                    text = "${community.memberCount}",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = IceWhite
-                                )
-                                Text(
-                                    text = "Members",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = IceWhite.copy(alpha = 0.6f)
+                                    text = community.sportCategory,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = IceWhite,
+                                    fontSize = 11.sp
                                 )
                             }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        // Premium Stats Row with enhanced design
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            IceWhite.copy(alpha = 0.08f),
+                                            IceWhite.copy(alpha = 0.03f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .border(
+                                    width = 0.8.dp,
+                                    color = IceWhite.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .padding(horizontal = 20.dp, vertical = 20.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            StatItem(
+                                value = "${community.memberCount}",
+                                label = "Members",
+                                icon = Icons.Outlined.Group,
+                                color = accentColor
+                            )
                             
                             Box(
                                 modifier = Modifier
-                                    .width(1.dp)
-                                    .height(40.dp)
-                                    .background(IceWhite.copy(alpha = 0.15f))
+                                    .width(0.8.dp)
+                                    .height(50.dp)
+                                    .background(IceWhite.copy(alpha = 0.12f))
                             )
                             
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = formatCreatedDate(community.createdAt),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = IceWhite
-                                )
-                                Text(
-                                    text = "Created",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = IceWhite.copy(alpha = 0.6f)
-                                )
-                            }
+                            StatItem(
+                                value = formatCreatedDate(community.createdAt),
+                                label = "Created",
+                                icon = Icons.Outlined.CalendarToday,
+                                color = accentColor
+                            )
                         }
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(28.dp))
                 
-                // Info section
+                // Premium Info Section - Creator & Description
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    color = IceWhite.copy(alpha = 0.06f),
-                    border = BorderStroke(1.dp, IceWhite.copy(alpha = 0.1f))
+                        .padding(horizontal = 20.dp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(20.dp),
+                            spotColor = accentColor.copy(alpha = 0.12f)
+                        ),
+                    shape = RoundedCornerShape(20.dp),
+                    color = IceWhite.copy(alpha = 0.07f),
+                    border = BorderStroke(1.dp, IceWhite.copy(alpha = 0.12f))
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        // Created by
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        // Creator Section
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(48.dp)
                                     .background(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                accentColor.copy(alpha = 0.3f),
+                                                accentColor.copy(alpha = 0.12f)
+                                            )
+                                        ),
+                                        shape = CircleShape
+                                    )
+                                    .border(
+                                        width = 1.2.dp,
                                         color = accentColor.copy(alpha = 0.2f),
                                         shape = CircleShape
                                     ),
@@ -1559,8 +1632,8 @@ private fun CommunityDetailSheet(
                                 Icon(
                                     imageVector = Icons.Rounded.Person,
                                     contentDescription = null,
-                                    tint = IceWhite,
-                                    modifier = Modifier.size(18.dp)
+                                    tint = IceWhite.copy(alpha = 0.8f),
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                             
@@ -1568,51 +1641,110 @@ private fun CommunityDetailSheet(
                                 Text(
                                     text = "Created by",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = IceWhite.copy(alpha = 0.5f)
+                                    color = IceWhite.copy(alpha = 0.6f),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
+                                Spacer(modifier = Modifier.height(3.dp))
                                 Text(
                                     text = creatorName,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = IceWhite
+                                    color = IceWhite,
+                                    letterSpacing = (-0.1).sp
                                 )
                             }
                         }
                         
                         if (community.description.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(20.dp))
                             
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(1.dp)
+                                    .height(0.8.dp)
                                     .background(IceWhite.copy(alpha = 0.1f))
                             )
                             
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(20.dp))
                             
-                            Text(
-                                text = "About",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = IceWhite.copy(alpha = 0.7f)
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            Text(
-                                text = community.description,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = IceWhite.copy(alpha = 0.85f),
-                                lineHeight = 22.sp
-                            )
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Info,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = accentColor
+                                    )
+                                    Text(
+                                        text = "About",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = IceWhite.copy(alpha = 0.85f),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.height(10.dp))
+                                
+                                Text(
+                                    text = community.description,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = IceWhite.copy(alpha = 0.8f),
+                                    lineHeight = 24.sp,
+                                    letterSpacing = (0.2).sp
+                                )
+                            }
                         }
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(120.dp))
             }
         }
+    }
+}
+
+// Helper composable for stats
+@Composable
+fun StatItem(
+    value: String,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = color
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = IceWhite,
+                fontSize = 13.sp
+            )
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = IceWhite.copy(alpha = 0.6f),
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
