@@ -58,41 +58,42 @@ fun ModeSelectorScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(24.dp)
+                .padding(bottom = 100.dp), // Add bottom padding to avoid navbar
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             // Floating decorative elements
             FloatingModeIcons()
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Title
             Text(
                 text = "Choose Your\nMatch Style",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 36.sp,
-                    lineHeight = 42.sp,
+                    fontSize = 32.sp,
+                    lineHeight = 38.sp,
                     letterSpacing = (-1).sp
                 ),
                 color = Lead,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Subtitle
             Text(
                 text = "Casual for fun · Competitive for serious challenges",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 15.sp
+                    fontSize = 14.sp
                 ),
                 color = WarmHaze,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Casual Card
             ModeSelectionCard(
@@ -109,7 +110,7 @@ fun ModeSelectorScreen(
                 onClick = { onModeSelected(RoomMode.CASUAL) }
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Competitive Card
             ModeSelectionCard(
@@ -127,7 +128,7 @@ fun ModeSelectorScreen(
                 isPreview = false
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Helper text
             Text(
@@ -178,7 +179,7 @@ private fun ModeSelectionCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(150.dp)
     ) {
         // Animated glow
         Box(
@@ -238,13 +239,13 @@ private fun ModeSelectionCard(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Emoji icon
                     Box(
                         modifier = Modifier
-                            .size(80.dp)
+                            .size(64.dp)
                             .shadow(
                                 elevation = 12.dp,
                                 shape = CircleShape,
@@ -263,7 +264,7 @@ private fun ModeSelectionCard(
                     ) {
                         Text(
                             text = emoji,
-                            fontSize = 40.sp
+                            fontSize = 32.sp
                         )
                     }
 
@@ -407,7 +408,7 @@ private fun FloatingModeIcons() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(80.dp)
     ) {
         // Icon 1 - Blue themed
         Box(

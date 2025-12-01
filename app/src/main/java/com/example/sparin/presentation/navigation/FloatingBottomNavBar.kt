@@ -56,12 +56,18 @@ fun FloatingBottomNavBarPremium(
     
     val selectedIndex = items.indexOfFirst { it.screen.route == currentRoute }.coerceAtLeast(0)
     
-    // Smooth sliding animation for the indicator
+    // Calculate total width for symmetric spacing
+    val totalItems = items.size
+    val itemWidth = 52.dp
+    val containerWidth = (itemWidth * totalItems)
+    
+    // Smooth sliding animation for the indicator with enhanced spring
     val indicatorOffset by animateDpAsState(
-        targetValue = (selectedIndex * 56).dp,
+        targetValue = (selectedIndex * itemWidth.value).dp,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessLow
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+            visibilityThreshold = 0.01.dp
         ),
         label = "indicatorSlide"
     )
@@ -69,19 +75,20 @@ fun FloatingBottomNavBarPremium(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 20.dp),
+            .padding(horizontal = 20.dp, vertical = 24.dp),
         contentAlignment = Alignment.Center
     ) {
         // Main pill container with premium shadow
         Box(
             modifier = Modifier
+                .width(containerWidth + 24.dp)
                 .shadow(
                     elevation = 24.dp,
-                    shape = RoundedCornerShape(40.dp),
+                    shape = RoundedCornerShape(36.dp),
                     ambientColor = NavBarShadowColor.copy(alpha = 0.4f),
                     spotColor = NavBarShadowColor.copy(alpha = 0.6f)
                 )
-                .clip(RoundedCornerShape(40.dp))
+                .clip(RoundedCornerShape(36.dp))
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -90,7 +97,7 @@ fun FloatingBottomNavBarPremium(
                         )
                     )
                 )
-                .height(72.dp)
+                .height(68.dp)
         ) {
             // Glossy top edge highlight for premium feel
             Box(
@@ -113,8 +120,8 @@ fun FloatingBottomNavBarPremium(
             
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(horizontal = 12.dp, vertical = 12.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
             ) {
                 // Sliding white bubble indicator
                 Box(
@@ -131,12 +138,15 @@ fun FloatingBottomNavBarPremium(
                             color = NavBarActiveWhite,
                             shape = CircleShape
                         )
+                        .align(Alignment.CenterStart)
                 )
                 
-                // Navigation icons row
+                // Navigation icons row with symmetric spacing
                 Row(
-                    modifier = Modifier.fillMaxHeight(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     items.forEachIndexed { index, item ->
@@ -161,18 +171,36 @@ private fun PremiumNavItemWithSlider(
     // Icon color animation with smooth transition
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) NavBarDark else NavBarInactiveGray,
-        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
         label = "iconColor"
     )
     
-    // Scale micro-interaction
+    // Scale micro-interaction with smoother spring
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.1f else 1f,
+        targetValue = if (isSelected) 1.15f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+            visibilityThreshold = 0.001f
+        ),
+        label = "scale"
+    )
+    
+    // Alpha animation for smooth fade effect
+    val alpha by animateFloatAsState(
+        targetValue = if (isSelected) 1f else 0.7f,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "alpha"
+    )
+    
+    // Subtle rotation for dynamic feel
+    val rotation by animateFloatAsState(
+        targetValue = if (isSelected) 0f else 0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
         ),
-        label = "scale"
+        label = "rotation"
     )
     
     Box(
@@ -194,6 +222,8 @@ private fun PremiumNavItemWithSlider(
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
+                    rotationZ = rotation
+                    this.alpha = alpha
                 },
             tint = iconColor
         )

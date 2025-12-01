@@ -32,16 +32,13 @@ sealed class Screen(val route: String) {
         ) = "chat_room/$roomId/$mode/${roomTitle.replace("/", "-")}/${sport.replace("/", "-")}"
     }
     object EditProfile : Screen("edit_profile")
+    
     object CommunityFeed : Screen("community_feed/{communityId}/{name}/{emoji}") {
-        fun createRoute(communityId: String, name: String, emoji: String) = 
+        fun createRoute(communityId: String, name: String, emoji: String) =
             "community_feed/$communityId/$name/$emoji"
     }
+
     object CampaignDetail : Screen("campaign_detail/{campaignId}") {
         fun createRoute(campaignId: String) = "campaign_detail/$campaignId"
-    }
-    
-    object CommunityFeed : Screen("community_feed/{communityId}/{communityName}/{communityEmoji}") {
-        fun createRoute(communityId: String, communityName: String, communityEmoji: String) =
-            "community_feed/$communityId/$communityName/$communityEmoji"
     }
 }
