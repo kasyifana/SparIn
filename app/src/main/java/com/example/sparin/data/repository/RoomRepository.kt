@@ -114,6 +114,24 @@ class RoomRepository(
             Resource.Error(e.message ?: "Failed to get rooms")
         }
     }
+
+    /**
+     * Get rooms joined by user
+     */
+    suspend fun getRoomsByUser(userId: String): Resource<List<Room>> {
+        return try {
+            // Query rooms where 'members' array contains userId
+            val rooms = firestoreService.queryCollectionArrayContains(
+                Constants.Collections.ROOMS,
+                "members",
+                userId,
+                Room::class.java
+            )
+            Resource.Success(rooms)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to get user rooms")
+        }
+    }
     
     /**
      * Get room by ID

@@ -65,7 +65,7 @@ fun ModeSelectorScreen(
             // Floating decorative elements
             FloatingModeIcons()
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Title
             Text(
