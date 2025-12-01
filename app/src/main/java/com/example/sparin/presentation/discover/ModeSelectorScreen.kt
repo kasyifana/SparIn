@@ -46,7 +46,7 @@ fun ModeSelectorScreen(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         CascadingWhite,
-                        SoftLavender.copy(alpha = 0.15f),
+                        SoftLavender.copy(alpha = 0.12f),
                         CascadingWhite
                     )
                 )
@@ -58,79 +58,84 @@ fun ModeSelectorScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
-                .padding(top = 16.dp, bottom = 100.dp),
+                .padding(horizontal = 24.dp)
+                .padding(top = 48.dp, bottom = 100.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Compact header section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Header section
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column {
-                    Text(
-                        text = "Discover",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp,
-                            letterSpacing = (-0.5).sp
-                        ),
-                        color = Lead
-                    )
-                    Text(
-                        text = "Choose your match style",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = WarmHaze
-                    )
-                }
-                
-                // Floating decorative badge
+                // Decorative badge
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .shadow(8.dp, CircleShape)
+                        .size(56.dp)
+                        .shadow(12.dp, CircleShape)
                         .background(
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    Color(0xFF74C9FF).copy(alpha = 0.3f),
-                                    Color(0xFFEF4444).copy(alpha = 0.3f)
+                                    Color(0xFF74C9FF).copy(alpha = 0.25f),
+                                    Color(0xFFEF4444).copy(alpha = 0.25f)
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF74C9FF).copy(alpha = 0.4f),
+                                    Color(0xFFEF4444).copy(alpha = 0.4f)
                                 )
                             ),
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("🎯", fontSize = 22.sp)
+                    Text("🎯", fontSize = 26.sp)
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Discover",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 32.sp,
+                        letterSpacing = (-0.5).sp
+                    ),
+                    color = Lead
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = "Choose your match style",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = WarmHaze
+                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // Cards take remaining space
+            // Cards section - Compact fixed height
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Casual Card - Takes more space
-                ModeSelectionCard(
-                    mode = RoomMode.CASUAL,
+                // Casual Card
+                CompactModeCard(
                     title = "CASUAL",
-                    subtitle = "Play for fun, no pressure\nJust enjoy the game! 🎉",
+                    subtitle = "Play for fun, no pressure",
                     emoji = "🎮",
-                    gradient = listOf(
-                        Color(0xFF74C9FF).copy(alpha = 0.35f),
-                        Color(0xFF5BA8E0).copy(alpha = 0.3f),
-                        Color(0xFFA78BFA).copy(alpha = 0.25f)
-                    ),
                     accentColor = Color(0xFF74C9FF),
-                    onClick = { onModeSelected(RoomMode.CASUAL) },
-                    modifier = Modifier.weight(1f)
+                    onClick = { onModeSelected(RoomMode.CASUAL) }
                 )
 
                 // Divider with "OR" text
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -142,7 +147,7 @@ fun ModeSelectorScreen(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
                                         Color.Transparent,
-                                        WarmHaze.copy(alpha = 0.3f)
+                                        WarmHaze.copy(alpha = 0.25f)
                                     )
                                 )
                             )
@@ -150,15 +155,15 @@ fun ModeSelectorScreen(
                     
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .size(40.dp)
+                            .padding(horizontal = 12.dp)
+                            .size(32.dp)
                             .background(
                                 color = CascadingWhite,
                                 shape = CircleShape
                             )
                             .border(
                                 width = 1.dp,
-                                color = WarmHaze.copy(alpha = 0.2f),
+                                color = WarmHaze.copy(alpha = 0.15f),
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -166,8 +171,8 @@ fun ModeSelectorScreen(
                         Text(
                             text = "OR",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 10.sp
                             ),
                             color = WarmHaze
                         )
@@ -180,7 +185,7 @@ fun ModeSelectorScreen(
                             .background(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
-                                        WarmHaze.copy(alpha = 0.3f),
+                                        WarmHaze.copy(alpha = 0.25f),
                                         Color.Transparent
                                     )
                                 )
@@ -188,27 +193,19 @@ fun ModeSelectorScreen(
                     )
                 }
 
-                // Competitive Card - Takes more space
-                ModeSelectionCard(
-                    mode = RoomMode.COMPETITIVE,
+                // Competitive Card
+                CompactModeCard(
                     title = "COMPETITIVE",
-                    subtitle = "Serious matches, track wins\nClimb the leaderboard! 🔥",
+                    subtitle = "Serious matches, track wins",
                     emoji = "🏆",
-                    gradient = listOf(
-                        Color(0xFFEF4444).copy(alpha = 0.3f),
-                        Color(0xFFDC2626).copy(alpha = 0.25f),
-                        Color(0xFFB91C1C).copy(alpha = 0.2f)
-                    ),
                     accentColor = Color(0xFFEF4444),
-                    onClick = { onModeSelected(RoomMode.COMPETITIVE) },
-                    isPreview = false,
-                    modifier = Modifier.weight(1f)
+                    onClick = { onModeSelected(RoomMode.COMPETITIVE) }
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
-            // Bottom helper text with icon
+            // Bottom helper text
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
@@ -216,275 +213,146 @@ fun ModeSelectorScreen(
                 Icon(
                     imageVector = Icons.Rounded.SwapHoriz,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = WarmHaze.copy(alpha = 0.6f)
+                    modifier = Modifier.size(14.dp),
+                    tint = WarmHaze.copy(alpha = 0.5f)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "Switch modes anytime",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = WarmHaze.copy(alpha = 0.6f)
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = WarmHaze.copy(alpha = 0.5f)
                 )
             }
         }
     }
 }
 
-// ==================== MODE SELECTION CARD ====================
+// ==================== COMPACT MODE CARD ====================
 
 @Composable
-private fun ModeSelectionCard(
-    mode: RoomMode,
+private fun CompactModeCard(
     title: String,
     subtitle: String,
     emoji: String,
-    gradient: List<Color>,
     accentColor: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    isPreview: Boolean = false
+    onClick: () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "mode_card_$title")
-
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.6f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glow"
-    )
-
-    val floatOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2500, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float"
-    )
-
-    Box(
-        modifier = modifier
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
             .fillMaxWidth()
+            .height(100.dp)
+            .shadow(
+                elevation = 12.dp,
+                shape = RoundedCornerShape(24.dp),
+                ambientColor = accentColor.copy(alpha = 0.2f),
+                spotColor = accentColor.copy(alpha = 0.15f)
+            ),
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White
     ) {
-        // Animated glow
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .offset(y = floatOffset.dp)
                 .background(
-                    brush = Brush.radialGradient(
+                    brush = Brush.horizontalGradient(
                         colors = listOf(
-                            accentColor.copy(alpha = glowAlpha * 0.4f),
-                            accentColor.copy(alpha = 0f)
+                            accentColor.copy(alpha = 0.08f),
+                            Color.White
+                        )
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            accentColor.copy(alpha = 0.3f),
+                            accentColor.copy(alpha = 0.1f)
                         )
                     ),
-                    shape = RoundedCornerShape(28.dp)
+                    shape = RoundedCornerShape(24.dp)
                 )
-                .blur(20.dp)
-        )
-
-        // Main card
-        Surface(
-            onClick = onClick,
-            modifier = Modifier
-                .fillMaxSize()
-                .offset(y = floatOffset.dp)
-                .shadow(
-                    elevation = 20.dp,
-                    shape = RoundedCornerShape(28.dp),
-                    ambientColor = accentColor.copy(alpha = 0.35f),
-                    spotColor = accentColor.copy(alpha = 0.35f)
-                ),
-            shape = RoundedCornerShape(28.dp),
-            color = Color.Transparent,
-            enabled = !isPreview
         ) {
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = gradient + listOf(NeumorphLight.copy(alpha = 0.95f))
-                        )
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                accentColor.copy(alpha = 0.6f),
-                                accentColor.copy(alpha = 0.2f),
-                                Color.Transparent
-                            )
-                        ),
-                        shape = RoundedCornerShape(28.dp)
-                    )
+                    .padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Floating sparkles
-                FloatingSparkles(accentColor)
-
-                Row(
+                // Emoji icon
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Emoji icon - bigger
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .shadow(
-                                elevation = 16.dp,
-                                shape = RoundedCornerShape(24.dp),
-                                ambientColor = accentColor.copy(alpha = 0.5f)
-                            )
-                            .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        accentColor.copy(alpha = 0.4f),
-                                        accentColor.copy(alpha = 0.15f)
-                                    )
-                                ),
-                                shape = RoundedCornerShape(24.dp)
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = accentColor.copy(alpha = 0.3f),
-                                shape = RoundedCornerShape(24.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = emoji,
-                            fontSize = 40.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(20.dp))
-
-                    // Text content
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 22.sp,
-                                letterSpacing = 1.sp
-                            ),
-                            color = Lead
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                lineHeight = 20.sp
-                            ),
-                            color = WarmHaze
-                        )
-
-                        if (isPreview) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFFDC143C).copy(alpha = 0.15f)
-                            ) {
-                                Text(
-                                    text = "Coming Soon",
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.SemiBold
-                                    ),
-                                    color = Color(0xFFDC143C)
+                        .size(56.dp)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    accentColor.copy(alpha = 0.2f),
+                                    accentColor.copy(alpha = 0.08f)
                                 )
-                            }
-                        }
-                    }
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = accentColor.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = emoji,
+                        fontSize = 28.sp
+                    )
+                }
 
-                    // Arrow icon - styled
-                    if (!isPreview) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .background(
-                                    color = accentColor.copy(alpha = 0.15f),
-                                    shape = CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.ArrowForward,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                                tint = accentColor
-                            )
-                        }
-                    }
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Text content
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = Lead
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 13.sp
+                        ),
+                        color = WarmHaze
+                    )
+                }
+
+                // Arrow icon
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            color = accentColor.copy(alpha = 0.1f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = accentColor
+                    )
                 }
             }
         }
     }
-}
-
-// ==================== FLOATING SPARKLES ====================
-
-@Composable
-private fun BoxScope.FloatingSparkles(color: Color) {
-    val infiniteTransition = rememberInfiniteTransition(label = "sparkles")
-
-    val sparkle1 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "sparkle1"
-    )
-
-    val sparkle2 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = -8f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "sparkle2"
-    )
-
-    // Sparkle 1
-    Box(
-        modifier = Modifier
-            .size(12.dp)
-            .align(Alignment.TopEnd)
-            .offset(x = (-30).dp, y = (20 + sparkle1).dp)
-            .background(
-                color = color.copy(alpha = 0.6f),
-                shape = CircleShape
-            )
-            .blur(4.dp)
-    )
-
-    // Sparkle 2
-    Box(
-        modifier = Modifier
-            .size(8.dp)
-            .align(Alignment.BottomStart)
-            .offset(x = 40.dp, y = (-25 + sparkle2).dp)
-            .background(
-                color = color.copy(alpha = 0.5f),
-                shape = CircleShape
-            )
-            .blur(3.dp)
-    )
 }
 
 // ==================== BACKGROUND BLOBS ====================
