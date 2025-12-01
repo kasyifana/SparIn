@@ -328,12 +328,10 @@ private fun MyCommunitiesSection(
                                 community = community,
                                 onOpenClick = {
                                     if (community.id.isNotEmpty()) {
-                                        // TODO: Re-implement CommunityFeed navigation
-                                        // val encodedName = URLEncoder.encode(community.name, StandardCharsets.UTF_8.toString())
-                                        // val emoji = getCommunityEmoji(community.sportCategory)
-                                        // val encodedEmoji = URLEncoder.encode(emoji, StandardCharsets.UTF_8.toString())
-                                        // navController.navigate(Screen.CommunityFeed.createRoute(community.id, encodedName, encodedEmoji))
-                                        android.util.Log.d("CommunityScreen", "Community selected: ${community.name}")
+                                        val encodedName = URLEncoder.encode(community.name, StandardCharsets.UTF_8.toString())
+                                        val emoji = getCommunityEmoji(community.sportCategory)
+                                        val encodedEmoji = URLEncoder.encode(emoji, StandardCharsets.UTF_8.toString())
+                                        navController.navigate(Screen.CommunityFeed.createRoute(community.id, encodedName, encodedEmoji))
                                     } else {
                                         android.util.Log.e("CommunityScreen", "Community ID is empty for ${community.name}")
                                     }

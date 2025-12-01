@@ -20,6 +20,9 @@ import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
 import com.example.sparin.presentation.profile.ProfileScreen
 import com.example.sparin.presentation.profile.EditProfileScreen
+import com.example.sparin.presentation.community.feed.CommunityFeedScreen
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 /**
  * Navigation Graph untuk aplikasi SparIN
@@ -169,6 +172,32 @@ fun NavGraph(
             com.example.sparin.presentation.discover.RoomDetailScreen(
                 navController = navController,
                 roomId = roomId
+            )
+        }
+        
+        // Community Feed Screen
+        composable(
+            route = Screen.CommunityFeed.route,
+            arguments = listOf(
+                navArgument("communityId") {
+                    type = NavType.StringType
+                },
+                navArgument("name") {
+                    type = NavType.StringType
+                },
+                navArgument("emoji") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val communityId = backStackEntry.arguments?.getString("communityId") ?: ""
+            val name = URLDecoder.decode(backStackEntry.arguments?.getString("name") ?: "", StandardCharsets.UTF_8.toString())
+            val emoji = URLDecoder.decode(backStackEntry.arguments?.getString("emoji") ?: "", StandardCharsets.UTF_8.toString())
+            CommunityFeedScreen(
+                navController = navController,
+                communityId = communityId,
+                communityName = name,
+                communityEmoji = emoji
             )
         }
         
