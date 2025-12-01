@@ -234,7 +234,8 @@ fun DiscoverCompetitiveScreen(navController: NavHostController) {
             CompetitiveHeader(
                 searchQuery = searchQuery,
                 onSearchChange = { searchQuery = it },
-                onCategoryClick = { showCategoryPicker = true }
+                onCategoryClick = { showCategoryPicker = true },
+                onBackClick = { navController.popBackStack() }
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -552,13 +553,48 @@ private fun CompetitiveModeIndicator() {
 private fun CompetitiveHeader(
     searchQuery: String,
     onSearchChange: (String) -> Unit,
-    onCategoryClick: () -> Unit
+    onCategoryClick: () -> Unit,
+    onBackClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
+        // Back Button Row
+        Surface(
+            onClick = onBackClick,
+            modifier = Modifier
+                .size(44.dp)
+                .shadow(
+                    elevation = 12.dp,
+                    shape = CircleShape,
+                    ambientColor = DeepRed.copy(alpha = 0.3f)
+                ),
+            shape = CircleShape,
+            color = DarkGrey
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(
+                        width = 1.dp,
+                        color = DeepRed.copy(alpha = 0.4f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ArrowBack,
+                    contentDescription = "Back",
+                    modifier = Modifier.size(22.dp),
+                    tint = Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
         // Title with fire emoji
         Text(
             text = "Competitive\nRooms 🔥",
