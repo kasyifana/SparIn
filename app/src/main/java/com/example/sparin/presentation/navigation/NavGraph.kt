@@ -1,5 +1,8 @@
 package com.example.sparin.presentation.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -103,7 +106,21 @@ fun NavGraph(
             DiscoverCompetitiveScreen(navController = navController)
         }
         
-        composable(Screen.Chat.route) {
+        composable(
+            route = Screen.Chat.route,
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { -it },
+                    animationSpec = tween(300)
+                )
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
             ChatListScreen(navController = navController)
         }
         
@@ -136,7 +153,19 @@ fun NavGraph(
                     type = NavType.StringType
                     defaultValue = "Sport"
                 }
-            )
+            ),
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(300)
+                )
+            }
         ) { backStackEntry ->
             val roomId = backStackEntry.arguments?.getString("roomId")
             val mode = backStackEntry.arguments?.getString("mode") ?: "casual"
