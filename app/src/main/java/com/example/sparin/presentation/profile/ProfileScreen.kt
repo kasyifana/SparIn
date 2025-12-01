@@ -90,68 +90,41 @@ private fun ProfileContent(
 ) {
     val scrollState = rememberScrollState()
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 24.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp)
-        ) {
-            Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(48.dp))
 
-            // Profile Header
-            ProfileHeader(
-                userProfile = userProfile,
-                onEditClick = onEditProfile
-            )
+        // Profile Header
+        ProfileHeader(
+            userProfile = userProfile,
+            onEditClick = onEditProfile
+        )
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Stats Section
-            StatsSection(stats = stats)
+        // Stats Section
+        StatsSection(stats = stats)
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Badge Display
-            BadgeDisplay(badges = badges)
+        // Badge Display
+        BadgeDisplay(badges = badges)
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // AI Insight Card
-            AIInsightCard(aiInsights = aiInsights)
+        // AI Insight Card
+        AIInsightCard(aiInsights = aiInsights)
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Match History List
-            MatchHistoryList(matchHistory = matchHistory)
+        // Match History List
+        MatchHistoryList(matchHistory = matchHistory)
 
-            Spacer(modifier = Modifier.height(100.dp)) // Bottom padding for nav bar
-        }
-
-        // Floating Edit Profile Button
-        FloatingActionButton(
-            onClick = onEditProfile,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(24.dp)
-                .shadow(
-                    elevation = 12.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    ambientColor = Crunch.copy(alpha = 0.3f),
-                    spotColor = Crunch.copy(alpha = 0.3f)
-                ),
-            containerColor = Crunch,
-            contentColor = Lead,
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Edit,
-                contentDescription = "Edit Profile",
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        Spacer(modifier = Modifier.height(100.dp)) // Bottom padding for nav bar
     }
 }
 

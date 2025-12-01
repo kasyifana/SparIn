@@ -225,11 +225,6 @@ fun DiscoverCompetitiveScreen(navController: NavHostController) {
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Mode Indicator Banner with pulse animation
-            CompetitiveModeIndicator()
-
-            Spacer(modifier = Modifier.height(20.dp))
-
             // Header with search
             CompetitiveHeader(
                 searchQuery = searchQuery,
@@ -268,13 +263,100 @@ fun DiscoverCompetitiveScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(120.dp))
         }
 
-        // Futuristic Create Room FAB
-        CompetitiveCreateRoomFAB(
+        // Futuristic Create Room FAB (Circular) with Animations
+        Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 24.dp, bottom = 100.dp),
-            onClick = { showAddRoomModal = true }
-        )
+                .padding(end = 24.dp, bottom = 100.dp)
+        ) {
+            val infiniteTransition = rememberInfiniteTransition(label = "fab_animation")
+            
+            // Pulse animation
+            val pulseScale by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.08f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1200, easing = EaseInOutSine),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "pulse"
+            )
+            
+            // Glow animation
+            val glowAlpha by infiniteTransition.animateFloat(
+                initialValue = 0.5f,
+                targetValue = 0.9f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1500, easing = EaseInOutSine),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "glow"
+            )
+            
+            // Rotation animation
+            val rotation by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(8000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                ),
+                label = "rotation"
+            )
+            
+            // Glow effect behind FAB
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .graphicsLayer {
+                        scaleX = pulseScale
+                        scaleY = pulseScale
+                    }
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                NeonRed.copy(alpha = glowAlpha * 0.6f),
+                                DeepRed.copy(alpha = glowAlpha * 0.3f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+                    .blur(24.dp)
+            )
+            
+            // Main FAB
+            FloatingActionButton(
+                onClick = { showAddRoomModal = true },
+                modifier = Modifier
+                    .size(64.dp)
+                    .graphicsLayer {
+                        scaleX = pulseScale
+                        scaleY = pulseScale
+                        rotationZ = rotation * 0.05f // Subtle rotation
+                    }
+                    .shadow(
+                        elevation = 20.dp,
+                        shape = CircleShape,
+                        ambientColor = DeepRed.copy(alpha = 0.6f),
+                        spotColor = NeonRed.copy(alpha = 0.6f)
+                    ),
+                containerColor = DeepRed,
+                contentColor = Color.White,
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "Create Room",
+                    modifier = Modifier
+                        .size(28.dp)
+                        .graphicsLayer {
+                            rotationZ = -rotation * 0.05f // Counter-rotation for icon
+                        },
+                    tint = Color.White
+                )
+            }
+        }
 
         // Detail Modal
         selectedRoom?.let { room ->
