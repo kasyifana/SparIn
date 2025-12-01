@@ -23,8 +23,13 @@ sealed class Screen(val route: String) {
     object RoomDetail : Screen("room_detail/{roomId}") {
         fun createRoute(roomId: String) = "room_detail/$roomId"
     }
-    object ChatRoom : Screen("chat_room/{roomId}") {
-        fun createRoute(roomId: String) = "chat_room/$roomId"
+    object ChatRoom : Screen("chat_room/{roomId}/{mode}/{roomTitle}/{sport}") {
+        fun createRoute(
+            roomId: String, 
+            mode: String = "casual",
+            roomTitle: String = "Chat Room",
+            sport: String = "Sport"
+        ) = "chat_room/$roomId/$mode/${roomTitle.replace("/", "-")}/${sport.replace("/", "-")}"
     }
     object EditProfile : Screen("edit_profile")
     object CampaignDetail : Screen("campaign_detail/{campaignId}") {

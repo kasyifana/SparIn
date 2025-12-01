@@ -1,8 +1,6 @@
 package com.example.sparin.presentation.community
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,27 +17,28 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.sparin.data.model.Community
+import com.example.sparin.presentation.community.CommunityViewModel
+import com.example.sparin.presentation.navigation.Screen
 import com.example.sparin.ui.theme.*
-import kotlin.math.cos
-import kotlin.math.sin
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 /**
- * Premium Community Screen for SparIN
- * Gen-Z aesthetic: soft-neumorphism, frosted glass cards, pastel gradients
+ * CommunityScreen - Displays all communities with real Firestore data
+ * Allows users to browse, join, and create communities
  */
 
-// Sport categories data
+// Sport categories for filtering
 data class SportCategory(
     val name: String,
     val emoji: String
@@ -51,322 +50,187 @@ val sportCategories = listOf(
     SportCategory("Futsal", "⚽"),
     SportCategory("Basket", "🏀"),
     SportCategory("Voli", "🏐"),
-    SportCategory("Tenis", "🎾"),
+    SportCategory("Tennis", "🎾"),
     SportCategory("Gym", "💪"),
-    SportCategory("Boxing", "🥊"),
-    SportCategory("Lari", "🏃"),
-    SportCategory("Hiking", "🥾"),
-    SportCategory("Renang", "🏊"),
-    SportCategory("Sepeda", "🚴")
+    SportCategory("Running", "🏃"),
+    SportCategory("Cycling", "🚴")
 )
 
-// Community data
-data class CommunityItem(
-    val name: String,
-    val sport: String,
-    val emoji: String,
-    val memberCount: Int,
-    val tags: List<String>,
-    val accentColor: Color
-)
+// Helper: Get emoji from sport category
+private fun getCommunityEmoji(sportCategory: String): String {
+    return when (sportCategory.lowercase()) {
+        "badminton" -> "🏸"
+        "futsal", "football" -> "⚽"
+        "basket", "basketball" -> "🏀"
+        "tennis" -> "🎾"
+        "voli", "volleyball" -> "🏐"
+        "gym" -> "💪"
+        "running" -> "🏃"
+        "cycling" -> "🚴"
+        else -> "🏅"
+    }
+}
 
-val communityList = listOf(
-    CommunityItem(
-        name = "Jakarta Badminton Club",
-        sport = "Badminton",
-        emoji = "🏸",
-        memberCount = 1250,
-        tags = listOf("Beginner Friendly", "Weekly Meetups"),
-        accentColor = PeachGlow
-    ),
-    CommunityItem(
-        name = "Futsal Warriors BSD",
-        sport = "Futsal",
-        emoji = "⚽",
-        memberCount = 890,
-        tags = listOf("Competitive", "City Area"),
-        accentColor = MintBreeze
-    ),
-    CommunityItem(
-        name = "Streetball Jakarta",
-        sport = "Basketball",
-        emoji = "🏀",
-        memberCount = 2100,
-        tags = listOf("All Levels", "Weekend Games"),
-        accentColor = SkyMist
-    ),
-    CommunityItem(
-        name = "Tennis Enthusiasts",
-        sport = "Tennis",
-        emoji = "🎾",
-        memberCount = 560,
-        tags = listOf("Semi-Pro", "Morning Sessions"),
-        accentColor = RoseDust
-    ),
-    CommunityItem(
-        name = "Gym Bros Community",
-        sport = "Gym",
-        emoji = "💪",
-        memberCount = 3400,
-        tags = listOf("Fitness Tips", "Workout Buddy"),
-        accentColor = ChineseSilver
-    ),
-    CommunityItem(
-        name = "Running Jakarta",
-        sport = "Running",
-        emoji = "🏃",
-        memberCount = 4200,
-        tags = listOf("Casual", "City Routes"),
-        accentColor = PeachGlow
-    )
-)
+// Helper: Get accent color from sport category
+private fun getCommunityColor(sportCategory: String): Color {
+    return when (sportCategory.lowercase()) {
+        "badminton" -> PeachGlow
+        "futsal", "football" -> MintBreeze
+        "basket", "basketball" -> SkyMist
+        "tennis" -> RoseDust
+        "voli", "volleyball" -> SoftLavender
+        "gym" -> ChineseSilver
+        "running" -> PeachGlow
+        "cycling" -> MintBreeze
+        else -> Dreamland
+    }
+}
 
-val suggestedCommunities = listOf(
-    CommunityItem("Voli Pantai", "Volleyball", "🏐", 320, listOf(), MintBreeze),
-    CommunityItem("Boxing Club", "Boxing", "🥊", 180, listOf(), RoseDust),
-    CommunityItem("Cycling ID", "Cycling", "🚴", 890, listOf(), SkyMist),
-    CommunityItem("Swim Squad", "Swimming", "🏊", 450, listOf(), PeachGlow),
-    CommunityItem("Hiking Indo", "Hiking", "🥾", 1200, listOf(), ChineseSilver)
-)
+// ==================== MAIN SCREEN ====================
 
 @Composable
-fun CommunityScreen(navController: NavHostController) {
+fun CommunityScreen(
+    navController: NavHostController,
+    viewModel: CommunityViewModel = org.koin.androidx.compose.koinViewModel()
+) {
+    // ViewModel states
+    val allCommunitiesState by viewModel.allCommunitiesState.collectAsState()
+    val userCommunitiesState by viewModel.userCommunitiesState.collectAsState()
+    
+    // Local UI state
     var selectedCategory by remember { mutableStateOf("All") }
     val scrollState = rememberScrollState()
+    var showJoinDialog by remember { mutableStateOf(false) }
+    var selectedCommunityToJoin by remember { mutableStateOf<Community?>(null) }
+    
+    // Load data on first composition
+    LaunchedEffect(Unit) {
+        viewModel.loadAllCommunities()
+        viewModel.loadUserCommunities()
+    }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(CascadingWhite, SoftLavender.copy(alpha = 0.2f))
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate("create_community") },
+                containerColor = Crunch,
+                contentColor = CascadingWhite,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 8.dp
                 )
-            )
-    ) {
-        // Background blobs
-        CommunityBackgroundBlobs()
-
-        Column(
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = "Create Community",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    ) { padding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(CascadingWhite, SoftLavender.copy(alpha = 0.2f))
+                    )
+                )
+                .padding(padding)
         ) {
-            // Header Section
-            CommunityHeader()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+            ) {
+                // Header
+                CommunityHeader()
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-            // Category Tabs
-            CategoryTabsSection(
-                selectedCategory = selectedCategory,
-                onCategorySelected = { selectedCategory = it }
+                // Category Tabs
+                CategoryTabsSection(
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // My Communities
+                MyCommunitiesSection(
+                    userCommunitiesState = userCommunitiesState,
+                    navController = navController
+                )
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Popular Communities
+                PopularCommunitiesSection(
+                    allCommunitiesState = allCommunitiesState,
+                    userCommunitiesState = userCommunitiesState,
+                    selectedCategory = selectedCategory,
+                    onJoinClick = { community ->
+                        selectedCommunityToJoin = community
+                        showJoinDialog = true
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(100.dp))
+            }
+        }
+
+        // Join Dialog
+        if (showJoinDialog && selectedCommunityToJoin != null) {
+            JoinCommunityDialog(
+                community = selectedCommunityToJoin!!,
+                onConfirm = {
+                    val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+                    if (currentUserId != null) {
+                        viewModel.joinCommunity(
+                            communityId = selectedCommunityToJoin!!.id,
+                            userId = currentUserId,
+                            onSuccess = {
+                                showJoinDialog = false
+                                selectedCommunityToJoin = null
+                            },
+                            onError = {
+                                showJoinDialog = false
+                                selectedCommunityToJoin = null
+                            }
+                        )
+                    }
+                },
+                onDismiss = {
+                    showJoinDialog = false
+                    selectedCommunityToJoin = null
+                }
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Main Community List
-            CommunityListSection(selectedCategory = selectedCategory)
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Suggested Communities
-            SuggestedCommunitiesSection()
-
-            Spacer(modifier = Modifier.height(100.dp)) // Bottom padding for nav bar
         }
     }
 }
 
-// ==================== BACKGROUND ====================
-
-@Composable
-private fun CommunityBackgroundBlobs() {
-    val infiniteTransition = rememberInfiniteTransition(label = "community_blobs")
-
-    val offset1 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(25000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "offset1"
-    )
-
-    val offset2 by infiniteTransition.animateFloat(
-        initialValue = 180f,
-        targetValue = 540f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(30000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "offset2"
-    )
-
-    Canvas(
-        modifier = Modifier
-            .fillMaxSize()
-            .blur(80.dp)
-    ) {
-        drawCircle(
-            color = ChineseSilver.copy(alpha = 0.25f),
-            radius = 180f,
-            center = Offset(
-                x = size.width * 0.1f + cos(Math.toRadians(offset1.toDouble())).toFloat() * 30f,
-                y = size.height * 0.08f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 20f
-            )
-        )
-
-        drawCircle(
-            color = PeachGlow.copy(alpha = 0.15f),
-            radius = 140f,
-            center = Offset(
-                x = size.width * 0.85f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 25f,
-                y = size.height * 0.2f + sin(Math.toRadians(offset2.toDouble())).toFloat() * 30f
-            )
-        )
-
-        drawCircle(
-            color = MintBreeze.copy(alpha = 0.15f),
-            radius = 160f,
-            center = Offset(
-                x = size.width * 0.25f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 35f,
-                y = size.height * 0.5f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 25f
-            )
-        )
-
-        drawCircle(
-            color = SkyMist.copy(alpha = 0.12f),
-            radius = 120f,
-            center = Offset(
-                x = size.width * 0.8f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 20f,
-                y = size.height * 0.75f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 30f
-            )
-        )
-    }
-}
-
-// ==================== HEADER SECTION ====================
+// ==================== HEADER ====================
 
 @Composable
 private fun CommunityHeader() {
-    val infiniteTransition = rememberInfiniteTransition(label = "header_float")
-
-    val float1 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 8f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float1"
-    )
-
-    val float2 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = -6f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2500, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float2"
-    )
-
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 48.dp)
+            .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
-        // Floating 3D accents
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = (-60).dp, y = (20 + float1).dp)
-                .background(
-                    color = PeachGlow.copy(alpha = 0.4f),
-                    shape = CircleShape
-                )
-                .blur(8.dp)
+        Text(
+            text = "Community Hub",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            color = Lead
         )
-
-        Box(
-            modifier = Modifier
-                .size(25.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = (-100).dp, y = (40 + float2).dp)
-                .background(
-                    color = MintBreeze.copy(alpha = 0.5f),
-                    shape = CircleShape
-                )
-                .blur(5.dp)
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Text(
+            text = "Join groups and find your people",
+            style = MaterialTheme.typography.bodyMedium,
+            color = WarmHaze
         )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Community Hub",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    ),
-                    color = Lead
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Join groups and find your people",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WarmHaze
-                )
-            }
-
-            // Search Icon with glow
-            Box {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    Crunch.copy(alpha = 0.2f),
-                                    Crunch.copy(alpha = 0f)
-                                )
-                            ),
-                            shape = CircleShape
-                        )
-                )
-
-                Surface(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .align(Alignment.Center)
-                        .shadow(
-                            elevation = 8.dp,
-                            shape = CircleShape,
-                            ambientColor = NeumorphDark.copy(alpha = 0.15f)
-                        ),
-                    shape = CircleShape,
-                    color = NeumorphLight
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Search,
-                            contentDescription = "Search",
-                            modifier = Modifier.size(22.dp),
-                            tint = WarmHaze
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -377,77 +241,34 @@ private fun CategoryTabsSection(
     selectedCategory: String,
     onCategorySelected: (String) -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Browse by Sport",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold
-            ),
-            color = Lead,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            sportCategories.forEach { category ->
-                CategoryPill(
-                    category = category,
-                    isSelected = selectedCategory == category.name,
-                    onClick = { onCategorySelected(category.name) }
-                )
-            }
+        sportCategories.forEach { category ->
+            CategoryChip(
+                category = category,
+                isSelected = selectedCategory == category.name,
+                onClick = { onCategorySelected(category.name) }
+            )
         }
     }
 }
 
 @Composable
-private fun CategoryPill(
+private fun CategoryChip(
     category: SportCategory,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) Crunch else NeumorphLight,
-        animationSpec = tween(200),
-        label = "bg_color"
-    )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (isSelected) Crunch else Dreamland.copy(alpha = 0.4f),
-        animationSpec = tween(200),
-        label = "border_color"
-    )
-
-    val elevation by animateDpAsState(
-        targetValue = if (isSelected) 8.dp else 4.dp,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "elevation"
-    )
-
     Surface(
-        modifier = Modifier
-            .shadow(
-                elevation = elevation,
-                shape = RoundedCornerShape(20.dp),
-                ambientColor = if (isSelected) Crunch.copy(alpha = 0.3f) else NeumorphDark.copy(alpha = 0.1f),
-                spotColor = if (isSelected) Crunch.copy(alpha = 0.3f) else NeumorphDark.copy(alpha = 0.1f)
-            )
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(20.dp)
-            )
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        color = backgroundColor
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = if (isSelected) Crunch else CascadingWhite,
+        shadowElevation = if (isSelected) 4.dp else 2.dp
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
@@ -457,219 +278,175 @@ private fun CategoryPill(
             Text(text = category.emoji, fontSize = 16.sp)
             Text(
                 text = category.name,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
-                ),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 color = if (isSelected) Lead else WarmHaze
             )
         }
     }
 }
 
-// ==================== COMMUNITY LIST ====================
+// ==================== MY COMMUNITIES ====================
 
 @Composable
-private fun CommunityListSection(selectedCategory: String) {
-    val filteredCommunities = if (selectedCategory == "All") {
-        communityList
-    } else {
-        communityList.filter { it.sport.contains(selectedCategory, ignoreCase = true) }
-    }
-
+private fun MyCommunitiesSection(
+    userCommunitiesState: CommunitiesState,
+    navController: NavHostController
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
         Text(
-            text = "Popular Communities",
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Bold
-            ),
+            text = "My Communities",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
             color = Lead
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            (if (filteredCommunities.isEmpty()) communityList else filteredCommunities).forEach { community ->
-                CommunityCard(community = community)
+        when (userCommunitiesState) {
+            is CommunitiesState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Crunch)
+                }
+            }
+            is CommunitiesState.Success -> {
+                if (userCommunitiesState.communities.isEmpty()) {
+                    EmptyState(message = "You haven't joined any communities yet")
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        userCommunitiesState.communities.forEach { community ->
+                            JoinedCommunityCard(
+                                community = community,
+                                onOpenClick = {
+                                    if (community.id.isNotEmpty()) {
+                                        val encodedName = URLEncoder.encode(community.name, StandardCharsets.UTF_8.toString())
+                                        val emoji = getCommunityEmoji(community.sportCategory)
+                                        val encodedEmoji = URLEncoder.encode(emoji, StandardCharsets.UTF_8.toString())
+                                        navController.navigate(Screen.CommunityFeed.createRoute(community.id, encodedName, encodedEmoji))
+                                    } else {
+                                        android.util.Log.e("CommunityScreen", "Community ID is empty for ${community.name}")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            is CommunitiesState.Error -> {
+                ErrorState(message = userCommunitiesState.message)
             }
         }
     }
 }
 
 @Composable
-private fun CommunityCard(community: CommunityItem) {
-    var isPressed by remember { mutableStateOf(false) }
+private fun JoinedCommunityCard(
+    community: Community,
+    onOpenClick: () -> Unit
+) {
+    val emoji = getCommunityEmoji(community.sportCategory)
+    val accentColor = getCommunityColor(community.sportCategory)
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = if (isPressed) 6.dp else 12.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = NeumorphDark.copy(alpha = 0.12f),
-                spotColor = NeumorphDark.copy(alpha = 0.12f)
-            ),
-        shape = RoundedCornerShape(24.dp),
-        color = NeumorphLight.copy(alpha = 0.97f)
+            .clickable(onClick = onOpenClick),
+        shape = RoundedCornerShape(20.dp),
+        color = CascadingWhite,
+        shadowElevation = 4.dp
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Dreamland.copy(alpha = 0.2f),
-                            community.accentColor.copy(alpha = 0.15f),
-                            Dreamland.copy(alpha = 0.1f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                )
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Subtle background gradient swirl
+            // Icon
             Box(
                 modifier = Modifier
-                    .size(100.dp)
-                    .align(Alignment.TopEnd)
-                    .offset(x = 20.dp, y = (-20).dp)
+                    .size(56.dp)
                     .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                community.accentColor.copy(alpha = 0.2f),
-                                community.accentColor.copy(alpha = 0f)
-                            )
-                        ),
-                        shape = CircleShape
-                    )
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                        color = accentColor.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(14.dp)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                // Sport Icon
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    community.accentColor.copy(alpha = 0.4f),
-                                    community.accentColor.copy(alpha = 0.2f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(18.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                Text(text = emoji, fontSize = 28.sp)
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Info
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = community.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Lead,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(text = community.emoji, fontSize = 32.sp)
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // Community Details
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = community.name,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Lead,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.People,
+                            imageVector = Icons.Rounded.Group,
                             contentDescription = null,
                             modifier = Modifier.size(14.dp),
                             tint = WarmHaze
                         )
                         Text(
-                            text = "${community.memberCount} members",
+                            text = "${community.memberCount}",
                             style = MaterialTheme.typography.bodySmall,
                             color = WarmHaze
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Tags
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        community.tags.take(2).forEach { tag ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = ChineseSilver.copy(alpha = 0.5f)
-                            ) {
-                                Text(
-                                    text = tag,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = WarmHaze,
-                                    fontSize = 10.sp
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Join Button
-                Surface(
-                    modifier = Modifier
-                        .shadow(
-                            elevation = 6.dp,
-                            shape = RoundedCornerShape(14.dp),
-                            ambientColor = Crunch.copy(alpha = 0.3f),
-                            spotColor = Crunch.copy(alpha = 0.3f)
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { isPressed = !isPressed },
-                    shape = RoundedCornerShape(14.dp),
-                    color = Crunch
-                ) {
                     Text(
-                        text = "Join",
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = Lead
+                        text = "• ${community.sportCategory}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WarmHaze
                     )
                 }
             }
+
+            Icon(
+                imageVector = Icons.Rounded.ChevronRight,
+                contentDescription = "Open",
+                tint = Crunch,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
 
-// ==================== SUGGESTED COMMUNITIES ====================
+// ==================== POPULAR COMMUNITIES ====================
 
 @Composable
-private fun SuggestedCommunitiesSection() {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+private fun PopularCommunitiesSection(
+    allCommunitiesState: CommunitiesState,
+    userCommunitiesState: CommunitiesState,
+    selectedCategory: String,
+    onJoinClick: (Community) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -678,144 +455,258 @@ private fun SuggestedCommunitiesSection() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Suggested for You",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
+                text = "Popular Communities",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
                 color = Lead
             )
-            TextButton(onClick = { }) {
-                Text(
-                    text = "See All",
-                    color = Crunch,
-                    fontWeight = FontWeight.Medium
-                )
-            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            suggestedCommunities.forEach { community ->
-                SuggestedCommunityCard(community = community)
+        when (allCommunitiesState) {
+            is CommunitiesState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Crunch)
+                }
+            }
+            is CommunitiesState.Success -> {
+                val joinedIds = when (userCommunitiesState) {
+                    is CommunitiesState.Success ->
+                        userCommunitiesState.communities.map { it.id }.toSet()
+                    else -> emptySet()
+                }
+
+                val filteredCommunities = allCommunitiesState.communities
+                    .filter { it.id !in joinedIds }
+                    .filter { selectedCategory == "All" || it.sportCategory.equals(selectedCategory, ignoreCase = true) }
+
+                if (filteredCommunities.isEmpty()) {
+                    EmptyState(message = "No communities available")
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        filteredCommunities.forEach { community ->
+                            PopularCommunityCard(
+                                community = community,
+                                onJoinClick = { onJoinClick(community) }
+                            )
+                        }
+                    }
+                }
+            }
+            is CommunitiesState.Error -> {
+                ErrorState(message = allCommunitiesState.message)
             }
         }
     }
 }
 
 @Composable
-private fun SuggestedCommunityCard(community: CommunityItem) {
-    val infiniteTransition = rememberInfiniteTransition(label = "suggested_float")
-
-    val floatAnim by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float"
-    )
+private fun PopularCommunityCard(
+    community: Community,
+    onJoinClick: () -> Unit
+) {
+    val emoji = getCommunityEmoji(community.sportCategory)
+    val accentColor = getCommunityColor(community.sportCategory)
 
     Surface(
         modifier = Modifier
-            .width(130.dp)
-            .height(160.dp)
-            .offset(y = floatAnim.dp)
-            .shadow(
-                elevation = 10.dp,
-                shape = RoundedCornerShape(22.dp),
-                ambientColor = NeumorphDark.copy(alpha = 0.12f),
-                spotColor = NeumorphDark.copy(alpha = 0.12f)
-            ),
-        shape = RoundedCornerShape(22.dp),
-        color = Color.Transparent
+            .width(160.dp)
+            .height(200.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = CascadingWhite,
+        shadowElevation = 4.dp
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            community.accentColor.copy(alpha = 0.5f),
-                            community.accentColor.copy(alpha = 0.2f),
-                            NeumorphLight
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            NeumorphLight.copy(alpha = 0.8f),
-                            community.accentColor.copy(alpha = 0.3f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(22.dp)
-                )
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .size(64.dp)
+                    .background(
+                        color = accentColor.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                // Sport emoji with 3D effect
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .shadow(
-                            elevation = 6.dp,
-                            shape = CircleShape,
-                            ambientColor = NeumorphDark.copy(alpha = 0.15f)
-                        )
-                        .background(
-                            color = NeumorphLight.copy(alpha = 0.9f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = community.emoji, fontSize = 24.sp)
-                }
+                Text(text = emoji, fontSize = 32.sp)
+            }
 
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
+            Text(
+                text = community.name,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Lead,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.height(40.dp)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Group,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = WarmHaze
+                )
+                Text(
+                    text = "${community.memberCount}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = WarmHaze
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = onJoinClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Crunch,
+                    contentColor = CascadingWhite
+                ),
+                contentPadding = PaddingValues(vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Join",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+// ==================== JOIN DIALOG ====================
+
+@Composable
+private fun JoinCommunityDialog(
+    community: Community,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val emoji = getCommunityEmoji(community.sportCategory)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = emoji,
+                    fontSize = 48.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Join Community?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = community.name,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    color = Lead,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.People,
+                        imageVector = Icons.Rounded.Group,
                         contentDescription = null,
-                        modifier = Modifier.size(12.dp),
+                        modifier = Modifier.size(16.dp),
                         tint = WarmHaze
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${community.memberCount}",
-                        style = MaterialTheme.typography.labelSmall,
+                        text = "${community.memberCount} members",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = WarmHaze
                     )
                 }
             }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Crunch
+                )
+            ) {
+                Text("Join")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = WarmHaze)
+            }
         }
+    )
+}
+
+// ==================== UTILITY COMPONENTS ====================
+
+@Composable
+private fun EmptyState(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = WarmHaze,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun ErrorState(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Error: $message",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
+        )
     }
 }

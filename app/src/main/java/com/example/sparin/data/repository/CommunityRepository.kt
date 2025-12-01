@@ -5,12 +5,14 @@ import com.example.sparin.data.remote.FirestoreService
 import com.example.sparin.domain.util.Resource
 import com.example.sparin.util.Constants
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.tasks.await
 
 /**
  * Repository untuk Community operations
  */
 class CommunityRepository(
-    private val firestoreService: FirestoreService
+    private val firestoreService: FirestoreService,
+    private val firestore: com.google.firebase.firestore.FirebaseFirestore
 ) {
     
     /**
@@ -18,10 +20,15 @@ class CommunityRepository(
      */
     suspend fun getCommunities(): Resource<List<Community>> {
         return try {
-            val communities = firestoreService.getCollection(
-                Constants.Collections.COMMUNITIES,
-                Community::class.java
-            )
+            val snapshot = firestore.collection(Constants.Collections.COMMUNITIES)
+                .get()
+                .await()
+                
+            val communities = snapshot.documents.mapNotNull { doc ->
+                val community = doc.toObject(Community::class.java)
+                community?.copy(id = doc.id)
+            }
+            
             Resource.Success(communities.filter { it.isPublic })
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to get communities")
@@ -33,12 +40,16 @@ class CommunityRepository(
      */
     suspend fun getCommunitiesByCategory(category: String): Resource<List<Community>> {
         return try {
-            val communities = firestoreService.queryCollection(
-                Constants.Collections.COMMUNITIES,
-                "sportCategory",
-                category,
-                Community::class.java
-            )
+            val snapshot = firestore.collection(Constants.Collections.COMMUNITIES)
+                .whereEqualTo("sportCategory", category)
+                .get()
+                .await()
+                
+            val communities = snapshot.documents.mapNotNull { doc ->
+                val community = doc.toObject(Community::class.java)
+                community?.copy(id = doc.id)
+            }
+            
             Resource.Success(communities.filter { it.isPublic })
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to get communities")

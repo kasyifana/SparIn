@@ -117,13 +117,31 @@ fun NavGraph(
             arguments = listOf(
                 navArgument("roomId") {
                     type = NavType.StringType
+                },
+                navArgument("mode") {
+                    type = NavType.StringType
+                    defaultValue = "casual"
+                },
+                navArgument("roomTitle") {
+                    type = NavType.StringType
+                    defaultValue = "Chat Room"
+                },
+                navArgument("sport") {
+                    type = NavType.StringType
+                    defaultValue = "Sport"
                 }
             )
         ) { backStackEntry ->
             val roomId = backStackEntry.arguments?.getString("roomId")
+            val mode = backStackEntry.arguments?.getString("mode") ?: "casual"
+            val roomTitle = backStackEntry.arguments?.getString("roomTitle") ?: "Chat Room"
+            val sport = backStackEntry.arguments?.getString("sport") ?: "Sport"
             ChatRoomScreen(
                 navController = navController,
-                roomId = roomId
+                roomId = roomId,
+                mode = mode,
+                roomTitle = roomTitle,
+                sport = sport
             )
         }
         

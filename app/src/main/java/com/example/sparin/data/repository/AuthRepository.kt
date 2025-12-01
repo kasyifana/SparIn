@@ -131,4 +131,12 @@ class AuthRepository(
     fun getCurrentUserId(): String? {
         return authService.getCurrentUserId()
     }
+
+    /**
+     * Get current user details from Firestore
+     */
+    suspend fun getCurrentUser(): User? {
+        val userId = getCurrentUserId() ?: return null
+        return firestoreService.getDocument(Constants.Collections.USERS, userId, User::class.java)
+    }
 }

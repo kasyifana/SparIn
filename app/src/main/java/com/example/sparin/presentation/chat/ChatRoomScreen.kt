@@ -45,54 +45,35 @@ import kotlinx.coroutines.launch
 fun ChatRoomScreen(
     navController: NavHostController,
     roomId: String? = null,
+    mode: String = "casual",
+    roomTitle: String = "Chat Room",
+    sport: String = "Sport",
     viewModel: ChatRoomViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val inputText by viewModel.inputText.collectAsState()
+    // Delegate to the new SportChatRoomScreen
+    SportChatRoomScreen(
+        navController = navController,
+        roomId = roomId,
+        mode = mode,
+        roomTitle = roomTitle,
+        sport = sport,
+        sportEmoji = getSportEmoji(sport)
+    )
+}
 
-    // Define colors based on SparIN Design System
-    val cascadingWhite = Color(0xFFF6F6F6)
-    val chineseSilver = Color(0xFFE0DBF3)
-    val crunch = Color(0xFFF3BA60)
-    val dreamland = Color(0xFFB6B1C0)
-    val warmHaze = Color(0xFF736A6A)
-    val lead = Color(0xFF202022)
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        cascadingWhite,
-                        chineseSilver.copy(alpha = 0.1f)
-                    )
-                )
-            )
-    ) {
-        when (val state = uiState) {
-            is ChatRoomUiState.Loading -> {
-                LoadingState()
-            }
-            is ChatRoomUiState.Success -> {
-                ChatRoomContent(
-                    roomName = state.roomName,
-                    participantsCount = state.participantsCount,
-                    messages = state.messages,
-                    inputText = inputText,
-                    onInputChange = { viewModel.updateInputText(it) },
-                    onSendClick = { viewModel.sendMessage() },
-                    onBackClick = { navController.navigateUp() }
-                )
-            }
-            is ChatRoomUiState.Error -> {
-                ErrorState(
-                    message = state.message,
-                    onRetry = { viewModel.retry() },
-                    onBackClick = { navController.navigateUp() }
-                )
-            }
-        }
+private fun getSportEmoji(sport: String): String {
+    return when (sport.lowercase()) {
+        "badminton" -> "🏸"
+        "futsal" -> "⚽"
+        "basket", "basketball" -> "🏀"
+        "voli", "volleyball" -> "🏐"
+        "tennis" -> "🎾"
+        "hiking" -> "🥾"
+        "cycling" -> "🚴"
+        "swimming" -> "🏊"
+        "muaythai" -> "🥋"
+        "boxing" -> "🥊"
+        else -> "🏃"
     }
 }
 
