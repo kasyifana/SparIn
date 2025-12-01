@@ -15,6 +15,7 @@ import com.example.sparin.presentation.discover.DiscoverViewModel
 import com.example.sparin.presentation.community.CommunityViewModel
 import com.example.sparin.presentation.community.feed.CommunityFeedViewModel
 import com.example.sparin.presentation.profile.ProfileViewModel
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 /**
@@ -51,7 +52,7 @@ val repositoryModule = module {
     factory { HomeViewModel(get(), get(), get(), get()) } // UserRepo, RoomRepo, MatchRepo, CampaignRepo
     factory { PersonalizationViewModel(get(), get()) }
     factory { DiscoverViewModel(get()) } // RoomRepo
-    factory { CommunityViewModel(get(), get()) } // CommunityRepo + FirestoreService
+    factory { CommunityViewModel(get(), get()) } // CommunityRepo + AuthRepo
     factory { CommunityFeedViewModel(get(), get()) } // FeedRepo + AuthRepo
     factory { ProfileViewModel(get(), get()) } // UserRepo + RoomRepo
 }

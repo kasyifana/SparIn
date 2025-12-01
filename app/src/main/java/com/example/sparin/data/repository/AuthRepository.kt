@@ -139,4 +139,18 @@ class AuthRepository(
         val userId = getCurrentUserId() ?: return null
         return firestoreService.getDocument(Constants.Collections.USERS, userId, User::class.java)
     }
+
+    /**
+     * Get current user's display name
+     */
+    fun getCurrentUserName(): String? {
+        return authService.getCurrentUser()?.displayName
+    }
+
+    /**
+     * Get current user's photo URL
+     */
+    fun getCurrentUserPhotoUrl(): String? {
+        return authService.getCurrentUser()?.photoUrl?.toString()
+    }
 }
