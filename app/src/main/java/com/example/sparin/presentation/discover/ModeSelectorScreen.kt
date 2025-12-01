@@ -101,11 +101,11 @@ fun ModeSelectorScreen(
                 subtitle = "Play for fun, no pressure",
                 emoji = "🎮",
                 gradient = listOf(
-                    MintBreeze.copy(alpha = 0.3f),
-                    SoftLavender.copy(alpha = 0.3f),
-                    SkyMist.copy(alpha = 0.3f)
+                    Color(0xFF74C9FF).copy(alpha = 0.3f),
+                    Color(0xFF5BA8E0).copy(alpha = 0.25f),
+                    Color(0xFFA78BFA).copy(alpha = 0.2f)
                 ),
-                accentColor = MintBreeze,
+                accentColor = Color(0xFF74C9FF),
                 onClick = { onModeSelected(RoomMode.CASUAL) }
             )
 
@@ -118,11 +118,11 @@ fun ModeSelectorScreen(
                 subtitle = "Serious matches, track your wins",
                 emoji = "🏆",
                 gradient = listOf(
-                    Color(0xFFDC143C).copy(alpha = 0.15f),
-                    Color(0xFF8B0000).copy(alpha = 0.15f),
-                    Color(0xFF000000).copy(alpha = 0.1f)
+                    Color(0xFFEF4444).copy(alpha = 0.25f),
+                    Color(0xFFDC2626).copy(alpha = 0.2f),
+                    Color(0xFFB91C1C).copy(alpha = 0.15f)
                 ),
-                accentColor = Color(0xFFDC143C),
+                accentColor = Color(0xFFEF4444),
                 onClick = { onModeSelected(RoomMode.COMPETITIVE) },
                 isPreview = false
             )
@@ -409,7 +409,7 @@ private fun FloatingModeIcons() {
             .fillMaxWidth()
             .height(100.dp)
     ) {
-        // Icon 1
+        // Icon 1 - Blue themed
         Box(
             modifier = Modifier
                 .size(50.dp)
@@ -418,13 +418,13 @@ private fun FloatingModeIcons() {
                 .shadow(
                     elevation = 8.dp,
                     shape = CircleShape,
-                    ambientColor = MintBreeze.copy(alpha = 0.4f)
+                    ambientColor = Color(0xFF74C9FF).copy(alpha = 0.4f)
                 )
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            MintBreeze.copy(alpha = 0.6f),
-                            MintBreeze.copy(alpha = 0.2f)
+                            Color(0xFF74C9FF).copy(alpha = 0.6f),
+                            Color(0xFF74C9FF).copy(alpha = 0.2f)
                         )
                     ),
                     shape = CircleShape
@@ -434,7 +434,7 @@ private fun FloatingModeIcons() {
             Text("⭐", fontSize = 24.sp)
         }
 
-        // Icon 2
+        // Icon 2 - Red themed
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -443,20 +443,20 @@ private fun FloatingModeIcons() {
                 .shadow(
                     elevation = 6.dp,
                     shape = CircleShape,
-                    ambientColor = PeachGlow.copy(alpha = 0.4f)
+                    ambientColor = Color(0xFFEF4444).copy(alpha = 0.4f)
                 )
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            PeachGlow.copy(alpha = 0.6f),
-                            PeachGlow.copy(alpha = 0.2f)
+                            Color(0xFFEF4444).copy(alpha = 0.6f),
+                            Color(0xFFEF4444).copy(alpha = 0.2f)
                         )
                     ),
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text("✨", fontSize = 18.sp)
+            Text("🔥", fontSize = 18.sp)
         }
     }
 }
@@ -492,8 +492,9 @@ private fun ModeSelectorBackgroundBlobs() {
             .fillMaxSize()
             .blur(80.dp)
     ) {
+        // Blue blob for Casual
         drawCircle(
-            color = MintBreeze.copy(alpha = 0.2f),
+            color = Color(0xFF74C9FF).copy(alpha = 0.2f),
             radius = 180f,
             center = Offset(
                 x = size.width * 0.2f + cos(Math.toRadians(offset1.toDouble())).toFloat() * 40f,
@@ -501,8 +502,9 @@ private fun ModeSelectorBackgroundBlobs() {
             )
         )
 
+        // Red blob for Competitive
         drawCircle(
-            color = PeachGlow.copy(alpha = 0.18f),
+            color = Color(0xFFEF4444).copy(alpha = 0.15f),
             radius = 160f,
             center = Offset(
                 x = size.width * 0.8f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 35f,
@@ -510,8 +512,9 @@ private fun ModeSelectorBackgroundBlobs() {
             )
         )
 
+        // Light blue accent blob
         drawCircle(
-            color = SkyMist.copy(alpha = 0.15f),
+            color = Color(0xFFA78BFA).copy(alpha = 0.15f),
             radius = 140f,
             center = Offset(
                 x = size.width * 0.5f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 30f,
