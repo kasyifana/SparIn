@@ -1,6 +1,7 @@
 package com.example.sparin.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,8 +18,8 @@ import com.example.sparin.presentation.discover.DiscoverCompetitiveScreen
 import com.example.sparin.presentation.discover.RoomMode
 import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
-import com.example.sparin.presentation.community.feed.CommunityFeedScreen
 import com.example.sparin.presentation.profile.ProfileScreen
+import com.example.sparin.presentation.profile.EditProfileScreen
 
 /**
  * Navigation Graph untuk aplikasi SparIN
@@ -26,11 +27,13 @@ import com.example.sparin.presentation.profile.ProfileScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String
+    startDestination: String,
+    modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        modifier = modifier
     ) {
         // Onboarding & Auth Flow
         composable(Screen.Onboarding.route) {
@@ -105,6 +108,10 @@ fun NavGraph(
             ProfileScreen(navController = navController)
         }
         
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(navController = navController)
+        }
+        
         // Detail Screens with arguments
         
         // Chat Room Detail
@@ -113,37 +120,55 @@ fun NavGraph(
             arguments = listOf(
                 navArgument("roomId") {
                     type = NavType.StringType
+                },
+                navArgument("mode") {
+                    type = NavType.StringType
+                    defaultValue = "casual"
+                },
+                navArgument("roomTitle") {
+                    type = NavType.StringType
+                    defaultValue = "Chat Room"
+                },
+                navArgument("sport") {
+                    type = NavType.StringType
+                    defaultValue = "Sport"
                 }
             )
         ) { backStackEntry ->
             val roomId = backStackEntry.arguments?.getString("roomId")
+            val mode = backStackEntry.arguments?.getString("mode") ?: "casual"
+            val roomTitle = backStackEntry.arguments?.getString("roomTitle") ?: "Chat Room"
+            val sport = backStackEntry.arguments?.getString("sport") ?: "Sport"
             ChatRoomScreen(
                 navController = navController,
-                roomId = roomId
+                roomId = roomId,
+                mode = mode,
+                roomTitle = roomTitle,
+                sport = sport
             )
         }
         
-        // Community Feed (Posts & Comments)
+        // Create Room Screen
         composable(
-            route = "chat/{communityName}/{communityEmoji}",
-            arguments = listOf(
-                navArgument("communityName") { 
-                    type = NavType.StringType
-                    defaultValue = "Community"
-                },
-                navArgument("communityEmoji") { 
-                    type = NavType.StringType
-                    defaultValue = "🏸"
-                }
-            )
+            route = "create_room/{mode}",
+            arguments = listOf(navArgument("mode") { type = NavType.StringType })
         ) { backStackEntry ->
-            val communityName = backStackEntry.arguments?.getString("communityName") ?: "Community"
-            val communityEmoji = backStackEntry.arguments?.getString("communityEmoji") ?: "🏸"
-            
-            CommunityFeedScreen(
+            val mode = backStackEntry.arguments?.getString("mode") ?: "Casual"
+            com.example.sparin.presentation.discover.CreateRoomScreen(
                 navController = navController,
-                communityName = communityName,
-                communityEmoji = communityEmoji
+                mode = mode
+            )
+        }
+        
+        // Room Detail Screen
+        composable(
+            route = "room_detail/{roomId}",
+            arguments = listOf(navArgument("roomId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+            com.example.sparin.presentation.discover.RoomDetailScreen(
+                navController = navController,
+                roomId = roomId
             )
         }
         

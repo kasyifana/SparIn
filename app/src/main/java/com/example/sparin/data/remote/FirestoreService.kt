@@ -130,6 +130,22 @@ class FirestoreService(
         val snapshot = query.get().await()
         return snapshot.documents.mapNotNull { it.toObject(clazz) }
     }
+
+    /**
+     * Query collection where array contains value
+     */
+    suspend fun <T> queryCollectionArrayContains(
+        collection: String,
+        field: String,
+        value: Any,
+        clazz: Class<T>
+    ): List<T> {
+        val snapshot = firestore.collection(collection)
+            .whereArrayContains(field, value)
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toObject(clazz) }
+    }
     
     /**
      * Observe collection real-time

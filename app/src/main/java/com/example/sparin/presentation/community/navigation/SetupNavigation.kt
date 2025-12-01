@@ -39,9 +39,11 @@ fun SetupCommunityNavigation(
         }
 
         // Chat Screen dengan arguments
+        // Chat Screen dengan arguments
         composable(
-            route = "chat/{communityName}/{communityEmoji}",
+            route = "chat/{communityId}/{communityName}/{communityEmoji}",
             arguments = listOf(
+                navArgument("communityId") { type = NavType.StringType },
                 navArgument("communityName") { 
                     type = NavType.StringType
                     defaultValue = "Community"
@@ -52,11 +54,13 @@ fun SetupCommunityNavigation(
                 }
             )
         ) { backStackEntry ->
+            val communityId = backStackEntry.arguments?.getString("communityId") ?: ""
             val communityName = backStackEntry.arguments?.getString("communityName") ?: "Community"
             val communityEmoji = backStackEntry.arguments?.getString("communityEmoji") ?: "🏸"
 
             CommunityFeedScreen(
                 navController = navController,
+                communityId = communityId,
                 communityName = communityName,
                 communityEmoji = communityEmoji
             )
@@ -67,8 +71,8 @@ fun SetupCommunityNavigation(
 /**
  * Extension function untuk navigate ke chat dengan type-safe arguments
  */
-fun NavHostController.navigateToChat(communityName: String, communityEmoji: String) {
+fun NavHostController.navigateToChat(communityId: String, communityName: String, communityEmoji: String) {
     val encodedName = URLEncoder.encode(communityName, StandardCharsets.UTF_8.toString())
     val encodedEmoji = URLEncoder.encode(communityEmoji, StandardCharsets.UTF_8.toString())
-    this.navigate("chat/$encodedName/$encodedEmoji")
+    this.navigate("chat/$communityId/$encodedName/$encodedEmoji")
 }

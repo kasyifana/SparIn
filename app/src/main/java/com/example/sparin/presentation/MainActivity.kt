@@ -3,16 +3,18 @@ package com.example.sparin.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.sparin.data.repository.AuthRepository
+import com.example.sparin.presentation.navigation.FloatingBottomNavBarPremium
 import com.example.sparin.presentation.navigation.NavGraph
 import com.example.sparin.presentation.navigation.Screen
-import com.example.sparin.presentation.navigation.bottomNavItems
 import com.example.sparin.ui.theme.SparInTheme
 import org.koin.android.ext.android.inject
 
@@ -48,8 +50,6 @@ class MainActivity : ComponentActivity() {
                 }
                 else -> {
                     // Signed in - check if personalization is complete
-                    // For now, assume they need personalization (will be updated by ViewModel)
-                    // This will be overridden by navigation logic after user data loads
                     Screen.Home.route
                 }
             }
@@ -64,39 +64,34 @@ class MainActivity : ComponentActivity() {
             Screen.Profile.route
         )
         
-        Scaffold(
-            bottomBar = {
-                if (currentRoute in screensWithBottomNav) {
-                    NavigationBar {
-                        bottomNavItems.forEach { item ->
-                            NavigationBarItem(
-                                icon = { Icon(item.icon, contentDescription = item.title) },
-                                label = { Text(item.title) },
-                                selected = currentRoute == item.screen.route,
-                                onClick = {
-                                    if (currentRoute != item.screen.route) {
-                                        navController.navigate(item.screen.route) {
-                                            // Pop up to start destination
-                                            popUpTo(Screen.Home.route) {
-                                                saveState = true
-                                            }
-                                            // Avoid multiple copies
-                                            launchSingleTop = true
-                                            // Restore state when reselecting
-                                            restoreState = true
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        ) { paddingValues ->
+        val showBottomNav = currentRoute in screensWithBottomNav
+        
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Main content
             NavGraph(
                 navController = navController,
-                startDestination = startDestination
+                startDestination = startDestination,
+                modifier = Modifier.fillMaxSize()
             )
+            
+            // Floating Bottom Navigation Bar
+            if (showBottomNav) {
+                FloatingBottomNavBarPremium(
+                    currentRoute = currentRoute,
+                    onNavigate = { screen ->
+                        if (currentRoute != screen.route) {
+                            navController.navigate(screen.route) {
+                                popUpTo(Screen.Home.route) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
         }
     }
 }
