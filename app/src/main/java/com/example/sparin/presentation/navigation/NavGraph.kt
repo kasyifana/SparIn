@@ -15,6 +15,7 @@ import com.example.sparin.presentation.onboarding.OnboardingScreen
 import com.example.sparin.presentation.personalization.PersonalizationScreen
 import com.example.sparin.presentation.home.HomeScreen
 import com.example.sparin.presentation.community.CommunityScreen
+import com.example.sparin.presentation.community.AllMyCommunitiesScreen
 import com.example.sparin.presentation.discover.ModeSelectorScreen
 import com.example.sparin.presentation.discover.DiscoverCasualScreen
 import com.example.sparin.presentation.discover.DiscoverCompetitiveScreen
@@ -24,6 +25,7 @@ import com.example.sparin.presentation.chat.ChatRoomScreen
 import com.example.sparin.presentation.profile.ProfileScreen
 import com.example.sparin.presentation.profile.EditProfileScreen
 import com.example.sparin.presentation.community.feed.CommunityFeedScreen
+import com.example.sparin.presentation.community.feed.AllUpcomingEventsScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -84,6 +86,11 @@ fun NavGraph(
         
         composable(Screen.Community.route) {
             CommunityScreen(navController = navController)
+        }
+        
+        // All My Communities Screen
+        composable(Screen.AllMyCommunities.route) {
+            AllMyCommunitiesScreen(navController = navController)
         }
         
         composable(Screen.Discover.route) {
@@ -227,6 +234,27 @@ fun NavGraph(
                 communityId = communityId,
                 communityName = name,
                 communityEmoji = emoji
+            )
+        }
+        
+        // All Upcoming Events Screen
+        composable(
+            route = Screen.AllUpcomingEvents.route,
+            arguments = listOf(
+                navArgument("communityId") {
+                    type = NavType.StringType
+                },
+                navArgument("communityName") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val communityId = backStackEntry.arguments?.getString("communityId") ?: ""
+            val communityName = URLDecoder.decode(backStackEntry.arguments?.getString("communityName") ?: "", StandardCharsets.UTF_8.toString())
+            AllUpcomingEventsScreen(
+                navController = navController,
+                communityId = communityId,
+                communityName = communityName
             )
         }
         

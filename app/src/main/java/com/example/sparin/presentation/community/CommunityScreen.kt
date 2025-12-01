@@ -52,7 +52,8 @@ data class Community(
     val memberCount: String,
     val newPosts: Int = 0,
     val isJoined: Boolean = false,
-    val description: String = ""
+    val description: String = "",
+    val category: String = "" // Added category for filtering
 )
 
 // ==================== SAMPLE DATA ====================
@@ -72,7 +73,7 @@ private val sportCategories = listOf(
     SportCategory("Bowling", "🎳", ChineseSilver.copy(alpha = 0.9f))
 )
 
-private val myCommunities = listOf(
+private val initialMyCommunities = listOf(
     Community(
         id = "1",
         name = "Badminton Jakarta",
@@ -81,7 +82,8 @@ private val myCommunities = listOf(
         memberCount = "3.2k",
         newPosts = 15,
         isJoined = true,
-        description = "Komunitas badminton terbesar di Jakarta!"
+        description = "Komunitas badminton terbesar di Jakarta!",
+        category = "Badminton"
     ),
     Community(
         id = "2",
@@ -91,7 +93,8 @@ private val myCommunities = listOf(
         memberCount = "2.1k",
         newPosts = 8,
         isJoined = true,
-        description = "Main futsal bareng di Bandung"
+        description = "Main futsal bareng di Bandung",
+        category = "Futsal"
     ),
     Community(
         id = "3",
@@ -101,18 +104,20 @@ private val myCommunities = listOf(
         memberCount = "1.5k",
         newPosts = 5,
         isJoined = true,
-        description = "Hoops lovers Surabaya!"
+        description = "Hoops lovers Surabaya!",
+        category = "Basket"
     )
 )
 
-private val recommendedCommunities = listOf(
+private val initialRecommendedCommunities = listOf(
     Community(
         id = "4",
         name = "Badminton Jogja Community",
         emoji = "🏸",
         bannerColor = PeachGlow,
         memberCount = "1.8k",
-        description = "Komunitas bulutangkis Yogyakarta"
+        description = "Komunitas bulutangkis Yogyakarta",
+        category = "Badminton"
     ),
     Community(
         id = "5",
@@ -120,7 +125,8 @@ private val recommendedCommunities = listOf(
         emoji = "🏃",
         bannerColor = MintBreeze,
         memberCount = "980",
-        description = "Morning run around beautiful Bali"
+        description = "Morning run around beautiful Bali",
+        category = "Lari"
     ),
     Community(
         id = "6",
@@ -128,7 +134,8 @@ private val recommendedCommunities = listOf(
         emoji = "💪",
         bannerColor = SkyMist,
         memberCount = "2.5k",
-        description = "Fitness enthusiasts unite!"
+        description = "Fitness enthusiasts unite!",
+        category = "Gym"
     ),
     Community(
         id = "7",
@@ -136,7 +143,8 @@ private val recommendedCommunities = listOf(
         emoji = "🏐",
         bannerColor = RoseDust,
         memberCount = "750",
-        description = "Spiker & setter Semarang"
+        description = "Spiker & setter Semarang",
+        category = "Volleyball"
     ),
     Community(
         id = "8",
@@ -144,7 +152,26 @@ private val recommendedCommunities = listOf(
         emoji = "🚴",
         bannerColor = SoftLavender,
         memberCount = "1.2k",
-        description = "Explore Malang on wheels"
+        description = "Explore Malang on wheels",
+        category = "Sepeda"
+    ),
+    Community(
+        id = "9",
+        name = "Tennis Club Medan",
+        emoji = "🎾",
+        bannerColor = SkyMist.copy(alpha = 0.9f),
+        memberCount = "650",
+        description = "Tennis enthusiasts in Medan",
+        category = "Tennis"
+    ),
+    Community(
+        id = "10",
+        name = "Boxing Academy Surabaya",
+        emoji = "🥊",
+        bannerColor = RoseDust.copy(alpha = 0.9f),
+        memberCount = "480",
+        description = "Learn boxing techniques",
+        category = "Boxing"
     )
 )
 
@@ -167,6 +194,41 @@ fun CommunityScreen(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
+    
+    // State for dynamic community lists
+    var myCommunities by remember { mutableStateOf(initialMyCommunities) }
+    var recommendedCommunities by remember { mutableStateOf(initialRecommendedCommunities) }
+    
+    // Filter communities based on search and category
+    val filteredMyCommunities = remember(searchQuery, selectedCategory, myCommunities) {
+        myCommunities.filter { community ->
+            val matchesSearch = searchQuery.isEmpty() ||
+                    community.name.contains(searchQuery, ignoreCase = true) ||
+                    community.description.contains(searchQuery, ignoreCase = true) ||
+                    community.category.contains(searchQuery, ignoreCase = true)
+            val matchesCategory = selectedCategory == null || community.category == selectedCategory
+            matchesSearch && matchesCategory
+        }
+    }
+    
+    val filteredRecommendedCommunities = remember(searchQuery, selectedCategory, recommendedCommunities) {
+        recommendedCommunities.filter { community ->
+            val matchesSearch = searchQuery.isEmpty() ||
+                    community.name.contains(searchQuery, ignoreCase = true) ||
+                    community.description.contains(searchQuery, ignoreCase = true) ||
+                    community.category.contains(searchQuery, ignoreCase = true)
+            val matchesCategory = selectedCategory == null || community.category == selectedCategory
+            matchesSearch && matchesCategory
+        }
+    }
+    
+    // Get most popular community (highest member count)
+    val mostPopularCommunity = remember(myCommunities, recommendedCommunities) {
+        (myCommunities + recommendedCommunities)
+            .maxByOrNull { 
+                it.memberCount.replace("k", "000").replace(".", "").toIntOrNull() ?: 0 
+            }
+    }
 
     Box(
         modifier = Modifier
@@ -188,9 +250,11 @@ fun CommunityScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 100.dp)
         ) {
-            // SECTION 1: Header
+            // SECTION 1: Header with Add button
             item {
-                CommunityHeader()
+                CommunityHeader(
+                    onAddClick = { navController.navigate(Screen.CreateCommunity.route) }
+                )
             }
 
             // SECTION 2: Search Bar
@@ -217,7 +281,9 @@ fun CommunityScreen(
                 CategoryCarousel(
                     categories = sportCategories,
                     selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
+                    onCategorySelected = { category ->
+                        selectedCategory = if (selectedCategory == category) null else category
+                    }
                 )
             }
 
@@ -225,8 +291,8 @@ fun CommunityScreen(
             item {
                 Spacer(modifier = Modifier.height(28.dp))
                 MyCommunities(
-                    communities = myCommunities,
-                    onViewAllClick = { /* Navigate */ },
+                    communities = filteredMyCommunities,
+                    onViewAllClick = { navController.navigate(Screen.AllMyCommunities.route) },
                     onCommunityClick = { community ->
                         navController.navigate(
                             Screen.CommunityFeed.createRoute(
@@ -250,10 +316,15 @@ fun CommunityScreen(
             }
 
             // Recommended Communities List
-            items(recommendedCommunities) { community ->
+            items(filteredRecommendedCommunities, key = { it.id }) { community ->
                 RecommendedCommunityCard(
                     community = community,
-                    onJoinClick = { /* Handle join */ },
+                    onJoinClick = {
+                        // Move community from recommended to my communities
+                        val joinedCommunity = community.copy(isJoined = true, newPosts = 0)
+                        myCommunities = myCommunities + joinedCommunity
+                        recommendedCommunities = recommendedCommunities.filter { it.id != community.id }
+                    },
                     onClick = {
                         navController.navigate(
                             Screen.CommunityFeed.createRoute(
@@ -267,13 +338,23 @@ fun CommunityScreen(
                 )
             }
 
-            // SECTION 7: Community Detail Preview Card
+            // SECTION 7: Most Popular Community Card
             item {
                 Spacer(modifier = Modifier.height(28.dp))
-                CommunityDetailPreviewCard(
-                    community = myCommunities.first(),
-                    onSwipeClick = { /* Handle swipe */ }
-                )
+                mostPopularCommunity?.let { popular ->
+                    MostPopularCommunityCard(
+                        community = popular,
+                        onClick = {
+                            navController.navigate(
+                                Screen.CommunityFeed.createRoute(
+                                    communityId = popular.id,
+                                    name = popular.name,
+                                    emoji = popular.emoji
+                                )
+                            )
+                        }
+                    )
+                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
@@ -366,7 +447,9 @@ private fun CommunityBackgroundBlobs() {
 // ==================== SECTION 1: HEADER ====================
 
 @Composable
-private fun CommunityHeader() {
+private fun CommunityHeader(
+    onAddClick: () -> Unit = {}
+) {
     val infiniteTransition = rememberInfiniteTransition(label = "header_anim")
 
     val floatAnim by infiniteTransition.animateFloat(
@@ -453,7 +536,7 @@ private fun CommunityHeader() {
                 color = Lead
             )
 
-            // Groups Icon
+            // Add Community Button
             Surface(
                 modifier = Modifier
                     .size(44.dp)
@@ -461,16 +544,17 @@ private fun CommunityHeader() {
                         elevation = 10.dp,
                         shape = CircleShape,
                         ambientColor = GenZTeal.copy(alpha = 0.2f)
-                    ),
+                    )
+                    .clickable(onClick = onAddClick),
                 shape = CircleShape,
-                color = GenZTeal.copy(alpha = 0.15f)
+                color = GenZTeal
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Rounded.Groups,
-                        contentDescription = "Groups",
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = "Add Community",
                         modifier = Modifier.size(24.dp),
-                        tint = GenZTeal
+                        tint = Color.White
                     )
                 }
             }
@@ -816,19 +900,8 @@ private fun CategoryBubble(
         label = "cat_border"
     )
 
-    val elevation by animateDpAsState(
-        targetValue = if (isSelected) 10.dp else 6.dp,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "cat_elevation"
-    )
-
     Surface(
         modifier = Modifier
-            .shadow(
-                elevation = elevation,
-                shape = RoundedCornerShape(20.dp),
-                ambientColor = if (isSelected) GenZTeal.copy(alpha = 0.3f) else NeumorphDark.copy(alpha = 0.1f)
-            )
             .border(
                 width = if (isSelected) 2.dp else 0.dp,
                 color = borderColor,
@@ -844,6 +917,7 @@ private fun CategoryBubble(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // Emoji without background - clean design
             Text(
                 text = category.emoji,
                 fontSize = 28.sp
@@ -895,15 +969,32 @@ private fun MyCommunities(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(communities) { community ->
-                MyCommunityCard(
-                    community = community,
-                    onClick = { onCommunityClick(community) }
+        if (communities.isEmpty()) {
+            // Empty state
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .height(100.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No communities found. Join one below!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = WarmHaze
                 )
+            }
+        } else {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(communities, key = { it.id }) { community ->
+                    MyCommunityCard(
+                        community = community,
+                        onClick = { onCommunityClick(community) }
+                    )
+                }
             }
         }
     }
@@ -928,7 +1019,7 @@ private fun MyCommunityCard(
         color = NeumorphLight.copy(alpha = 0.98f)
     ) {
         Column {
-            // Banner
+            // Banner - clean emoji without extra background
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -943,6 +1034,7 @@ private fun MyCommunityCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
+                // Clean emoji without shadow background
                 Text(
                     text = community.emoji,
                     fontSize = 40.sp
@@ -1027,8 +1119,6 @@ private fun RecommendedCommunityCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isJoined by remember { mutableStateOf(community.isJoined) }
-
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -1048,7 +1138,7 @@ private fun RecommendedCommunityCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Thumbnail
+            // Thumbnail - clean emoji without extra shadow
             Box(
                 modifier = Modifier
                     .size(60.dp)
@@ -1120,43 +1210,40 @@ private fun RecommendedCommunityCard(
 
             // Join Button
             Button(
-                onClick = {
-                    isJoined = !isJoined
-                    onJoinClick()
-                },
+                onClick = onJoinClick,
                 modifier = Modifier
                     .height(36.dp)
                     .shadow(
-                        elevation = if (isJoined) 0.dp else 6.dp,
+                        elevation = 6.dp,
                         shape = RoundedCornerShape(18.dp),
                         ambientColor = GenZTeal.copy(alpha = 0.3f)
                     ),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isJoined) ChineseSilver.copy(alpha = 0.5f) else GenZTeal
+                    containerColor = GenZTeal
                 ),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 Text(
-                    text = if (isJoined) "Joined" else "+ Join",
+                    text = "+ Join",
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = if (isJoined) WarmHaze else Color.White
+                    color = Color.White
                 )
             }
         }
     }
 }
 
-// ==================== SECTION 7: COMMUNITY DETAIL PREVIEW ====================
+// ==================== SECTION 7: MOST POPULAR COMMUNITY ====================
 
 @Composable
-private fun CommunityDetailPreviewCard(
+private fun MostPopularCommunityCard(
     community: Community,
-    onSwipeClick: () -> Unit
+    onClick: () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "preview_anim")
+    val infiniteTransition = rememberInfiniteTransition(label = "popular_anim")
 
     val float1 by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -1168,109 +1255,176 @@ private fun CommunityDetailPreviewCard(
         label = "float1"
     )
 
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .shadow(
-                elevation = 18.dp,
-                shape = RoundedCornerShape(28.dp),
-                ambientColor = GenZTeal.copy(alpha = 0.2f),
-                spotColor = GenZTeal.copy(alpha = 0.2f)
-            ),
-        shape = RoundedCornerShape(28.dp),
-        color = NeumorphLight.copy(alpha = 0.98f)
+    Column(
+        modifier = Modifier.padding(horizontal = 24.dp)
     ) {
-        Column {
-            // Hero Image/Illustration Area
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                community.bannerColor,
-                                GenZTeal.copy(alpha = 0.7f),
-                                GenZCyan.copy(alpha = 0.8f)
-                            )
-                        )
-                    )
+        // Section Title
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Floating decorative elements
                 Text(
-                    text = community.emoji,
-                    fontSize = 64.sp,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .offset(y = float1.dp)
+                    text = "🔥",
+                    fontSize = 24.sp
                 )
-
-                // Floating bubbles
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .align(Alignment.TopEnd)
-                        .offset(x = (-20).dp, y = (20 + float1).dp)
-                        .background(
-                            color = Color.White.copy(alpha = 0.2f),
-                            shape = CircleShape
-                        )
-                        .blur(6.dp)
+                Text(
+                    text = "Most Popular",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Lead
                 )
+            }
+        }
 
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .align(Alignment.BottomStart)
-                        .offset(x = 30.dp, y = (-20 - float1).dp)
-                        .background(
-                            color = Color.White.copy(alpha = 0.15f),
-                            shape = CircleShape
-                        )
-                        .blur(5.dp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(
+                    elevation = 18.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    ambientColor = GenZTeal.copy(alpha = 0.2f),
+                    spotColor = GenZTeal.copy(alpha = 0.2f)
                 )
-
-                // Gradient overlay at bottom
+                .clickable(onClick = onClick),
+            shape = RoundedCornerShape(28.dp),
+            color = NeumorphLight.copy(alpha = 0.98f)
+        ) {
+            Column {
+                // Hero Banner Area
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(60.dp)
-                        .align(Alignment.BottomCenter)
+                        .height(140.dp)
                         .background(
-                            brush = Brush.verticalGradient(
+                            brush = Brush.linearGradient(
                                 colors = listOf(
-                                    Color.Transparent,
-                                    NeumorphLight.copy(alpha = 0.9f)
+                                    community.bannerColor,
+                                    GenZTeal.copy(alpha = 0.7f),
+                                    GenZCyan.copy(alpha = 0.8f)
                                 )
                             )
                         )
-                )
-            }
-
-            // Content
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                // Title and badges row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Floating emoji - clean without shadow
                     Text(
-                        text = community.name,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Lead
+                        text = community.emoji,
+                        fontSize = 56.sp,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = float1.dp)
                     )
 
-                    // Joined badge
-                    if (community.isJoined) {
+                    // Popular badge
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(12.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White.copy(alpha = 0.9f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "🏆",
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = "#1 Popular",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = GenZTeal
+                            )
+                        }
+                    }
+
+                    // Gradient overlay at bottom
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        NeumorphLight.copy(alpha = 0.9f)
+                                    )
+                                )
+                            )
+                    )
+                }
+
+                // Content
+                Column(
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    // Title row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = community.name,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = Lead,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // Joined badge if applicable
+                        if (community.isJoined) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = GenZTeal.copy(alpha = 0.15f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.CheckCircle,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = GenZTeal
+                                    )
+                                    Text(
+                                        text = "Joined",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = GenZTeal
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Stats row
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Member count badge
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = GenZTeal.copy(alpha = 0.15f)
+                            shape = RoundedCornerShape(10.dp),
+                            color = GenZBlue.copy(alpha = 0.15f)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -1278,115 +1432,93 @@ private fun CommunityDetailPreviewCard(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.CheckCircle,
+                                    imageVector = Icons.Rounded.People,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = GenZTeal
+                                    tint = GenZBlue
                                 )
                                 Text(
-                                    text = "You Joined",
+                                    text = "${community.memberCount} members",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold
                                     ),
-                                    color = GenZTeal
+                                    color = GenZBlue
                                 )
                             }
                         }
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Member avatars preview
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy((-10).dp)
-                ) {
-                    repeat(4) { index ->
-                        Surface(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .border(2.dp, NeumorphLight, CircleShape),
-                            shape = CircleShape,
-                            color = listOf(PeachGlow, MintBreeze, SkyMist, RoseDust)[index]
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
+                        // Category badge
+                        if (community.category.isNotEmpty()) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = GenZLavender.copy(alpha = 0.3f)
+                            ) {
                                 Text(
-                                    text = listOf("😊", "🏃", "💪", "🎯")[index],
-                                    fontSize = 14.sp
+                                    text = community.category,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = Lead
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
+                    // Description
                     Text(
-                        text = "+${community.memberCount} members",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = WarmHaze
+                        text = community.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = WarmHaze,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 22.sp
                     )
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // Description
-                Text(
-                    text = "${community.description} Connect with fellow ${community.name.split(" ").first().lowercase()} enthusiasts, share your experiences, and find new playing partners!",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WarmHaze,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 22.sp
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // CTA Button
-                Button(
-                    onClick = onSwipeClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp)
-                        .shadow(
-                            elevation = 12.dp,
-                            shape = RoundedCornerShape(27.dp),
-                            ambientColor = GenZTeal.copy(alpha = 0.35f),
-                            spotColor = GenZTeal.copy(alpha = 0.35f)
-                        ),
-                    shape = RoundedCornerShape(27.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Box(
+                    // CTA Button
+                    Button(
+                        onClick = onClick,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(GenZGradientStart, GenZGradientEnd)
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(25.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        ),
+                        contentPadding = PaddingValues(0.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Text(
-                                text = "Swipe & Let's Go",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(GenZGradientStart, GenZGradientEnd)
+                                    )
                                 ),
-                                color = Color.White
-                            )
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                                tint = Color.White
-                            )
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "View Community",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = Color.White
+                                )
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
                 }
