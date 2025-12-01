@@ -199,7 +199,8 @@ fun DiscoverCasualScreen(navController: NavHostController) {
                 searchQuery = searchQuery,
                 onSearchChange = { searchQuery = it },
                 selectedCategory = selectedCategory,
-                onCategoryClick = { showCategoryPicker = true }
+                onCategoryClick = { showCategoryPicker = true },
+                onBackClick = { navController.popBackStack() }
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -461,7 +462,8 @@ private fun CasualHeader(
     searchQuery: String,
     onSearchChange: (String) -> Unit,
     selectedCategory: String,
-    onCategoryClick: () -> Unit
+    onCategoryClick: () -> Unit,
+    onBackClick: () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "header_float")
 
@@ -489,6 +491,29 @@ private fun CasualHeader(
             )
             .padding(top = 48.dp)
     ) {
+        // Back Button - Top Left
+        Surface(
+            onClick = onBackClick,
+            modifier = Modifier
+                .padding(start = 16.dp, top = 8.dp)
+                .size(44.dp)
+                .shadow(8.dp, CircleShape),
+            shape = CircleShape,
+            color = GlassWhite.copy(alpha = 0.95f)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ArrowBack,
+                    contentDescription = "Back",
+                    modifier = Modifier.size(22.dp),
+                    tint = Lead
+                )
+            }
+        }
+
         // Floating decorative element - clean without white bg
         Text(
             text = "✨",
@@ -502,6 +527,7 @@ private fun CasualHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 16.dp)
+                .padding(top = 48.dp)
         ) {
             // Title with emoji
             Text(
