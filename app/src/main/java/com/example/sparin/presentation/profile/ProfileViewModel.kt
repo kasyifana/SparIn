@@ -25,8 +25,60 @@ class ProfileViewModel(
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
+    // Interactive state management
+    private val _selectedStatCard = MutableStateFlow<StatCardType?>(null)
+    val selectedStatCard: StateFlow<StatCardType?> = _selectedStatCard.asStateFlow()
+
+    private val _isComparisonMode = MutableStateFlow(false)
+    val isComparisonMode: StateFlow<Boolean> = _isComparisonMode.asStateFlow()
+
+    private val _showBottomSheet = MutableStateFlow(false)
+    val showBottomSheet: StateFlow<Boolean> = _showBottomSheet.asStateFlow()
+
+    private val _showPopup = MutableStateFlow<PopupType?>(null)
+    val showPopup: StateFlow<PopupType?> = _showPopup.asStateFlow()
+
+    private val _animatedStatIncrease = MutableStateFlow<StatCardType?>(null)
+    val animatedStatIncrease: StateFlow<StatCardType?> = _animatedStatIncrease.asStateFlow()
+
     init {
         loadProfileData()
+    }
+
+    // Interactive state functions
+    fun selectStatCard(type: StatCardType) {
+        _selectedStatCard.value = type
+        _showBottomSheet.value = true
+    }
+
+    fun deselectStatCard() {
+        _selectedStatCard.value = null
+        _showBottomSheet.value = false
+    }
+
+    fun toggleComparisonMode() {
+        _isComparisonMode.value = !_isComparisonMode.value
+    }
+
+    fun exitComparisonMode() {
+        _isComparisonMode.value = false
+    }
+
+    fun showPopup(type: PopupType) {
+        _showPopup.value = type
+    }
+
+    fun hidePopup() {
+        _showPopup.value = null
+    }
+
+    fun triggerStatIncrease(type: StatCardType) {
+        _animatedStatIncrease.value = type
+        // Reset after animation completes (will be handled in UI)
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(2000)
+            _animatedStatIncrease.value = null
+        }
     }
 
     private fun loadProfileData() {
@@ -177,4 +229,35 @@ data class AIInsights(
     val performanceTrend: String,
     val recommendations: List<String>,
     val suggestedRooms: List<String>
+)
+
+// ==================== Interactive State Types ====================
+
+enum class StatCardType {
+    WINRATE,
+    TOTAL_MATCHES,
+    TOTAL_WINS,
+    RANK,
+    ELO;
+    
+    val displayName: String
+        get() = when (this) {
+            WINRATE -> "Winrate"
+            TOTAL_MATCHES -> "Total Matches"
+            TOTAL_WINS -> "Total Wins"
+            RANK -> "Rank"
+            ELO -> "ELO Rating"
+        }
+}
+
+enum class PopupType {
+    RANK_UPGRADE,
+    MICRO_INSIGHT,
+    TOOLTIP
+}
+
+data class ComparisonData(
+    val currentMonth: Double,
+    val lastMonth: Double,
+    val sportCategories: Map<String, Double>
 )

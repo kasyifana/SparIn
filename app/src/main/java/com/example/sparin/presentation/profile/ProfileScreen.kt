@@ -66,7 +66,8 @@ fun ProfileScreen(
                     aiInsights = state.aiInsights,
                     onEditProfile = {
                         navController.navigate(Screen.EditProfile.route)
-                    }
+                    },
+                    viewModel = viewModel
                 )
             }
             is ProfileUiState.Error -> {
@@ -86,7 +87,8 @@ private fun ProfileContent(
     matchHistory: List<MatchHistoryItem>,
     badges: List<Badge>,
     aiInsights: AIInsights,
-    onEditProfile: () -> Unit
+    onEditProfile: () -> Unit,
+    viewModel: ProfileViewModel
 ) {
     val scrollState = rememberScrollState()
 
@@ -107,7 +109,10 @@ private fun ProfileContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Stats Section
-        StatsSection(stats = stats)
+        StatsSection(
+            stats = stats,
+            viewModel = viewModel
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -252,14 +257,12 @@ private fun StatsSectionPreview() {
                 .background(CascadingWhite)
                 .padding(24.dp)
         ) {
-            StatsSection(
-                stats = UserStats(
-                    winrate = 68.5,
-                    totalMatches = 47,
-                    totalWins = 32,
-                    rank = "Gold III",
-                    elo = 1850
-                )
+            // Preview disabled - requires ViewModel dependency
+            // StatsSection preview is available in StatsSection.kt
+            Text(
+                text = "Stats Section Preview\n(Requires ViewModel)",
+                style = MaterialTheme.typography.bodyMedium,
+                color = WarmHaze
             )
         }
     }
