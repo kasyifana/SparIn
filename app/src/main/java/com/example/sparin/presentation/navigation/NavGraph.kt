@@ -6,7 +6,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import androidx.compose.ui.Modifier
 import com.example.sparin.presentation.auth.SignInScreen
 import com.example.sparin.presentation.onboarding.OnboardingScreen
 import com.example.sparin.presentation.personalization.PersonalizationScreen
@@ -18,9 +17,8 @@ import com.example.sparin.presentation.discover.DiscoverCompetitiveScreen
 import com.example.sparin.presentation.discover.RoomMode
 import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
-import com.example.sparin.presentation.community.feed.CommunityFeedScreen
-import com.example.sparin.presentation.community.CreateCommunityScreen
 import com.example.sparin.presentation.profile.ProfileScreen
+import com.example.sparin.presentation.profile.EditProfileScreen
 
 /**
  * Navigation Graph untuk aplikasi SparIN
@@ -28,13 +26,11 @@ import com.example.sparin.presentation.profile.ProfileScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String,
-    modifier: Modifier = Modifier
+    startDestination: String
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
+        startDestination = startDestination
     ) {
         // Onboarding & Auth Flow
         composable(Screen.Onboarding.route) {
@@ -81,11 +77,6 @@ fun NavGraph(
             CommunityScreen(navController = navController)
         }
         
-        // Create Community Screen
-        composable("create_community") {
-            CreateCommunityScreen(navController = navController)
-        }
-        
         composable(Screen.Discover.route) {
             ModeSelectorScreen(
                 navController = navController,
@@ -114,6 +105,10 @@ fun NavGraph(
             ProfileScreen(navController = navController)
         }
         
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(navController = navController)
+        }
+        
         // Detail Screens with arguments
         
         // Chat Room Detail
@@ -122,41 +117,31 @@ fun NavGraph(
             arguments = listOf(
                 navArgument("roomId") {
                     type = NavType.StringType
+                },
+                navArgument("mode") {
+                    type = NavType.StringType
+                    defaultValue = "casual"
+                },
+                navArgument("roomTitle") {
+                    type = NavType.StringType
+                    defaultValue = "Chat Room"
+                },
+                navArgument("sport") {
+                    type = NavType.StringType
+                    defaultValue = "Sport"
                 }
             )
         ) { backStackEntry ->
             val roomId = backStackEntry.arguments?.getString("roomId")
+            val mode = backStackEntry.arguments?.getString("mode") ?: "casual"
+            val roomTitle = backStackEntry.arguments?.getString("roomTitle") ?: "Chat Room"
+            val sport = backStackEntry.arguments?.getString("sport") ?: "Sport"
             ChatRoomScreen(
                 navController = navController,
-                roomId = roomId
-            )
-        }
-        
-        // Community Feed (Posts & Comments)
-        // Community Feed (Posts & Comments)
-        composable(
-            route = Screen.CommunityFeed.route,
-            arguments = listOf(
-                navArgument("communityId") { type = NavType.StringType },
-                navArgument("communityName") { 
-                    type = NavType.StringType
-                    defaultValue = "Community"
-                },
-                navArgument("communityEmoji") { 
-                    type = NavType.StringType
-                    defaultValue = "🏸"
-                }
-            )
-        ) { backStackEntry ->
-            val communityId = backStackEntry.arguments?.getString("communityId") ?: ""
-            val communityName = backStackEntry.arguments?.getString("communityName") ?: "Community"
-            val communityEmoji = backStackEntry.arguments?.getString("communityEmoji") ?: "🏸"
-            
-            CommunityFeedScreen(
-                navController = navController,
-                communityId = communityId,
-                communityName = communityName,
-                communityEmoji = communityEmoji
+                roomId = roomId,
+                mode = mode,
+                roomTitle = roomTitle,
+                sport = sport
             )
         }
         
