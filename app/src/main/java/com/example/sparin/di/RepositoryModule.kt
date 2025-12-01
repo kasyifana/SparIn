@@ -53,5 +53,6 @@ val repositoryModule = module {
     factory { DiscoverViewModel(get()) } // RoomRepo
     factory { CommunityViewModel(get(), get()) } // CommunityRepo + FirestoreService
     factory { CommunityFeedViewModel(get(), get()) } // FeedRepo + AuthRepo
-    // ProfileViewModel uses mock data for now - no DI needed
+    factory { CommunityFeedViewModel(get(), get()) } // FeedRepo + AuthRepo
+    factory { ProfileViewModel(get(), get()) } // UserRepo + RoomRepo
 }

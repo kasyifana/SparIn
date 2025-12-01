@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sparin.presentation.profile.UserStats
+import com.example.sparin.data.model.UserStats
 import com.example.sparin.ui.theme.*
 
 /**

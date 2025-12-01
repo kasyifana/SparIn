@@ -2,6 +2,12 @@ package com.example.sparin.presentation.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sparin.data.model.Room
+import com.example.sparin.data.model.User
+import com.example.sparin.data.model.UserStats
+import com.example.sparin.data.repository.RoomRepository
+import com.example.sparin.data.repository.UserRepository
+import com.example.sparin.domain.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +17,10 @@ import kotlinx.coroutines.launch
  * ProfileViewModel - Manages profile screen state
  * Following MVVM architecture pattern
  */
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(
+    private val userRepository: UserRepository,
+    private val roomRepository: RoomRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -24,93 +33,60 @@ class ProfileViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
 
-            // Simulate data loading - Replace with actual repository calls
             try {
-                // Mock data for demonstration
+                // 1. Get User Profile
+                val userResult = userRepository.getCurrentUserProfile()
+                if (userResult is Resource.Error) {
+                    _uiState.value = ProfileUiState.Error(userResult.message ?: "Failed to load profile")
+                    return@launch
+                }
+                val user = (userResult as Resource.Success).data!!
+
+                // 2. Get Joined Rooms (Match History)
+                val roomsResult = roomRepository.getRoomsByUser(user.uid)
+                val rooms = if (roomsResult is Resource.Success) roomsResult.data ?: emptyList() else emptyList()
+
+                // 3. Map Data
                 val profile = UserProfile(
-                    name = "Avit Raharjo",
-                    bio = "Passionate badminton player | Weekend warrior",
-                    profileImageUrl = null,
-                    city = "Jakarta",
-                    age = 24,
-                    gender = "Male"
+                    name = user.name,
+                    bio = user.bio.ifEmpty { "No bio yet." },
+                    profileImageUrl = user.profilePhoto.ifEmpty { null },
+                    city = user.city,
+                    age = user.age ?: 0,
+                    gender = user.gender
                 )
 
-                val stats = UserStats(
-                    winrate = 68.5,
-                    totalMatches = 47,
-                    totalWins = 32,
-                    rank = "Gold III",
-                    elo = 1850
-                )
+                val stats = user.stats
 
-                val matchHistory = listOf(
+                val matchHistory = rooms.map { room ->
                     MatchHistoryItem(
-                        id = "1",
-                        sport = "🏸",
-                        sportName = "Badminton",
-                        opponent = "vs. Reza Pratama",
-                        date = "Today",
-                        score = "21-18, 21-19",
-                        result = MatchResult.WIN
-                    ),
-                    MatchHistoryItem(
-                        id = "2",
-                        sport = "⚽",
-                        sportName = "Futsal",
-                        opponent = "vs. Team Alpha",
-                        date = "Yesterday",
-                        score = "5-3",
-                        result = MatchResult.WIN
-                    ),
-                    MatchHistoryItem(
-                        id = "3",
-                        sport = "🏸",
-                        sportName = "Badminton",
-                        opponent = "vs. Dina Marlina",
-                        date = "2 days ago",
-                        score = "19-21, 20-22",
-                        result = MatchResult.LOSS
-                    ),
-                    MatchHistoryItem(
-                        id = "4",
-                        sport = "🏀",
-                        sportName = "Basketball",
-                        opponent = "vs. Aldo & Friends",
-                        date = "3 days ago",
-                        score = "42-38",
-                        result = MatchResult.WIN
-                    ),
-                    MatchHistoryItem(
-                        id = "5",
-                        sport = "🎾",
-                        sportName = "Tennis",
-                        opponent = "vs. Maya Sari",
-                        date = "5 days ago",
-                        score = "6-4, 5-7, 6-3",
-                        result = MatchResult.WIN
+                        id = room.id,
+                        sport = getSportEmoji(room.category),
+                        sportName = room.category,
+                        opponent = "vs. ${room.maxPlayers - 1} others", // Simplified for now
+                        date = formatDate(room.dateTime),
+                        score = "Played", // Placeholder as we don't have score data yet
+                        result = MatchResult.WIN // Placeholder
                     )
-                )
+                }
 
+                // Mock badges for now (can be dynamic later)
                 val badges = listOf(
                     Badge("🏆", "Champion", "Won 5 tournaments"),
                     Badge("🔥", "Hot Streak", "10 wins in a row"),
-                    Badge("⭐", "Rising Star", "Fastest climber"),
-                    Badge("💪", "Consistent", "30 days active"),
-                    Badge("🎯", "Sharpshooter", "90% accuracy")
+                    Badge("⭐", "Rising Star", "Fastest climber")
                 )
 
+                // Mock AI insights for now
                 val aiInsights = AIInsights(
                     performanceTrend = "Your performance improved 15% this week! 🚀",
                     recommendations = listOf(
                         "Try joining advanced badminton rooms to challenge yourself",
-                        "You're performing best in morning sessions (7-9 AM)",
-                        "Consider practicing your backhand technique"
+                        "You're performing best in morning sessions (7-9 AM)"
                     ),
                     suggestedRooms = listOf(
                         "Pro Badminton League - Senayan",
-                        "Elite Futsal Championship",
-                        "Weekend Tennis Masters"
+                        "Elite Futsal Championship"
                     )
                 )
 
@@ -131,6 +107,24 @@ class ProfileViewModel : ViewModel() {
 
     fun retry() {
         loadProfileData()
+    }
+
+    private fun getSportEmoji(category: String): String {
+        return when (category.lowercase()) {
+            "badminton" -> "🏸"
+            "futsal" -> "⚽"
+            "basketball" -> "🏀"
+            "tennis" -> "🎾"
+            "running" -> "🏃"
+            "cycling" -> "🚴"
+            "gym" -> "💪"
+            else -> "🏅"
+        }
+    }
+
+    private fun formatDate(timestamp: Long): String {
+        val sdf = java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault())
+        return sdf.format(java.util.Date(timestamp))
     }
 }
 
@@ -157,14 +151,6 @@ data class UserProfile(
     val city: String,
     val age: Int,
     val gender: String
-)
-
-data class UserStats(
-    val winrate: Double,
-    val totalMatches: Int,
-    val totalWins: Int,
-    val rank: String,
-    val elo: Int
 )
 
 data class MatchHistoryItem(

@@ -1,5 +1,8 @@
 package com.example.sparin.presentation.discover
 
+import java.text.SimpleDateFormat
+import java.util.*
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -29,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import com.example.sparin.ui.theme.*
 import kotlin.math.cos
@@ -130,9 +134,18 @@ val sampleCasualRooms = listOf(
 )
 
 @Composable
-fun DiscoverCasualScreen(navController: NavHostController) {
+fun DiscoverCasualScreen(
+    navController: NavHostController,
+    viewModel: DiscoverViewModel = koinViewModel()
+) {
     var selectedCategory by remember { mutableStateOf("All") }
     val scrollState = rememberScrollState()
+    val roomsState by viewModel.casualRoomsState.collectAsState()
+
+    // Refresh on entry
+    LaunchedEffect(Unit) {
+        viewModel.loadCasualRooms()
+    }
 
     Box(
         modifier = Modifier
@@ -157,20 +170,78 @@ fun DiscoverCasualScreen(navController: NavHostController) {
                 .verticalScroll(scrollState)
         ) {
             // Header
-            CasualHeader()
+            CasualHeader(onBack = { navController.navigateUp() })
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Sport Category Tabs
             CasualSportTabs(
                 selectedCategory = selectedCategory,
-                onCategorySelected = { selectedCategory = it }
+                onCategorySelected = { 
+                    selectedCategory = it
+                    viewModel.filterByCategory(it)
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // Match Cards
-            CasualMatchCards(selectedCategory = selectedCategory)
+            when (val state = roomsState) {
+                is RoomsState.Loading -> {
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MintBreeze)
+                    }
+                }
+                is RoomsState.Error -> {
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                        Text("Error: ${state.message}", color = Color.Red)
+                    }
+                }
+                is RoomsState.Success -> {
+                    val rooms = state.rooms
+                    if (rooms.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                            Text("No casual rooms found. Create one!", color = WarmHaze)
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = "${rooms.size} matches available",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 17.sp
+                                ),
+                                color = Lead
+                            )
+
+                            rooms.forEach { room ->
+                                // Map Room to UI Item
+                                val uiItem = CasualRoomItem(
+                                    id = room.id,
+                                    title = room.name,
+                                    sport = room.category,
+                                    emoji = getEmojiForCategory(room.category),
+                                    location = room.locationName,
+                                    schedule = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).format(Date(room.dateTime)),
+                                    currentPlayers = room.currentPlayers,
+                                    maxPlayers = room.maxPlayers,
+                                    tags = listOf("Casual", "Fun"), // Default tags for now
+                                    accentColor = getColorForCategory(room.category)
+                                )
+                                CasualRoomCard(
+                                    room = uiItem,
+                                    onClick = { navController.navigate("room_detail/${room.id}") }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(100.dp))
         }
@@ -180,8 +251,266 @@ fun DiscoverCasualScreen(navController: NavHostController) {
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 24.dp, bottom = 100.dp),
-            onClick = { /* Navigate to create room */ }
+            onClick = { navController.navigate("create_room/Casual") }
         )
+    }
+}
+
+// Helper functions moved to DiscoverUtils.kt
+
+// ... (Rest of the file remains mostly the same, but CasualMatchCards function is removed/inlined above)
+
+// ==================== MATCH CARDS (Updated to accept onClick) ====================
+
+@Composable
+private fun CasualRoomCard(room: CasualRoomItem, onClick: () -> Unit) {
+    val infiniteTransition = rememberInfiniteTransition(label = "room_card_${room.id}")
+
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 0.4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glow"
+    )
+
+    Box(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Glow effect
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            room.accentColor.copy(alpha = glowAlpha),
+                            room.accentColor.copy(alpha = 0f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(28.dp)
+                )
+                .blur(16.dp)
+        )
+
+        // Main card
+        Surface(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(
+                    elevation = 12.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    ambientColor = room.accentColor.copy(alpha = 0.2f),
+                    spotColor = room.accentColor.copy(alpha = 0.2f)
+                ),
+            shape = RoundedCornerShape(28.dp),
+            color = Color.Transparent
+        ) {
+            // ... (Content same as before)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                room.accentColor.copy(alpha = 0.15f),
+                                NeumorphLight.copy(alpha = 0.95f),
+                                room.accentColor.copy(alpha = 0.1f)
+                            )
+                        )
+                    )
+                    .border(
+                        width = 1.5.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                room.accentColor.copy(alpha = 0.4f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+                    )
+                    .padding(20.dp)
+            ) {
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Sport emoji
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .shadow(
+                                    elevation = 8.dp,
+                                    shape = CircleShape,
+                                    ambientColor = room.accentColor.copy(alpha = 0.3f)
+                                )
+                                .background(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            room.accentColor.copy(alpha = 0.3f),
+                                            room.accentColor.copy(alpha = 0.1f)
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                )
+                            ,
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = room.emoji, fontSize = 28.sp)
+                        }
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = room.title,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp
+                                ),
+                                color = Lead,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.LocationOn,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = WarmHaze
+                                )
+                                Text(
+                                    text = room.location,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = WarmHaze,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Tags
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        room.tags.forEach { tag ->
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = room.accentColor.copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = tag,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = Lead.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Bottom row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Schedule
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Schedule,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = WarmHaze
+                            )
+                            Text(
+                                text = room.schedule,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = WarmHaze
+                            )
+                        }
+
+                        // Players count + Join button
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.People,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = room.accentColor
+                                )
+                                Text(
+                                    text = "${room.currentPlayers}/${room.maxPlayers}",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = room.accentColor
+                                )
+                            }
+
+                            // Join button
+                            Surface(
+                                onClick = onClick, // Use the passed onClick
+                                shape = RoundedCornerShape(16.dp),
+                                color = room.accentColor.copy(alpha = 0.9f),
+                                modifier = Modifier.shadow(
+                                    elevation = 6.dp,
+                                    shape = RoundedCornerShape(16.dp),
+                                    ambientColor = room.accentColor.copy(alpha = 0.3f)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        text = "Join",
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = Color.White
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Rounded.ArrowForward,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -261,7 +590,7 @@ private fun CasualBackgroundBlobs() {
 // ==================== HEADER ====================
 
 @Composable
-private fun CasualHeader() {
+private fun CasualHeader(onBack: () -> Unit) {
     val infiniteTransition = rememberInfiniteTransition(label = "header_float")
 
     val float1 by infiniteTransition.animateFloat(
@@ -277,8 +606,22 @@ private fun CasualHeader() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 48.dp)
+            .padding(top = 24.dp) // Adjusted padding for back button
     ) {
+        // Back Button
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 12.dp, top = 12.dp)
+                .zIndex(1f)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.ArrowBack,
+                contentDescription = "Back",
+                tint = Lead
+            )
+        }
         // Floating decorative elements
         Box(
             modifier = Modifier
@@ -307,7 +650,7 @@ private fun CasualHeader() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
+                .padding(start = 24.dp, end = 24.dp, top = 56.dp, bottom = 16.dp)
         ) {
             // Title
             Text(
@@ -505,287 +848,6 @@ private fun CasualSportChip(
 
             if (isSelected) {
                 Text("✨", fontSize = 12.sp)
-            }
-        }
-    }
-}
-
-// ==================== MATCH CARDS ====================
-
-@Composable
-private fun CasualMatchCards(selectedCategory: String) {
-    val filteredRooms = if (selectedCategory == "All") {
-        sampleCasualRooms
-    } else {
-        sampleCasualRooms.filter { it.sport == selectedCategory }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "${filteredRooms.size} matches available",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 17.sp
-            ),
-            color = Lead
-        )
-
-        filteredRooms.forEach { room ->
-            CasualRoomCard(room = room)
-        }
-    }
-}
-
-@Composable
-private fun CasualRoomCard(room: CasualRoomItem) {
-    val infiniteTransition = rememberInfiniteTransition(label = "room_card_${room.id}")
-
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glow"
-    )
-
-    Box(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Glow effect
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            room.accentColor.copy(alpha = glowAlpha),
-                            room.accentColor.copy(alpha = 0f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(28.dp)
-                )
-                .blur(16.dp)
-        )
-
-        // Main card
-        Surface(
-            onClick = { /* Navigate to room detail */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(
-                    elevation = 12.dp,
-                    shape = RoundedCornerShape(28.dp),
-                    ambientColor = room.accentColor.copy(alpha = 0.2f),
-                    spotColor = room.accentColor.copy(alpha = 0.2f)
-                ),
-            shape = RoundedCornerShape(28.dp),
-            color = Color.Transparent
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                room.accentColor.copy(alpha = 0.15f),
-                                NeumorphLight.copy(alpha = 0.95f),
-                                room.accentColor.copy(alpha = 0.1f)
-                            )
-                        )
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                room.accentColor.copy(alpha = 0.4f),
-                                Color.Transparent
-                            )
-                        ),
-                        shape = RoundedCornerShape(28.dp)
-                    )
-                    .padding(20.dp)
-            ) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Sport emoji
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .shadow(
-                                    elevation = 8.dp,
-                                    shape = CircleShape,
-                                    ambientColor = room.accentColor.copy(alpha = 0.3f)
-                                )
-                                .background(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            room.accentColor.copy(alpha = 0.3f),
-                                            room.accentColor.copy(alpha = 0.1f)
-                                        )
-                                    ),
-                                    shape = CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = room.emoji, fontSize = 28.sp)
-                        }
-
-                        Spacer(modifier = Modifier.width(14.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = room.title,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp
-                                ),
-                                color = Lead,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.LocationOn,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = WarmHaze
-                                )
-                                Text(
-                                    text = room.location,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = WarmHaze,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Tags
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        room.tags.forEach { tag ->
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = room.accentColor.copy(alpha = 0.2f)
-                            ) {
-                                Text(
-                                    text = tag,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Medium
-                                    ),
-                                    color = Lead.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Bottom row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Schedule
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Schedule,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = WarmHaze
-                            )
-                            Text(
-                                text = room.schedule,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.Medium
-                                ),
-                                color = WarmHaze
-                            )
-                        }
-
-                        // Players count + Join button
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.People,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = room.accentColor
-                                )
-                                Text(
-                                    text = "${room.currentPlayers}/${room.maxPlayers}",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = room.accentColor
-                                )
-                            }
-
-                            // Join button
-                            Surface(
-                                onClick = { /* Join room */ },
-                                shape = RoundedCornerShape(16.dp),
-                                color = room.accentColor.copy(alpha = 0.9f),
-                                modifier = Modifier.shadow(
-                                    elevation = 6.dp,
-                                    shape = RoundedCornerShape(16.dp),
-                                    ambientColor = room.accentColor.copy(alpha = 0.3f)
-                                )
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text(
-                                        text = "Join",
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = Color.White
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Rounded.ArrowForward,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
             }
         }
     }

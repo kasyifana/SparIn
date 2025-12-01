@@ -24,7 +24,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.sparin.presentation.profile.components.*
+import com.example.sparin.data.model.UserStats
 import com.example.sparin.ui.theme.*
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * ProfileScreen - Main Profile Screen for SparIN
@@ -34,7 +36,7 @@ import com.example.sparin.ui.theme.*
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    viewModel: ProfileViewModel = viewModel()
+    viewModel: ProfileViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
