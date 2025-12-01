@@ -30,3 +30,10 @@ val SunsetOrange = Color(0xFFE8A857)
 // Neumorphism shadows
 val NeumorphLight = Color(0xFFFFFFFF)
 val NeumorphDark = Color(0xFFD1CCD9)
+
+// Floating Bottom Nav Colors (Gen-Z Premium Aesthetic)
+val NavBarDark = Color(0xFF1A1A2E)         // Dark navy/charcoal pill container
+val NavBarDarkGlossy = Color(0xFF16213E)   // Slightly lighter for glossy effect
+val NavBarInactiveIcon = Color(0xFF6B7280) // Soft gray for inactive icons
+val NavBarActiveWhite = Color(0xFFFFFFFF)  // Pure white for active button
+val NavBarShadow = Color(0xFF0F0F1A)       // Deep shadow color

@@ -35,4 +35,9 @@ sealed class Screen(val route: String) {
     object CampaignDetail : Screen("campaign_detail/{campaignId}") {
         fun createRoute(campaignId: String) = "campaign_detail/$campaignId"
     }
+    
+    object CommunityFeed : Screen("community_feed/{communityId}/{communityName}/{communityEmoji}") {
+        fun createRoute(communityId: String, communityName: String, communityEmoji: String) =
+            "community_feed/$communityId/$communityName/$communityEmoji"
+    }
 }
