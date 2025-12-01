@@ -19,6 +19,7 @@ import com.example.sparin.presentation.discover.RoomMode
 import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
 import com.example.sparin.presentation.profile.ProfileScreen
+import com.example.sparin.presentation.profile.EditProfileScreen
 
 /**
  * Navigation Graph untuk aplikasi SparIN
@@ -107,6 +108,10 @@ fun NavGraph(
             ProfileScreen(navController = navController)
         }
         
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(navController = navController)
+        }
+        
         // Detail Screens with arguments
         
         // Chat Room Detail
@@ -140,6 +145,30 @@ fun NavGraph(
                 mode = mode,
                 roomTitle = roomTitle,
                 sport = sport
+            )
+        }
+        
+        // Create Room Screen
+        composable(
+            route = "create_room/{mode}",
+            arguments = listOf(navArgument("mode") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val mode = backStackEntry.arguments?.getString("mode") ?: "Casual"
+            com.example.sparin.presentation.discover.CreateRoomScreen(
+                navController = navController,
+                mode = mode
+            )
+        }
+        
+        // Room Detail Screen
+        composable(
+            route = "room_detail/{roomId}",
+            arguments = listOf(navArgument("roomId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+            com.example.sparin.presentation.discover.RoomDetailScreen(
+                navController = navController,
+                roomId = roomId
             )
         }
         

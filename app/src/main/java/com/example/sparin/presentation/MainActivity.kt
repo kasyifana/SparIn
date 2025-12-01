@@ -50,8 +50,6 @@ class MainActivity : ComponentActivity() {
                 }
                 else -> {
                     // Signed in - check if personalization is complete
-                    // For now, assume they need personalization (will be updated by ViewModel)
-                    // This will be overridden by navigation logic after user data loads
                     Screen.Home.route
                 }
             }
