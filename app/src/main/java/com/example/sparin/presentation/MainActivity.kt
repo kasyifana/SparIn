@@ -3,10 +3,8 @@ package com.example.sparin.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.sparin.data.repository.AuthRepository
@@ -95,8 +93,7 @@ class MainActivity : ComponentActivity() {
         ) { paddingValues ->
             NavGraph(
                 navController = navController,
-                startDestination = startDestination,
-                modifier = Modifier.padding(paddingValues)
+                startDestination = startDestination
             )
         }
     }
