@@ -1,13 +1,6 @@
 package com.example.sparin.presentation.discover
 
-<<<<<<< HEAD
-import java.text.SimpleDateFormat
-import java.util.*
-import org.koin.androidx.compose.koinViewModel
-import androidx.compose.animation.animateColorAsState
-=======
 import androidx.compose.animation.*
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -207,10 +200,7 @@ val sampleCompetitiveRooms = listOf(
 )
 
 @Composable
-fun DiscoverCompetitiveScreen(
-    navController: NavHostController,
-    viewModel: DiscoverViewModel = koinViewModel()
-) {
+fun DiscoverCompetitiveScreen(navController: NavHostController) {
     var selectedCategory by remember { mutableStateOf("All") }
     var joinedRooms by remember { mutableStateOf(setOf<String>()) }
     var selectedRoom by remember { mutableStateOf<CompetitiveRoomItem?>(null) }
@@ -219,12 +209,6 @@ fun DiscoverCompetitiveScreen(
     var showAddRoomModal by remember { mutableStateOf(false) }
     var competitiveRooms by remember { mutableStateOf(sampleCompetitiveRooms) }
     val scrollState = rememberScrollState()
-    val roomsState by viewModel.competitiveRoomsState.collectAsState()
-
-    // Refresh on entry
-    LaunchedEffect(Unit) {
-        viewModel.loadCompetitiveRooms()
-    }
 
     Box(
         modifier = Modifier
@@ -239,103 +223,31 @@ fun DiscoverCompetitiveScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-
-
-<<<<<<< HEAD
-=======
             // Mode Indicator Banner with pulse animation
             CompetitiveModeIndicator()
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
 
+            Spacer(modifier = Modifier.height(20.dp))
 
-<<<<<<< HEAD
-            // Header
-            CompetitiveHeader(onBack = { navController.navigateUp() })
-=======
             // Header with search
             CompetitiveHeader(
                 searchQuery = searchQuery,
                 onSearchChange = { searchQuery = it },
                 onCategoryClick = { showCategoryPicker = true }
             )
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Sport Category Navbar (Sharp edges)
             CompetitiveSportTabs(
                 selectedCategory = selectedCategory,
-                onCategorySelected = { 
-                    selectedCategory = it
-                    viewModel.filterByCategory(it)
-                }
+                onCategorySelected = { selectedCategory = it }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // Competitive Match Cards
-<<<<<<< HEAD
-            when (val state = roomsState) {
-                is RoomsState.Loading -> {
-                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = NeonRed)
-                    }
-                }
-                is RoomsState.Error -> {
-                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                        Text("Error: ${state.message}", color = Color.Red)
-                    }
-                }
-                is RoomsState.Success -> {
-                    val rooms = state.rooms
-                    if (rooms.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                            Text("No competitive rooms found. Create one!", color = Color.Gray)
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text(
-                                text = "${rooms.size} elite matches",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
-                                ),
-                                color = NeonRed
-                            )
-
-                            rooms.forEach { room ->
-                                // Map Room to UI Item
-                                val uiItem = CompetitiveRoomItem(
-                                    id = room.id,
-                                    title = room.name,
-                                    sport = room.category,
-                                    emoji = getEmojiForCategory(room.category),
-                                    location = room.locationName,
-                                    distance = "2.5 km", // Dummy distance
-                                    schedule = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault()).format(Date(room.dateTime)),
-                                    currentPlayers = room.currentPlayers,
-                                    maxPlayers = room.maxPlayers,
-                                    skillLevel = "Intermediate+", // Default
-                                    tags = listOf("Ranked", "Serious"), // Default
-                                    difficulty = 4 // Default
-                                )
-                                CompetitiveRoomCard(
-                                    room = uiItem,
-                                    onClick = { navController.navigate("room_detail/${room.id}") }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-=======
             CompetitiveMatchCards(
                 rooms = competitiveRooms,
                 selectedCategory = selectedCategory,
@@ -351,7 +263,6 @@ fun DiscoverCompetitiveScreen(
                 },
                 onCardTap = { room -> selectedRoom = room }
             )
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
 
             Spacer(modifier = Modifier.height(120.dp))
         }
@@ -361,11 +272,7 @@ fun DiscoverCompetitiveScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 24.dp, bottom = 100.dp),
-<<<<<<< HEAD
-            onClick = { navController.navigate("create_room/Competitive") }
-=======
             onClick = { showAddRoomModal = true }
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
         )
 
         // Detail Modal
@@ -421,311 +328,6 @@ fun DiscoverCompetitiveScreen(
                         selectedCategory = newRoom.sport
                     }
                 }
-            )
-        }
-    }
-}
-
-// ... (Rest of the file remains mostly the same, but CompetitiveMatchCards function is removed/inlined above)
-
-// ==================== MATCH CARDS (Updated to accept onClick) ====================
-
-@Composable
-private fun CompetitiveRoomCard(room: CompetitiveRoomItem, onClick: () -> Unit) {
-    val infiniteTransition = rememberInfiniteTransition(label = "card_${room.id}")
-
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glow"
-    )
-
-    Box(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Red neon glow
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            NeonRed.copy(alpha = glowAlpha * 0.3f),
-                            NeonRed.copy(alpha = 0f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .blur(20.dp)
-        )
-
-        // Main card
-        Surface(
-            onClick = onClick, // Use passed onClick
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(
-                    elevation = 16.dp,
-                    shape = RoundedCornerShape(10.dp),
-                    ambientColor = NeonRed.copy(alpha = 0.4f),
-                    spotColor = NeonRed.copy(alpha = 0.4f)
-                ),
-            shape = RoundedCornerShape(10.dp), // Sharp corners
-            color = Gunmetal
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF1A1A1A),
-                                Gunmetal,
-                                Color(0xFF0F0F0F)
-                            )
-                        )
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                NeonRed.copy(alpha = 0.5f),
-                                MetallicRed.copy(alpha = 0.3f),
-                                NeonRed.copy(alpha = 0.5f)
-                            )
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .padding(20.dp)
-            ) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Sport emoji with metallic background
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .shadow(
-                                    elevation = 12.dp,
-                                    shape = RoundedCornerShape(8.dp),
-                                    ambientColor = NeonRed.copy(alpha = 0.4f)
-                                )
-                                .background(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            NeonRed.copy(alpha = 0.3f),
-                                            MetallicRed.copy(alpha = 0.2f)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = NeonRed.copy(alpha = 0.5f),
-                                    shape = RoundedCornerShape(8.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = room.emoji, fontSize = 30.sp)
-                        }
-
-                        Spacer(modifier = Modifier.width(14.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = room.title,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 18.sp,
-                                    letterSpacing = 0.3.sp
-                                ),
-                                color = Color.White,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.LocationOn,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = NeonRed.copy(alpha = 0.8f)
-                                )
-                                Text(
-                                    text = "${room.location} · ${room.distance}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.6f),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-
-                        // Difficulty flames
-                        DifficultyIndicator(difficulty = room.difficulty)
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Tags
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        room.tags.forEach { tag ->
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = NeonRed.copy(alpha = 0.15f),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    width = 1.dp,
-                                    color = NeonRed.copy(alpha = 0.4f)
-                                )
-                            ) {
-                                Text(
-                                    text = tag,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 0.3.sp
-                                    ),
-                                    color = NeonRed
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Skill level requirement
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Star,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = GlowRed
-                        )
-                        Text(
-                            text = "Skill Level Required: ${room.skillLevel}",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Bottom row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Schedule
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Schedule,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = NeonRed
-                            )
-                            Text(
-                                text = room.schedule,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.Medium
-                                ),
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                        }
-
-                        // Players count + Join button
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.People,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = NeonRed
-                                )
-                                Text(
-                                    text = "${room.currentPlayers}/${room.maxPlayers}",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = NeonRed
-                                )
-                            }
-
-                            // Join button
-                            Surface(
-                                onClick = { /* Join room */ },
-                                shape = RoundedCornerShape(6.dp),
-                                color = NeonRed.copy(alpha = 0.9f),
-                                modifier = Modifier.shadow(
-                                    elevation = 6.dp,
-                                    shape = RoundedCornerShape(6.dp),
-                                    ambientColor = NeonRed.copy(alpha = 0.3f)
-                                )
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text(
-                                        text = "Join",
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = Color.White
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Rounded.ArrowForward,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Helper for Difficulty
-@Composable
-fun DifficultyIndicator(difficulty: Int) {
-    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        repeat(5) { index ->
-            Text(
-                text = "🔥",
-                fontSize = 12.sp,
-                color = if (index < difficulty) Color.Unspecified else Color.White.copy(alpha = 0.2f)
             )
         }
     }
@@ -819,9 +421,8 @@ private fun CompetitiveBackgroundEffects() {
     }
 }
 
+// ==================== MODE INDICATOR ====================
 
-<<<<<<< HEAD
-=======
 @Composable
 private fun CompetitiveModeIndicator() {
     val infiniteTransition = rememberInfiniteTransition(label = "mode_indicator")
@@ -944,44 +545,21 @@ private fun CompetitiveModeIndicator() {
         }
     }
 }
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
 
 // ==================== HEADER ====================
 
 @Composable
-<<<<<<< HEAD
-private fun CompetitiveHeader(onBack: () -> Unit) {
-=======
 private fun CompetitiveHeader(
     searchQuery: String,
     onSearchChange: (String) -> Unit,
     onCategoryClick: () -> Unit
 ) {
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
-<<<<<<< HEAD
-        // Back Button
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .offset(x = (-12).dp) // Align with padding
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.White
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-        // Title
-=======
         // Title with fire emoji
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
         Text(
             text = "Competitive\nRooms 🔥",
             style = MaterialTheme.typography.headlineLarge.copy(
@@ -1299,9 +877,6 @@ private fun CompetitiveSportChip(
     }
 }
 
-<<<<<<< HEAD
-// Duplicates removed
-=======
 // ==================== MATCH CARDS ====================
 
 @Composable
@@ -1966,7 +1541,6 @@ private fun CompetitiveJoinButton(onClick: () -> Unit = {}) {
         }
     }
 }
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
 
 // ==================== FUTURISTIC CREATE FAB ====================
 
@@ -2031,13 +1605,8 @@ private fun CompetitiveCreateRoomFAB(
                 .blur(20.dp)
         )
 
-<<<<<<< HEAD
-        // FAB
-        FloatingActionButton(
-=======
         // Rounded futuristic FAB
         Surface(
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
             onClick = onClick,
             modifier = Modifier
                 .size(64.dp)
@@ -2051,14 +1620,8 @@ private fun CompetitiveCreateRoomFAB(
                     ambientColor = DeepRed.copy(alpha = 0.7f),
                     spotColor = NeonRed.copy(alpha = 0.7f)
                 ),
-<<<<<<< HEAD
-            containerColor = DarkGraphite,
-            contentColor = NeonRed,
-            shape = CircleShape
-=======
             shape = RoundedCornerShape(16.dp),
             color = Color.Transparent
->>>>>>> 14877f85e96e09ef928e4ad4be15636568bac5f5
         ) {
             Box(
                 modifier = Modifier
