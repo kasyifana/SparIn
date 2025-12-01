@@ -4,14 +4,17 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sparin.data.model.Community
+import com.example.sparin.data.model.User
 import com.example.sparin.data.repository.CommunityRepository
 import com.example.sparin.domain.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import com.example.sparin.data.remote.FirestoreService
+import com.example.sparin.util.Constants
 
 /**
  * ViewModel untuk Community Screen
@@ -30,6 +33,10 @@ class CommunityViewModel(
     private val _userCommunitiesState = MutableStateFlow<CommunitiesState>(CommunitiesState.Loading)
     val userCommunitiesState: StateFlow<CommunitiesState> = _userCommunitiesState.asStateFlow()
     
+    // User Names Cache - maps userId to userName
+    private val _userNamesCache = MutableStateFlow<Map<String, String>>(emptyMap())
+    val userNamesCache: StateFlow<Map<String, String>> = _userNamesCache.asStateFlow()
+    
     init {
         loadAllCommunities()
         loadUserCommunities()
@@ -43,12 +50,17 @@ class CommunityViewModel(
         viewModelScope.launch {
             _allCommunitiesState.value = CommunitiesState.Loading
             
-            val result = communityRepository.getCommunities() // Not getAllCommunities()
+            val result = communityRepository.getCommunities()
             
             when (result) {
                 is Resource.Success -> {
                     val communities = result.data ?: emptyList()
                     Log.d(TAG, "Loaded ${communities.size} communities")
+                    
+                    // Fetch user names for all creators
+                    val creatorIds = communities.map { it.createdBy }.distinct()
+                    fetchUserNames(creatorIds)
+                    
                     _allCommunitiesState.value = CommunitiesState.Success(communities)
                 }
                 is Resource.Error -> {
@@ -63,6 +75,40 @@ class CommunityViewModel(
     }
     
     /**
+     * Fetch user names for a list of user IDs
+     */
+    private suspend fun fetchUserNames(userIds: List<String>) {
+        val newCache = _userNamesCache.value.toMutableMap()
+        
+        userIds.filter { it.isNotEmpty() && !newCache.containsKey(it) }.forEach { userId ->
+            try {
+                val user = firestoreService.getDocument(
+                    Constants.Collections.USERS,
+                    userId,
+                    User::class.java
+                )
+                if (user != null && user.name.isNotEmpty()) {
+                    newCache[userId] = user.name
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to fetch user name for $userId: ${e.message}")
+            }
+        }
+        
+        _userNamesCache.value = newCache
+    }
+    
+    /**
+     * Get user display name from cache or return truncated UID
+     */
+    fun getUserDisplayName(userId: String): String {
+        return _userNamesCache.value[userId] ?: run {
+            // Return formatted short version if name not cached
+            if (userId.length > 8) userId.take(8) + "..." else userId
+        }
+    }
+    
+    /**
      * Load user's joined communities
      */
     fun loadUserCommunities() {
@@ -70,15 +116,21 @@ class CommunityViewModel(
         viewModelScope.launch {
             _userCommunitiesState.value = CommunitiesState.Loading
             
-            // For now, filter from all communities by checking if user is member
+            val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
             val result = communityRepository.getCommunities()
             
             when (result) {
                 is Resource.Success -> {
-                    val communities = result.data ?: emptyList()
-                    // TODO: Get actual userId from auth and filter
-                    Log.d(TAG, "Loaded ${communities.size} user communities")
-                    _userCommunitiesState.value = CommunitiesState.Success(communities)
+                    val allCommunities = result.data ?: emptyList()
+                    // Filter to only communities where user is a member
+                    val userCommunities = if (currentUserId != null) {
+                        allCommunities.filter { it.members.contains(currentUserId) }
+                    } else {
+                        emptyList()
+                    }
+                    
+                    Log.d(TAG, "Loaded ${userCommunities.size} user communities")
+                    _userCommunitiesState.value = CommunitiesState.Success(userCommunities)
                 }
                 is Resource.Error -> {
                     Log.e(TAG, "Failed to load user communities: ${result.message}")

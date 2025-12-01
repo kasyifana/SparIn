@@ -59,6 +59,7 @@ import kotlin.math.sin
  * CommunityScreen - Ultra Premium Gen-Z Aesthetic
  * Features: Glassmorphism, Floating Search, Neumorphic Cards, Member Stack Preview
  * Design: Soft-sport pastel gradients, dreamy shadows, floating elements
+ * Color Palette: CascadingWhite, ChineseSilver, Dreamland, WarmHaze, Lead, Crunch
  */
 
 // Sport categories for filtering with premium gradients
@@ -160,6 +161,7 @@ fun CommunityScreen(
 ) {
     val allCommunitiesState by viewModel.allCommunitiesState.collectAsState()
     val userCommunitiesState by viewModel.userCommunitiesState.collectAsState()
+    val userNamesCache by viewModel.userNamesCache.collectAsState()
     
     var selectedCategory by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
@@ -168,6 +170,11 @@ fun CommunityScreen(
     var selectedCommunityToJoin by remember { mutableStateOf<Community?>(null) }
     var showFullscreenImage by remember { mutableStateOf<String?>(null) }
     var showCommunityDetail by remember { mutableStateOf<Community?>(null) }
+    
+    // Function to get creator display name
+    val getCreatorName: (String) -> String = { userId ->
+        viewModel.getUserDisplayName(userId)
+    }
     
     LaunchedEffect(Unit) {
         viewModel.loadAllCommunities()
@@ -223,7 +230,8 @@ fun CommunityScreen(
                         navController.navigate(Screen.CommunityFeed.createRoute(community.id, encodedName, encodedEmoji))
                     }
                 },
-                onImageClick = { url -> showFullscreenImage = url }
+                onImageClick = { url -> showFullscreenImage = url },
+                getCreatorName = getCreatorName
             )
             
             Spacer(modifier = Modifier.height(36.dp))
@@ -238,7 +246,8 @@ fun CommunityScreen(
                     selectedCommunityToJoin = community
                     showJoinDialog = true
                 },
-                onImageClick = { url -> showFullscreenImage = url }
+                onImageClick = { url -> showFullscreenImage = url },
+                getCreatorName = getCreatorName
             )
             
             Spacer(modifier = Modifier.height(140.dp))
@@ -285,6 +294,7 @@ fun CommunityScreen(
     showCommunityDetail?.let { community ->
         CommunityDetailDialog(
             community = community,
+            creatorName = getCreatorName(community.createdBy),
             onDismiss = { showCommunityDetail = null },
             onImageClick = { url -> showFullscreenImage = url }
         )
@@ -794,7 +804,8 @@ private fun MyCommunitySection(
     navController: NavHostController,
     searchQuery: String,
     onCommunityClick: (Community) -> Unit,
-    onImageClick: (String) -> Unit
+    onImageClick: (String) -> Unit,
+    getCreatorName: (String) -> String
 ) {
     Column(
         modifier = Modifier
@@ -914,6 +925,7 @@ private fun MyCommunitySection(
                         filteredCommunities.forEach { community ->
                             PremiumCommunityCard(
                                 community = community,
+                                creatorName = getCreatorName(community.createdBy),
                                 onClick = { onCommunityClick(community) },
                                 onImageClick = onImageClick
                             )
@@ -933,6 +945,7 @@ private fun MyCommunitySection(
 @Composable
 private fun PremiumCommunityCard(
     community: Community,
+    creatorName: String,
     onClick: () -> Unit,
     onImageClick: (String) -> Unit = {}
 ) {
@@ -1137,10 +1150,12 @@ private fun PremiumCommunityCard(
                                         )
                                     }
                                     Text(
-                                        text = community.createdBy.take(15) + if (community.createdBy.length > 15) "..." else "",
+                                        text = creatorName,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = WarmHaze,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                                 
@@ -1424,7 +1439,8 @@ private fun DiscoverCommunitiesSection(
     selectedCategory: String,
     searchQuery: String,
     onJoinClick: (Community) -> Unit,
-    onImageClick: (String) -> Unit
+    onImageClick: (String) -> Unit,
+    getCreatorName: (String) -> String
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -1548,6 +1564,7 @@ private fun DiscoverCommunitiesSection(
                         items(filteredCommunities) { community ->
                             PremiumDiscoverCard(
                                 community = community,
+                                creatorName = getCreatorName(community.createdBy),
                                 onJoinClick = { onJoinClick(community) },
                                 onImageClick = onImageClick
                             )
@@ -1573,6 +1590,7 @@ private fun DiscoverCommunitiesSection(
 @Composable
 private fun PremiumDiscoverCard(
     community: Community,
+    creatorName: String,
     onJoinClick: () -> Unit,
     onImageClick: (String) -> Unit = {}
 ) {
@@ -1779,9 +1797,11 @@ private fun PremiumDiscoverCard(
                     
                     // Creator info
                     Text(
-                        text = "by ${community.createdBy.take(12)}${if (community.createdBy.length > 12) "..." else ""}",
+                        text = "by $creatorName",
                         style = MaterialTheme.typography.labelSmall,
-                        color = WarmHaze.copy(alpha = 0.7f)
+                        color = WarmHaze.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -2327,6 +2347,7 @@ private fun PremiumJoinDialog(
 @Composable
 private fun CommunityDetailDialog(
     community: Community,
+    creatorName: String,
     onDismiss: () -> Unit,
     onImageClick: (String) -> Unit
 ) {
@@ -2653,7 +2674,7 @@ private fun CommunityDetailDialog(
                                                 color = CascadingWhite.copy(alpha = 0.6f)
                                             )
                                             Text(
-                                                text = community.createdBy,
+                                                text = creatorName,
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = CascadingWhite
