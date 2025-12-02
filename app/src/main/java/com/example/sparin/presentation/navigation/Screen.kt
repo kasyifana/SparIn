@@ -49,4 +49,5 @@ sealed class Screen(val route: String) {
         fun createRoute(communityId: String, communityName: String) =
             "all_upcoming_events/$communityId/${communityName.replace("/", "-")}"
     }
+    object FindCommunitiesNearby : Screen("find_communities_nearby")
 }

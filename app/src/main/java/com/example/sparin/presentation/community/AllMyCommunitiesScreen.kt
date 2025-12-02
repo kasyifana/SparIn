@@ -277,11 +277,6 @@ private fun AllCommunitiesHeader(
             Surface(
                 modifier = Modifier
                     .size(44.dp)
-                    .shadow(
-                        elevation = 10.dp,
-                        shape = CircleShape,
-                        ambientColor = NeumorphDark.copy(alpha = 0.15f)
-                    )
                     .clickable(onClick = onBackClick),
                 shape = CircleShape,
                 color = NeumorphLight
@@ -319,13 +314,7 @@ private fun CommunitiesStatsCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .shadow(
-                elevation = 16.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = GenZTeal.copy(alpha = 0.2f),
-                spotColor = GenZTeal.copy(alpha = 0.2f)
-            ),
+            .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent
     ) {
@@ -407,15 +396,9 @@ private fun MyCommunityListCard(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = 10.dp,
-                shape = RoundedCornerShape(20.dp),
-                ambientColor = NeumorphDark.copy(alpha = 0.1f),
-                spotColor = NeumorphDark.copy(alpha = 0.1f)
-            )
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = NeumorphLight.copy(alpha = 0.98f)
+        color = NeumorphLight
     ) {
         Row(
             modifier = Modifier

@@ -16,6 +16,7 @@ import com.example.sparin.presentation.personalization.PersonalizationScreen
 import com.example.sparin.presentation.home.HomeScreen
 import com.example.sparin.presentation.community.CommunityScreen
 import com.example.sparin.presentation.community.AllMyCommunitiesScreen
+import com.example.sparin.presentation.community.FindCommunitiesNearbyScreen
 import com.example.sparin.presentation.discover.ModeSelectorScreen
 import com.example.sparin.presentation.discover.DiscoverCasualScreen
 import com.example.sparin.presentation.discover.DiscoverCompetitiveScreen
@@ -91,6 +92,11 @@ fun NavGraph(
         // All My Communities Screen
         composable(Screen.AllMyCommunities.route) {
             AllMyCommunitiesScreen(navController = navController)
+        }
+        
+        // Find Communities Nearby Screen
+        composable(Screen.FindCommunitiesNearby.route) {
+            FindCommunitiesNearbyScreen(navController = navController)
         }
         
         composable(Screen.Discover.route) {

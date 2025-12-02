@@ -10,6 +10,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -63,6 +65,7 @@ import java.util.UUID
 
 data class CommunityPost(
     val id: String,
+    val authorId: String = "", // User ID to check ownership
     val authorName: String,
     val authorEmoji: String,
     val content: String,
@@ -95,16 +98,26 @@ data class CommunityEvent(
     val id: String,
     val title: String,
     val date: String,
+    val time: String = "14:00 - 17:00",
     val location: String,
     val attendees: Int,
-    val emoji: String
+    val emoji: String,
+    val description: String = "",
+    val organizer: String = "Community Admin",
+    val requirements: List<String> = emptyList(),
+    val category: String = "Sport",
+    val highlights: List<String> = emptyList()
 )
 
 // ==================== SAMPLE DATA ====================
 
+// Current user ID - In production, get this from AuthRepository
+private const val CURRENT_USER_ID = "current_user"
+
 private val samplePosts = listOf(
     CommunityPost(
         id = "1",
+        authorId = "user_raka",
         authorName = "Raka Pratama",
         authorEmoji = "🏸",
         content = "Siapa yang mau main badminton bareng weekend ini? Drop location kalian di comment ya! 🏸🔥",
@@ -119,6 +132,7 @@ private val samplePosts = listOf(
     ),
     CommunityPost(
         id = "2",
+        authorId = "user_dinda",
         authorName = "Dinda Sports",
         authorEmoji = "💪",
         content = "Hari ini berhasil beat personal record! 💪 Keep pushing everyone! Never give up on your fitness journey! #NeverGiveUp #SportLife",
@@ -131,6 +145,7 @@ private val samplePosts = listOf(
     ),
     CommunityPost(
         id = "3",
+        authorId = "user_andy",
         authorName = "Coach Andy",
         authorEmoji = "🎯",
         content = "Tips untuk pemula:\n\n1. Warm up sebelum main\n2. Fokus pada footwork\n3. Jangan lupa stretching setelahnya\n\nShare ke teman kalian yang baru mulai olahraga! 🙌",
@@ -140,6 +155,7 @@ private val samplePosts = listOf(
     ),
     CommunityPost(
         id = "4",
+        authorId = "user_maya",
         authorName = "Maya Runner",
         authorEmoji = "🏃‍♀️",
         content = "Morning run done! 5km completed before sunrise ☀️ Who else loves early morning exercise?",
@@ -176,25 +192,69 @@ private val upcomingEvents = listOf(
         id = "1",
         title = "Weekend Tournament",
         date = "Dec 7, 2025",
+        time = "08:00 - 17:00",
         location = "GBK Arena",
         attendees = 48,
-        emoji = "🏆"
+        emoji = "🏆",
+        description = "Join our annual weekend tournament! Compete with players from all skill levels and win exciting prizes.",
+        organizer = "Raka Pratama",
+        category = "Competition",
+        requirements = listOf(
+            "Bring your own racket",
+            "Wear appropriate sports attire",
+            "Register before Dec 5"
+        ),
+        highlights = listOf(
+            "Prize pool Rp 5.000.000",
+            "Free lunch provided",
+            "Professional referees",
+            "Live streaming"
+        )
     ),
     CommunityEvent(
         id = "2",
         title = "Beginner Workshop",
         date = "Dec 14, 2025",
+        time = "10:00 - 12:00",
         location = "Sport Center BSD",
         attendees = 25,
-        emoji = "📚"
+        emoji = "📚",
+        description = "Learn the basics of badminton from our experienced coaches. Perfect for beginners who want to start their journey.",
+        organizer = "Coach Andy",
+        category = "Workshop",
+        requirements = listOf(
+            "No prior experience needed",
+            "Rackets provided",
+            "Comfortable clothing"
+        ),
+        highlights = listOf(
+            "Certified coach instruction",
+            "Basic technique training",
+            "Free refreshments",
+            "Certificate of completion"
+        )
     ),
     CommunityEvent(
         id = "3",
         title = "Fun Match Night",
         date = "Dec 20, 2025",
+        time = "19:00 - 22:00",
         location = "Mall Arena",
         attendees = 32,
-        emoji = "🎉"
+        emoji = "🎉",
+        description = "Casual night of fun matches! Meet new friends and enjoy a relaxed evening of badminton with music and snacks.",
+        organizer = "Dinda Sports",
+        category = "Social",
+        requirements = listOf(
+            "Bring positive vibes!",
+            "All skill levels welcome"
+        ),
+        highlights = listOf(
+            "DJ music",
+            "Snacks and drinks included",
+            "Random partner matching",
+            "Mini games and prizes"
+        )
     )
 )
 
@@ -223,6 +283,10 @@ fun CommunityFeedScreen(
     var showInfoDialog by remember { mutableStateOf(false) }
     var showMembersDialog by remember { mutableStateOf(false) }
     var showMoreMenu by remember { mutableStateOf(false) }
+    
+    // Event detail popup state
+    var selectedEvent by remember { mutableStateOf<CommunityEvent?>(null) }
+    var showEventDetail by remember { mutableStateOf(false) }
     
     // Selected image URI from gallery
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -304,6 +368,7 @@ fun CommunityFeedScreen(
                         // Create new post and add to top of list
                         val newPost = CommunityPost(
                             id = UUID.randomUUID().toString(),
+                            authorId = CURRENT_USER_ID, // Mark as current user's post
                             authorName = "You",
                             authorEmoji = "😊",
                             content = content,
@@ -335,6 +400,10 @@ fun CommunityFeedScreen(
                     onSeeAllClick = {
                         val encodedName = URLEncoder.encode(communityName, StandardCharsets.UTF_8.toString())
                         navController.navigate(Screen.AllUpcomingEvents.createRoute(communityId, encodedName))
+                    },
+                    onEventClick = { event ->
+                        selectedEvent = event
+                        showEventDetail = true
                     }
                 )
             }
@@ -391,6 +460,7 @@ fun CommunityFeedScreen(
             items(sortedPosts, key = { it.id }) { post ->
                 PostCard(
                     post = post,
+                    isOwnPost = post.authorId == CURRENT_USER_ID,
                     onLikeClick = { updatedPost ->
                         posts = posts.map { if (it.id == updatedPost.id) updatedPost else it }
                     },
@@ -404,7 +474,11 @@ fun CommunityFeedScreen(
                             } else it 
                         }
                     },
-                    onShareClick = { /* Handle share */ }
+                    onShareClick = { /* Handle share */ },
+                    onDeleteClick = {
+                        // Delete post from list
+                        posts = posts.filter { it.id != post.id }
+                    }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -427,6 +501,17 @@ fun CommunityFeedScreen(
             communityName = communityName,
             members = sampleMembers,
             onDismiss = { showMembersDialog = false }
+        )
+    }
+    
+    // Event Detail Dialog
+    if (showEventDetail && selectedEvent != null) {
+        FeedEventDetailDialog(
+            event = selectedEvent!!,
+            onDismiss = { 
+                showEventDetail = false
+                selectedEvent = null
+            }
         )
     }
 }
@@ -554,20 +639,27 @@ private fun FeedHeader(
             // Title
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
             ) {
                 Text(
                     text = communityEmoji,
                     fontSize = 24.sp
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = communityName,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 26.sp,
+                        letterSpacing = (-0.4).sp,
+                        textAlign = TextAlign.Center
                     ),
                     color = Lead,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -592,13 +684,19 @@ private fun FeedHeader(
                 }
                 
                 // Dropdown Menu
-                DropdownMenu(
-                    expanded = showMoreMenu,
-                    onDismissRequest = onDismissMenu,
-                    offset = DpOffset(x = 0.dp, y = 8.dp),
-                    modifier = Modifier
-                        .background(NeumorphLight, RoundedCornerShape(16.dp))
+                MaterialTheme(
+                    shapes = MaterialTheme.shapes.copy(
+                        extraSmall = RoundedCornerShape(16.dp)
+                    )
                 ) {
+                    DropdownMenu(
+                        expanded = showMoreMenu,
+                        onDismissRequest = onDismissMenu,
+                        offset = DpOffset(x = 0.dp, y = 8.dp),
+                        containerColor = NeumorphLight,
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                    ) {
                     // Info option
                     DropdownMenuItem(
                         text = {
@@ -681,6 +779,7 @@ private fun FeedHeader(
                         onClick = onMembersClick,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
+                    }
                 }
             }
         }
@@ -700,7 +799,7 @@ private fun CommunityBanner(
 
     val float1 by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 10f,
+        targetValue = 8f,
         animationSpec = infiniteRepeatable(
             animation = tween(2200, easing = EaseInOutSine),
             repeatMode = RepeatMode.Reverse
@@ -712,19 +811,14 @@ private fun CommunityBanner(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .padding(top = 16.dp)
-            .shadow(
-                elevation = 16.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = GenZTeal.copy(alpha = 0.2f)
-            ),
+            .padding(top = 16.dp),
         shape = RoundedCornerShape(24.dp),
         color = Color.Transparent
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(140.dp)
+                .height(160.dp)
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
@@ -734,91 +828,117 @@ private fun CommunityBanner(
                     )
                 )
         ) {
-            // Decorative elements
+            // Decorative circle - top right
             Box(
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(60.dp)
                     .align(Alignment.TopEnd)
-                    .offset(x = (-15).dp, y = (15 + float1).dp)
+                    .offset(x = (-10).dp, y = (10 + float1).dp)
                     .background(
-                        color = Color.White.copy(alpha = 0.15f),
+                        color = Color.White.copy(alpha = 0.12f),
+                        shape = CircleShape
+                    )
+                    .blur(10.dp)
+            )
+            
+            // Decorative circle - bottom right
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-20).dp, y = (-20).dp)
+                    .background(
+                        color = Color.White.copy(alpha = 0.08f),
                         shape = CircleShape
                     )
                     .blur(8.dp)
             )
 
-            Text(
-                text = emoji,
-                fontSize = 48.sp,
+            // Content - with proper padding to avoid emoji overlap
+            Row(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .offset(x = (-30).dp, y = float1.dp)
-            )
-
-            // Content
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
+                    .fillMaxSize()
                     .padding(20.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Left content - text info (with fixed width to prevent overlap)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Top section - member count and description
+                    Column(
+                        modifier = Modifier.padding(end = 70.dp) // More space for emoji
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.People,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = Color.White.copy(alpha = 0.9f)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.People,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White.copy(alpha = 0.9f)
+                            )
+                            Text(
+                                text = "$memberCount members",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Welcome message with community name
                         Text(
-                            text = "$memberCount members",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.White.copy(alpha = 0.9f)
+                            text = "Welcome to $name",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.85f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                // Member avatars
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy((-8).dp)
-                ) {
-                    repeat(5) { index ->
-                        Surface(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .border(2.dp, Color.White.copy(alpha = 0.8f), CircleShape),
-                            shape = CircleShape,
-                            color = listOf(PeachGlow, MintBreeze, SkyMist, RoseDust, SoftLavender)[index]
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = listOf("😊", "🏃", "💪", "🎯", "⚡")[index],
-                                    fontSize = 12.sp
-                                )
+                    // Bottom section - Member avatars only (removed +more)
+                    Row(
+                        modifier = Modifier.padding(end = 70.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy((-8).dp)
+                    ) {
+                        repeat(4) { index ->
+                            Surface(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .border(2.dp, Color.White.copy(alpha = 0.8f), CircleShape),
+                                shape = CircleShape,
+                                color = listOf(PeachGlow, MintBreeze, SkyMist, RoseDust)[index]
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = listOf("😊", "🏃", "💪", "🎯")[index],
+                                        fontSize = 12.sp
+                                    )
+                                }
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
+                }
+                
+                // Right side - Emoji (fixed position, absolute right)
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(56.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = "and more...",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.8f)
+                        text = emoji,
+                        fontSize = 44.sp,
+                        modifier = Modifier.offset(y = float1.dp)
                     )
                 }
             }
@@ -833,7 +953,8 @@ private fun CommunityBanner(
 @Composable
 private fun UpcomingEventsSection(
     events: List<CommunityEvent>,
-    onSeeAllClick: () -> Unit
+    onSeeAllClick: () -> Unit,
+    onEventClick: (CommunityEvent) -> Unit
 ) {
     Column {
         Row(
@@ -878,121 +999,147 @@ private fun UpcomingEventsSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(events) { event ->
-                EventCard(event = event)
+                EventCard(
+                    event = event,
+                    onClick = { onEventClick(event) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun EventCard(event: CommunityEvent) {
+private fun EventCard(
+    event: CommunityEvent,
+    onClick: () -> Unit
+) {
+    // Poster-style event card - informational only, tap for details
     Surface(
         modifier = Modifier
-            .width(200.dp)
-            .shadow(
-                elevation = 12.dp,
-                shape = RoundedCornerShape(20.dp),
-                ambientColor = NeumorphDark.copy(alpha = 0.1f)
-            ),
+            .width(180.dp)
+            .height(220.dp)
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = NeumorphLight.copy(alpha = 0.98f)
+        color = Color.Transparent
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            GenZTeal.copy(alpha = 0.9f),
+                            GenZCyan.copy(alpha = 0.85f)
+                        )
+                    )
+                )
         ) {
-            // Emoji and title row
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Surface(
-                    modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = GenZTeal.copy(alpha = 0.15f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(text = event.emoji, fontSize = 20.sp)
-                    }
-                }
-
-                Text(
-                    text = event.title,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    color = Lead,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Date
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.CalendarToday,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = GenZTeal
-                )
-                Text(
-                    text = event.date,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = WarmHaze
-                )
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Location
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.LocationOn,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = GenZBlue
-                )
-                Text(
-                    text = event.location,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = WarmHaze,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Attendees
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = MintBreeze.copy(alpha = 0.3f)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.People,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = GenZTeal
+            // Decorative circle
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .offset(x = 100.dp, y = (-20).dp)
+                    .background(
+                        color = Color.White.copy(alpha = 0.1f),
+                        shape = CircleShape
                     )
+                    .blur(20.dp)
+            )
+            
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Top section - Emoji and title
+                Column {
+                    // Large emoji
                     Text(
-                        text = "${event.attendees} going",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = GenZTeal
+                        text = event.emoji,
+                        fontSize = 42.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
+                    
+                    Text(
+                        text = event.title,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.White,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                
+                // Bottom section - Date and location
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // Date
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CalendarToday,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = Color.White.copy(alpha = 0.9f)
+                        )
+                        Text(
+                            text = event.date,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+                    
+                    // Location
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.LocationOn,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = Color.White.copy(alpha = 0.9f)
+                        )
+                        Text(
+                            text = event.location,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.9f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    
+                    // Tap to view hint
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White.copy(alpha = 0.2f),
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.TouchApp,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = Color.White
+                            )
+                            Text(
+                                text = "Tap for details",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1004,26 +1151,27 @@ private fun EventCard(event: CommunityEvent) {
 @Composable
 private fun PostCard(
     post: CommunityPost,
+    isOwnPost: Boolean,
     onLikeClick: (CommunityPost) -> Unit,
     onCommentAdded: (String, PostComment) -> Unit,
-    onShareClick: () -> Unit
+    onShareClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     var isLiked by remember { mutableStateOf(post.isLiked) }
     var likeCount by remember { mutableIntStateOf(post.likes) }
     var showComments by remember { mutableStateOf(false) }
     var newCommentText by remember { mutableStateOf("") }
+    var showPostMenu by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showImagePopup by remember { mutableStateOf(false) }
+    var selectedImageForPopup by remember { mutableStateOf<String?>(null) }
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .shadow(
-                elevation = 10.dp,
-                shape = RoundedCornerShape(22.dp),
-                ambientColor = NeumorphDark.copy(alpha = 0.08f)
-            ),
+            .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(22.dp),
-        color = NeumorphLight.copy(alpha = 0.98f)
+        color = NeumorphLight
     ) {
         Column(
             modifier = Modifier.padding(18.dp)
@@ -1066,15 +1214,50 @@ private fun PostCard(
                     }
                 }
 
-                IconButton(
-                    onClick = { /* More options */ },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.MoreHoriz,
-                        contentDescription = "More",
-                        tint = WarmHaze
-                    )
+                // Only show 3-dot menu for user's own posts
+                if (isOwnPost) {
+                    Box {
+                        IconButton(
+                            onClick = { showPostMenu = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.MoreHoriz,
+                                contentDescription = "More",
+                                tint = WarmHaze
+                            )
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showPostMenu,
+                            onDismissRequest = { showPostMenu = false },
+                            modifier = Modifier.background(NeumorphLight)
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Delete,
+                                            contentDescription = null,
+                                            tint = Color(0xFFFF6B6B),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Text(
+                                            text = "Delete Post",
+                                            color = Color(0xFFFF6B6B)
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    showPostMenu = false
+                                    showDeleteConfirm = true
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -1088,13 +1271,20 @@ private fun PostCard(
                 lineHeight = 22.sp
             )
             
-            // Display post images
+            // Display post images - clickable for fullscreen
             if (post.images.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
+                        .height(200.dp)
+                        .clickable {
+                            val imageUri = post.images.firstOrNull()
+                            if (imageUri != null) {
+                                selectedImageForPopup = imageUri
+                                showImagePopup = true
+                            }
+                        },
                     shape = RoundedCornerShape(16.dp),
                     color = GenZBlue.copy(alpha = 0.05f)
                 ) {
@@ -1106,7 +1296,7 @@ private fun PostCard(
                                 .data(Uri.parse(imageUri))
                                 .crossfade(true)
                                 .build(),
-                            contentDescription = "Post image",
+                            contentDescription = "Post image - tap to view full",
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(RoundedCornerShape(16.dp)),
@@ -1308,9 +1498,137 @@ private fun PostCard(
             }
         }
     }
+    
+    // Delete Confirmation Dialog
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = NeumorphLight,
+            title = {
+                Text(
+                    text = "Delete Post?",
+                    fontWeight = FontWeight.Bold,
+                    color = Lead
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to delete this post? This action cannot be undone.",
+                    color = WarmHaze
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDeleteClick()
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = Color(0xFFFF6B6B),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text(
+                        text = "Cancel",
+                        color = WarmHaze
+                    )
+                }
+            }
+        )
+    }
+    
+    // Fullscreen Image Viewer
+    if (showImagePopup && selectedImageForPopup != null) {
+        Dialog(
+            onDismissRequest = { 
+                showImagePopup = false 
+                selectedImageForPopup = null
+            },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .clickable { 
+                        showImagePopup = false 
+                        selectedImageForPopup = null
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                if (selectedImageForPopup!!.startsWith("content://")) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(Uri.parse(selectedImageForPopup))
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Full size image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    // Demo placeholder for non-URI images
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Image,
+                                contentDescription = null,
+                                modifier = Modifier.size(80.dp),
+                                tint = GenZBlue
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "📷 Demo Image",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+                
+                // Close button - top right corner
+                IconButton(
+                    onClick = { 
+                        showImagePopup = false 
+                        selectedImageForPopup = null
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .size(48.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = "Close",
+                        modifier = Modifier.size(28.dp),
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
+
+
 private fun CommentItem(comment: PostComment) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1691,17 +2009,22 @@ private fun CommunityInfoDialog(
     info: CommunityInfo,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.9f)
                 .shadow(
                     elevation = 20.dp,
                     shape = RoundedCornerShape(28.dp),
                     ambientColor = GenZTeal.copy(alpha = 0.2f)
                 ),
             shape = RoundedCornerShape(28.dp),
-            color = NeumorphLight
+            color = Color.White
         ) {
             Column(
                 modifier = Modifier.padding(24.dp)
@@ -1720,16 +2043,22 @@ private fun CommunityInfoDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
                         Text(text = communityEmoji, fontSize = 40.sp)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = communityName,
                             style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                lineHeight = 18.sp
                             ),
-                            color = Color.White
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1896,10 +2225,15 @@ private fun MembersDialog(
         }
     }
     
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.9f)
                 .heightIn(max = 500.dp)
                 .shadow(
                     elevation = 20.dp,
@@ -1907,7 +2241,7 @@ private fun MembersDialog(
                     ambientColor = GenZBlue.copy(alpha = 0.2f)
                 ),
             shape = RoundedCornerShape(28.dp),
-            color = NeumorphLight
+            color = Color.White
         ) {
             Column(
                 modifier = Modifier.padding(24.dp)
@@ -1918,7 +2252,9 @@ private fun MembersDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(
                             text = "Members",
                             style = MaterialTheme.typography.titleLarge.copy(
@@ -1927,11 +2263,22 @@ private fun MembersDialog(
                             color = Lead
                         )
                         Text(
-                            text = "${members.size} members in $communityName",
+                            text = "${members.size} members in",
                             style = MaterialTheme.typography.labelMedium,
                             color = WarmHaze
                         )
+                        Text(
+                            text = communityName,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = GenZTeal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     IconButton(
                         onClick = onDismiss,
@@ -2142,6 +2489,423 @@ private fun MemberItem(
                         ),
                         color = roleColor
                     )
+                }
+            }
+        }
+    }
+}
+
+// ==================== EVENT DETAIL DIALOG ====================
+
+@Composable
+private fun FeedEventDetailDialog(
+    event: CommunityEvent,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .fillMaxHeight(0.85f),
+            shape = RoundedCornerShape(28.dp),
+            color = Color.White,
+            shadowElevation = 24.dp
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Hero Header with Gradient
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    GenZTeal,
+                                    GenZCyan
+                                )
+                            )
+                        )
+                ) {
+                    // Decorative circles
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .offset(x = (-30).dp, y = (-30).dp)
+                            .background(
+                                color = Color.White.copy(alpha = 0.1f),
+                                shape = CircleShape
+                            )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .offset(x = 280.dp, y = 120.dp)
+                            .background(
+                                color = Color.White.copy(alpha = 0.1f),
+                                shape = CircleShape
+                            )
+                    )
+                    
+                    // Close button
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.2f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Close",
+                                modifier = Modifier.padding(8.dp),
+                                tint = Color.White
+                            )
+                        }
+                    }
+                    
+                    // Large emoji
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(top = 20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = event.emoji,
+                            fontSize = 72.sp
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Category badge
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color.White.copy(alpha = 0.2f)
+                        ) {
+                            Text(
+                                text = event.category,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+                
+                // Scrollable Content
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Title
+                    item {
+                        Text(
+                            text = event.title,
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = Lead,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
+                    // Date & Time
+                    item {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = GenZTeal.copy(alpha = 0.08f)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                // Date
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.CalendarToday,
+                                        contentDescription = null,
+                                        tint = GenZTeal,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = event.date,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = Lead
+                                    )
+                                }
+                                
+                                // Divider
+                                Box(
+                                    modifier = Modifier
+                                        .width(1.dp)
+                                        .height(40.dp)
+                                        .background(GenZTeal.copy(alpha = 0.3f))
+                                )
+                                
+                                // Time
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Schedule,
+                                        contentDescription = null,
+                                        tint = GenZTeal,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = event.time,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = Lead
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Location
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = GenZLavender.copy(alpha = 0.15f),
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.LocationOn,
+                                        contentDescription = null,
+                                        tint = GenZLavender,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                            Column {
+                                Text(
+                                    text = "Location",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = WarmHaze
+                                )
+                                Text(
+                                    text = event.location,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = Lead
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Organizer
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = GenZBlue.copy(alpha = 0.15f),
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Person,
+                                        contentDescription = null,
+                                        tint = GenZBlue,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                            Column {
+                                Text(
+                                    text = "Organized by",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = WarmHaze
+                                )
+                                Text(
+                                    text = event.organizer,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    color = Lead
+                                )
+                            }
+                        }
+                    }
+                    
+
+                    
+                    // Description
+                    if (event.description.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "About Event",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Lead
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = event.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = WarmHaze,
+                                lineHeight = 22.sp
+                            )
+                        }
+                    }
+                    
+                    // Highlights
+                    if (event.highlights.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "✨ Highlights",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Lead
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                event.highlights.forEach { highlight ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Surface(
+                                            modifier = Modifier.size(6.dp),
+                                            shape = CircleShape,
+                                            color = GenZTeal
+                                        ) {}
+                                        Text(
+                                            text = highlight,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Lead
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Requirements
+                    if (event.requirements.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "📋 Requirements",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Lead
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                color = ChineseSilver.copy(alpha = 0.08f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    event.requirements.forEach { req ->
+                                        Row(
+                                            verticalAlignment = Alignment.Top,
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.CheckCircle,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp),
+                                                tint = GenZTeal
+                                            )
+                                            Text(
+                                                text = req,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = Lead
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Bottom spacing
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+                
+                // Bottom Action - Close only
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = 8.dp,
+                    color = Color.White
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = GenZTeal
+                            )
+                        ) {
+                            Text(
+                                text = "Close",
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
                 }
             }
         }

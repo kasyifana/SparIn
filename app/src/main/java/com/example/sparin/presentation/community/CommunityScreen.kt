@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.*
@@ -21,20 +23,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import com.example.sparin.presentation.navigation.Screen
 import com.example.sparin.ui.theme.*
 import kotlin.math.cos
 import kotlin.math.sin
+import java.util.UUID
 
 // ==================== DATA CLASSES ====================
 
@@ -195,6 +202,9 @@ fun CommunityScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     
+    // State for Add Community Dialog
+    var showAddCommunityDialog by remember { mutableStateOf(false) }
+    
     // State for dynamic community lists
     var myCommunities by remember { mutableStateOf(initialMyCommunities) }
     var recommendedCommunities by remember { mutableStateOf(initialRecommendedCommunities) }
@@ -253,7 +263,7 @@ fun CommunityScreen(
             // SECTION 1: Header with Add button
             item {
                 CommunityHeader(
-                    onAddClick = { navController.navigate(Screen.CreateCommunity.route) }
+                    onAddClick = { showAddCommunityDialog = true }
                 )
             }
 
@@ -271,7 +281,7 @@ fun CommunityScreen(
             item {
                 Spacer(modifier = Modifier.height(24.dp))
                 FeaturedHeroCard(
-                    onExploreClick = { /* Navigate to explore */ }
+                    onExploreClick = { navController.navigate(Screen.FindCommunitiesNearby.route) }
                 )
             }
 
@@ -358,6 +368,19 @@ fun CommunityScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+    
+    // Add Community Dialog
+    if (showAddCommunityDialog) {
+        AddCommunityDialog(
+            categories = sportCategories,
+            onDismiss = { showAddCommunityDialog = false },
+            onAddCommunity = { newCommunity ->
+                // Add to my communities list
+                myCommunities = myCommunities + newCommunity
+                showAddCommunityDialog = false
+            }
+        )
     }
 }
 
@@ -1008,15 +1031,9 @@ private fun MyCommunityCard(
     Surface(
         modifier = Modifier
             .width(180.dp)
-            .shadow(
-                elevation = 14.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = NeumorphDark.copy(alpha = 0.12f),
-                spotColor = NeumorphDark.copy(alpha = 0.12f)
-            )
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(24.dp),
-        color = NeumorphLight.copy(alpha = 0.98f)
+        color = NeumorphLight
     ) {
         Column {
             // Banner - clean emoji without extra background
@@ -1122,15 +1139,9 @@ private fun RecommendedCommunityCard(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = 10.dp,
-                shape = RoundedCornerShape(20.dp),
-                ambientColor = NeumorphDark.copy(alpha = 0.1f),
-                spotColor = NeumorphDark.copy(alpha = 0.1f)
-            )
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = NeumorphLight.copy(alpha = 0.98f)
+        color = NeumorphLight
     ) {
         Row(
             modifier = Modifier
@@ -1287,15 +1298,9 @@ private fun MostPopularCommunityCard(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(
-                    elevation = 18.dp,
-                    shape = RoundedCornerShape(28.dp),
-                    ambientColor = GenZTeal.copy(alpha = 0.2f),
-                    spotColor = GenZTeal.copy(alpha = 0.2f)
-                )
                 .clickable(onClick = onClick),
             shape = RoundedCornerShape(28.dp),
-            color = NeumorphLight.copy(alpha = 0.98f)
+            color = NeumorphLight
         ) {
             Column {
                 // Hero Banner Area
@@ -1542,4 +1547,451 @@ private fun SectionHeader(
         ),
         color = Lead
     )
+}
+
+// ==================== ADD COMMUNITY DIALOG ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddCommunityDialog(
+    categories: List<SportCategory>,
+    onDismiss: () -> Unit,
+    onAddCommunity: (Community) -> Unit
+) {
+    // Form states
+    var communityName by remember { mutableStateOf("") }
+    var communityDescription by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<SportCategory?>(null) }
+    var showCategoryDropdown by remember { mutableStateOf(false) }
+    
+    // Validation
+    val isFormValid = communityName.isNotBlank() && selectedCategory != null
+    
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .padding(horizontal = 24.dp, vertical = 48.dp)
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(28.dp))
+                    .clickable(enabled = false, onClick = {}),
+                shape = RoundedCornerShape(28.dp),
+                color = Color.White,
+                shadowElevation = 24.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    // Header with gradient
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        GenZTeal,
+                                        GenZCyan
+                                    )
+                                )
+                            )
+                    ) {
+                        // Decorative circles
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .offset(x = (-30).dp, y = (-30).dp)
+                                .background(
+                                    color = Color.White.copy(alpha = 0.1f),
+                                    shape = CircleShape
+                                )
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .align(Alignment.BottomEnd)
+                                .offset(x = 20.dp, y = 20.dp)
+                                .background(
+                                    color = Color.White.copy(alpha = 0.1f),
+                                    shape = CircleShape
+                                )
+                        )
+                        
+                        // Close button
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.2f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = "Close",
+                                    modifier = Modifier.padding(8.dp),
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                        
+                        // Title
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(top = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "➕",
+                                fontSize = 40.sp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Create Community",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Color.White
+                            )
+                        }
+                    }
+                    
+                    // Form Content
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        // Community Name Field
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Community Name *",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = Lead
+                            )
+                            
+                            OutlinedTextField(
+                                value = communityName,
+                                onValueChange = { communityName = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = {
+                                    Text(
+                                        text = "e.g., Badminton Jakarta",
+                                        color = WarmHaze
+                                    )
+                                },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = GenZTeal,
+                                    unfocusedBorderColor = ChineseSilver.copy(alpha = 0.3f),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = ChineseSilver.copy(alpha = 0.05f)
+                                ),
+                                singleLine = true,
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Group,
+                                        contentDescription = null,
+                                        tint = GenZTeal
+                                    )
+                                }
+                            )
+                        }
+                        
+                        // Category Selection
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Sport Category *",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = Lead
+                            )
+                            
+                            ExposedDropdownMenuBox(
+                                expanded = showCategoryDropdown,
+                                onExpandedChange = { showCategoryDropdown = it }
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedCategory?.let { "${it.emoji} ${it.name}" } ?: "",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor(),
+                                    placeholder = {
+                                        Text(
+                                            text = "Select a category",
+                                            color = WarmHaze
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = GenZTeal,
+                                        unfocusedBorderColor = ChineseSilver.copy(alpha = 0.3f),
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = ChineseSilver.copy(alpha = 0.05f)
+                                    ),
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown)
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Category,
+                                            contentDescription = null,
+                                            tint = GenZTeal
+                                        )
+                                    }
+                                )
+                                
+                                ExposedDropdownMenu(
+                                    expanded = showCategoryDropdown,
+                                    onDismissRequest = { showCategoryDropdown = false }
+                                ) {
+                                    categories.forEach { category ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                                ) {
+                                                    Text(text = category.emoji, fontSize = 20.sp)
+                                                    Text(
+                                                        text = category.name,
+                                                        style = MaterialTheme.typography.bodyLarge
+                                                    )
+                                                }
+                                            },
+                                            onClick = {
+                                                selectedCategory = category
+                                                showCategoryDropdown = false
+                                            },
+                                            leadingIcon = {
+                                                if (selectedCategory == category) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Check,
+                                                        contentDescription = null,
+                                                        tint = GenZTeal
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Description Field
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Description",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = Lead
+                            )
+                            
+                            OutlinedTextField(
+                                value = communityDescription,
+                                onValueChange = { communityDescription = it },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp),
+                                placeholder = {
+                                    Text(
+                                        text = "Tell us about your community...",
+                                        color = WarmHaze
+                                    )
+                                },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = GenZTeal,
+                                    unfocusedBorderColor = ChineseSilver.copy(alpha = 0.3f),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = ChineseSilver.copy(alpha = 0.05f)
+                                ),
+                                maxLines = 4,
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Description,
+                                        contentDescription = null,
+                                        tint = GenZTeal,
+                                        modifier = Modifier.padding(bottom = 70.dp)
+                                    )
+                                }
+                            )
+                        }
+                        
+                        // Preview Card
+                        if (communityName.isNotBlank() && selectedCategory != null) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Preview",
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = Lead
+                                )
+                                
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = selectedCategory!!.color.copy(alpha = 0.15f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        // Emoji
+                                        Surface(
+                                            modifier = Modifier.size(50.dp),
+                                            shape = CircleShape,
+                                            color = selectedCategory!!.color.copy(alpha = 0.3f)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text(
+                                                    text = selectedCategory!!.emoji,
+                                                    fontSize = 24.sp
+                                                )
+                                            }
+                                        }
+                                        
+                                        // Info
+                                        Column(
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                text = communityName,
+                                                style = MaterialTheme.typography.titleMedium.copy(
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = Lead,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = if (communityDescription.isNotBlank()) 
+                                                    communityDescription 
+                                                else "No description",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = WarmHaze,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Person,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(14.dp),
+                                                    tint = GenZTeal
+                                                )
+                                                Text(
+                                                    text = "1 member (You)",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = GenZTeal
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Create Button
+                        Button(
+                            onClick = {
+                                selectedCategory?.let { category ->
+                                    val newCommunity = Community(
+                                        id = UUID.randomUUID().toString(),
+                                        name = communityName.trim(),
+                                        emoji = category.emoji,
+                                        bannerColor = category.color,
+                                        memberCount = "1",
+                                        newPosts = 0,
+                                        isJoined = true,
+                                        description = communityDescription.trim().ifBlank { 
+                                            "Welcome to $communityName community!" 
+                                        },
+                                        category = category.name
+                                    )
+                                    onAddCommunity(newCommunity)
+                                }
+                            },
+                            enabled = isFormValid,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(54.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = GenZTeal,
+                                disabledContainerColor = ChineseSilver.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Create Community",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                        
+                        // Hint text
+                        if (!isFormValid) {
+                            Text(
+                                text = "* Please fill in all required fields",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = WarmHaze,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
