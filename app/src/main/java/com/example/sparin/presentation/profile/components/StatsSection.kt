@@ -45,11 +45,8 @@ fun StatsSection(
     val animatedStatIncrease by viewModel.animatedStatIncrease.collectAsState()
     
     var showTooltip by remember { mutableStateOf<StatCardType?>(null) }
-    var expandedWinrateRing by remember { mutableStateOf(false) }
-    var expandedTotalMatches by remember { mutableStateOf(false) }
-    var expandedTotalWins by remember { mutableStateOf(false) }
-    var expandedRank by remember { mutableStateOf(false) }
-    var expandedElo by remember { mutableStateOf(false) }
+    // Centralized state untuk expand/collapse accordion - hanya satu stat yang bisa terbuka
+    var expandedStat by remember { mutableStateOf<StatCardType?>(null) }
 
     Box(modifier = modifier) {
         Surface(
@@ -101,7 +98,11 @@ fun StatsSection(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // Stats Pager for swipe navigation
-                    StatsPager(stats = stats) { page, statsData ->
+                    StatsPager(
+                        stats = stats,
+                        userScrollEnabled = expandedStat == null, // Disable scroll ketika ada detail yang terbuka
+                        onPageChanged = { expandedStat = null } // Reset expanded stat ketika pindah halaman
+                    ) { page, statsData ->
                         when (page) {
                             0 -> StatsCluster1(
                                 stats = statsData,
@@ -109,12 +110,12 @@ fun StatsSection(
                                 showTooltip = showTooltip,
                                 animatedStatIncrease = animatedStatIncrease,
                                 isComparisonMode = isComparisonMode,
-                                expandedWinrateRing = expandedWinrateRing,
-                                expandedTotalMatches = expandedTotalMatches,
+                                expandedStat = expandedStat,
                                 onTooltipClick = { showTooltip = it },
                                 onDismissTooltip = { showTooltip = null },
-                                onWinrateExpand = { expandedWinrateRing = !expandedWinrateRing },
-                                onTotalMatchesExpand = { expandedTotalMatches = !expandedTotalMatches }
+                                onStatExpand = { statType ->
+                                    expandedStat = if (expandedStat == statType) null else statType
+                                }
                             )
                             1 -> StatsCluster2(
                                 stats = statsData,
@@ -122,11 +123,11 @@ fun StatsSection(
                                 showTooltip = showTooltip,
                                 animatedStatIncrease = animatedStatIncrease,
                                 isComparisonMode = isComparisonMode,
-                                expandedTotalWins = expandedTotalWins,
-                                expandedRank = expandedRank,
+                                expandedStat = expandedStat,
                                 onTooltipClick = { statType -> showTooltip = statType },
-                                onTotalWinsExpand = { expandedTotalWins = !expandedTotalWins },
-                                onRankExpand = { expandedRank = !expandedRank }
+                                onStatExpand = { statType ->
+                                    expandedStat = if (expandedStat == statType) null else statType
+                                }
                             )
                             2 -> StatsCluster3(
                                 stats = statsData,
@@ -134,9 +135,11 @@ fun StatsSection(
                                 showTooltip = showTooltip,
                                 animatedStatIncrease = animatedStatIncrease,
                                 isComparisonMode = isComparisonMode,
-                                expandedElo = expandedElo,
+                                expandedStat = expandedStat,
                                 onTooltipClick = { statType -> showTooltip = statType },
-                                onEloExpand = { expandedElo = !expandedElo }
+                                onStatExpand = { statType ->
+                                    expandedStat = if (expandedStat == statType) null else statType
+                                }
                             )
                         }
                     }
@@ -243,12 +246,10 @@ private fun StatsCluster1(
     showTooltip: StatCardType?,
     animatedStatIncrease: StatCardType?,
     isComparisonMode: Boolean,
-    expandedWinrateRing: Boolean,
-    expandedTotalMatches: Boolean,
+    expandedStat: StatCardType?,
     onTooltipClick: (StatCardType) -> Unit,
     onDismissTooltip: () -> Unit,
-    onWinrateExpand: () -> Unit,
-    onTotalMatchesExpand: () -> Unit
+    onStatExpand: (StatCardType) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -267,7 +268,7 @@ private fun StatsCluster1(
                     isComparisonMode = isComparisonMode,
                     showTooltip = showTooltip == StatCardType.WINRATE,
                     showAchievement = animatedStatIncrease == StatCardType.WINRATE,
-                    onTap = { onWinrateExpand() },
+                    onTap = { onStatExpand(StatCardType.WINRATE) },
                     onLongPress = { viewModel.toggleComparisonMode() },
                     onTooltipClick = { onTooltipClick(StatCardType.WINRATE) },
                     onDismissTooltip = onDismissTooltip
@@ -285,7 +286,7 @@ private fun StatsCluster1(
                 isComparisonMode = isComparisonMode,
                 showTooltip = showTooltip == StatCardType.TOTAL_MATCHES,
                 showAchievement = animatedStatIncrease == StatCardType.TOTAL_MATCHES,
-                onTap = { onTotalMatchesExpand() },
+                onTap = { onStatExpand(StatCardType.TOTAL_MATCHES) },
                 onLongPress = { viewModel.toggleComparisonMode() },
                 onTooltipClick = { onTooltipClick(StatCardType.TOTAL_MATCHES) },
                 onDismissTooltip = onDismissTooltip
@@ -293,7 +294,7 @@ private fun StatsCluster1(
         }
 
         // Winrate Progress Ring (expandable)
-        if (expandedWinrateRing) {
+        if (expandedStat == StatCardType.WINRATE) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -308,7 +309,7 @@ private fun StatsCluster1(
         }
 
         // Total Matches Breakdown (expandable)
-        if (expandedTotalMatches) {
+        if (expandedStat == StatCardType.TOTAL_MATCHES) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -328,11 +329,9 @@ private fun StatsCluster2(
     showTooltip: StatCardType?,
     animatedStatIncrease: StatCardType?,
     isComparisonMode: Boolean,
-    expandedTotalWins: Boolean,
-    expandedRank: Boolean,
+    expandedStat: StatCardType?,
     onTooltipClick: (StatCardType) -> Unit,
-    onTotalWinsExpand: () -> Unit,
-    onRankExpand: () -> Unit
+    onStatExpand: (StatCardType) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -350,7 +349,7 @@ private fun StatsCluster2(
             isComparisonMode = isComparisonMode,
             showTooltip = showTooltip == StatCardType.TOTAL_WINS,
             showAchievement = animatedStatIncrease == StatCardType.TOTAL_WINS,
-            onTap = { onTotalWinsExpand() },
+            onTap = { onStatExpand(StatCardType.TOTAL_WINS) },
             onLongPress = { viewModel.toggleComparisonMode() },
             onTooltipClick = { onTooltipClick(StatCardType.TOTAL_WINS) }
         )
@@ -365,14 +364,14 @@ private fun StatsCluster2(
             isComparisonMode = isComparisonMode,
             showTooltip = showTooltip == StatCardType.RANK,
             showAchievement = animatedStatIncrease == StatCardType.RANK,
-            onTap = { onRankExpand() },
+            onTap = { onStatExpand(StatCardType.RANK) },
             onLongPress = { viewModel.toggleComparisonMode() },
             onTooltipClick = { onTooltipClick(StatCardType.RANK) }
         )
         }
 
         // Total Wins Breakdown (expandable)
-        if (expandedTotalWins) {
+        if (expandedStat == StatCardType.TOTAL_WINS) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -384,7 +383,7 @@ private fun StatsCluster2(
         }
 
         // Rank Breakdown (expandable)
-        if (expandedRank) {
+        if (expandedStat == StatCardType.RANK) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -404,9 +403,9 @@ private fun StatsCluster3(
     showTooltip: StatCardType?,
     animatedStatIncrease: StatCardType?,
     isComparisonMode: Boolean,
-    expandedElo: Boolean,
+    expandedStat: StatCardType?,
     onTooltipClick: (StatCardType) -> Unit,
-    onEloExpand: () -> Unit
+    onStatExpand: (StatCardType) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         InteractiveStatCard(
@@ -420,13 +419,13 @@ private fun StatsCluster3(
             isComparisonMode = isComparisonMode,
             showTooltip = showTooltip == StatCardType.ELO,
             showAchievement = animatedStatIncrease == StatCardType.ELO,
-            onTap = { onEloExpand() },
+            onTap = { onStatExpand(StatCardType.ELO) },
             onLongPress = { viewModel.toggleComparisonMode() },
             onTooltipClick = { onTooltipClick(StatCardType.ELO) }
         )
 
         // ELO Breakdown (expandable)
-        if (expandedElo) {
+        if (expandedStat == StatCardType.ELO) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
