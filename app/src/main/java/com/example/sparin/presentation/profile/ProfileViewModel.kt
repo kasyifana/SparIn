@@ -110,16 +110,96 @@ class ProfileViewModel(
 
                 val stats = user.stats
 
-                val matchHistory = rooms.map { room ->
-                    MatchHistoryItem(
-                        id = room.id,
-                        sport = getSportEmoji(room.category),
-                        sportName = room.category,
-                        opponent = "vs. ${room.maxPlayers - 1} others", // Simplified for now
-                        date = formatDate(room.dateTime),
-                        score = "Played", // Placeholder as we don't have score data yet
-                        result = MatchResult.WIN // Placeholder
+                // Rich sample match history data for UI showcase
+                val matchHistory = if (rooms.isEmpty()) {
+                    // Fallback to rich sample data if no real rooms
+                    listOf(
+                        MatchHistoryItem(
+                            id = "match_1",
+                            sport = "🏸",
+                            sportName = "Badminton",
+                            opponent = "vs. Reza Pratama",
+                            date = "Today",
+                            score = "21-18, 21-19",
+                            result = MatchResult.WIN
+                        ),
+                        MatchHistoryItem(
+                            id = "match_2",
+                            sport = "⚽",
+                            sportName = "Futsal",
+                            opponent = "vs. Team Alpha",
+                            date = "Yesterday",
+                            score = "5-3",
+                            result = MatchResult.WIN
+                        ),
+                        MatchHistoryItem(
+                            id = "match_3",
+                            sport = "🏀",
+                            sportName = "Basketball",
+                            opponent = "vs. Jakarta Warriors",
+                            date = "2 days ago",
+                            score = "78-82",
+                            result = MatchResult.LOSS
+                        ),
+                        MatchHistoryItem(
+                            id = "match_4",
+                            sport = "🎾",
+                            sportName = "Tennis",
+                            opponent = "vs. Ahmad Yani",
+                            date = "3 days ago",
+                            score = "6-4, 6-3",
+                            result = MatchResult.WIN
+                        ),
+                        MatchHistoryItem(
+                            id = "match_5",
+                            sport = "🏸",
+                            sportName = "Badminton",
+                            opponent = "vs. Dimas Ardianto",
+                            date = "1 week ago",
+                            score = "19-21, 23-21, 19-21",
+                            result = MatchResult.LOSS
+                        ),
+                        MatchHistoryItem(
+                            id = "match_6",
+                            sport = "⚽",
+                            sportName = "Futsal",
+                            opponent = "vs. Senayan FC",
+                            date = "1 week ago",
+                            score = "4-2",
+                            result = MatchResult.WIN
+                        ),
+                        MatchHistoryItem(
+                            id = "match_7",
+                            sport = "🏀",
+                            sportName = "Basketball",
+                            opponent = "vs. Sudirman Ballers",
+                            date = "2 weeks ago",
+                            score = "92-88",
+                            result = MatchResult.WIN
+                        ),
+                        MatchHistoryItem(
+                            id = "match_8",
+                            sport = "🎾",
+                            sportName = "Tennis",
+                            opponent = "vs. Budi Santoso",
+                            date = "2 weeks ago",
+                            score = "6-7, 4-6",
+                            result = MatchResult.LOSS
+                        )
                     )
+                } else {
+                    // Map real rooms to match history
+                    rooms.map { room ->
+                        MatchHistoryItem(
+                            id = room.id,
+                            sport = getSportEmoji(room.category),
+                            sportName = room.category,
+                            opponent = "vs. ${room.maxPlayers - 1} others",
+                            date = formatDate(room.dateTime),
+                            score = "Played",
+                            result = MatchResult.WIN
+                        )
+                    }
                 }
 
                 // Mock badges for now (can be dynamic later)

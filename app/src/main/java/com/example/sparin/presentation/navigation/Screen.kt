@@ -32,6 +32,7 @@ sealed class Screen(val route: String) {
         ) = "chat_room/$roomId/$mode/${roomTitle.replace("/", "-")}/${sport.replace("/", "-")}"
     }
     object EditProfile : Screen("edit_profile")
+    object MatchHistory : Screen("match_history")
     
     object CommunityFeed : Screen("community_feed/{communityId}/{name}/{emoji}") {
         fun createRoute(communityId: String, name: String, emoji: String) =

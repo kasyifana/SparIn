@@ -67,6 +67,9 @@ fun ProfileScreen(
                     onEditProfile = {
                         navController.navigate(Screen.EditProfile.route)
                     },
+                    onViewMatchHistory = {
+                        navController.navigate(Screen.MatchHistory.route)
+                    },
                     viewModel = viewModel
                 )
             }
@@ -88,6 +91,7 @@ private fun ProfileContent(
     badges: List<Badge>,
     aiInsights: AIInsights,
     onEditProfile: () -> Unit,
+    onViewMatchHistory: () -> Unit,
     viewModel: ProfileViewModel
 ) {
     val scrollState = rememberScrollState()
@@ -126,8 +130,12 @@ private fun ProfileContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Match History List
-        MatchHistoryList(matchHistory = matchHistory)
+        // Match History List (Limited to 3, View All for full list)
+        MatchHistoryList(
+            matchHistory = matchHistory,
+            maxItems = 3,
+            onViewAllClick = onViewMatchHistory
+        )
 
         Spacer(modifier = Modifier.height(100.dp)) // Bottom padding for nav bar
     }

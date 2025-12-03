@@ -25,6 +25,7 @@ import com.example.sparin.presentation.chat.ChatListScreen
 import com.example.sparin.presentation.chat.ChatRoomScreen
 import com.example.sparin.presentation.profile.ProfileScreen
 import com.example.sparin.presentation.profile.EditProfileScreen
+import com.example.sparin.presentation.profile.MatchHistoryScreen
 import com.example.sparin.presentation.community.feed.CommunityFeedScreen
 import com.example.sparin.presentation.community.feed.AllUpcomingEventsScreen
 import java.net.URLDecoder
@@ -143,6 +144,10 @@ fun NavGraph(
         
         composable(Screen.EditProfile.route) {
             EditProfileScreen(navController = navController)
+        }
+        
+        composable(Screen.MatchHistory.route) {
+            MatchHistoryScreen(navController = navController)
         }
         
         // Detail Screens with arguments
