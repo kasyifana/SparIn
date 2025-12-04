@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.sparin.presentation.navigation.Screen
 import com.example.sparin.presentation.profile.components.MatchHistoryList
 import com.example.sparin.ui.theme.*
 import org.koin.androidx.compose.koinViewModel
@@ -149,7 +150,10 @@ fun MatchHistoryScreen(
                             MatchHistoryList(
                                 matchHistory = state.matchHistory,
                                 maxItems = null, // Show all
-                                onViewAllClick = null // No view all button here
+                                onViewAllClick = null, // No view all button here
+                                onMatchClick = { match ->
+                                    navController.navigate(Screen.MatchDetail.createRoute(match.id))
+                                }
                             )
                         }
                     }

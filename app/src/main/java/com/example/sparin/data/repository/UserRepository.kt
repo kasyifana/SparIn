@@ -140,6 +140,20 @@ class UserRepository(
         )
     }
     
+    /**
+     * Sign out current user
+     */
+    suspend fun signOut(): Resource<Unit> {
+        return try {
+            authService.signOut()
+            Log.d(TAG, "User signed out successfully")
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to sign out: ${e.message}", e)
+            Resource.Error(e.message ?: "Failed to sign out")
+        }
+    }
+    
     companion object {
         private const val TAG = "UserRepository"
     }

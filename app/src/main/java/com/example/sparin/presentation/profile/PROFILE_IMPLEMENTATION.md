@@ -30,7 +30,7 @@ Implementasi lengkap ProfileScreen untuk aplikasi mobile SparIN dengan fitur-fit
 - Interactive micro-animations
 - Modern sporty icons
 
-## 📦 Components Created (15 Files)
+## 📦 Components Created (16 Files)
 
 ### **Core Components**
 
@@ -330,6 +330,36 @@ Implementasi lengkap ProfileScreen untuk aplikasi mobile SparIN dengan fitur-fit
 - Rounded corners (24dp)
 - Motivational messaging
 
+### 18. **LogoutSection.kt** ⭐ **[NEW]**
+**Premium Logout Section dengan Gen-Z Aesthetic**
+- Section header "Account" (Bold, 18sp)
+- Main logout button dengan:
+  - Glassmorphic design dengan gradient merah
+  - Animated glow effect yang smooth
+  - Exit icon dalam circular container
+  - Text "Logout" + subtitle "See you next game! 👋"
+  - Hover dan press animations
+  - Red accent color untuk warning state
+- Account action buttons grid:
+  - Settings button (cyan accent)
+  - About button (neon yellow accent)
+  - Compact 100dp height cards
+- Confirmation dialog dengan:
+  - Full-screen backdrop blur (50% opacity)
+  - White modal card (32dp corner radius)
+  - Animated waving emoji 👋 dalam badge
+  - Title: "Leaving Already?" (Bold, 24sp)
+  - Friendly subtitle tentang data safety
+  - Two action buttons:
+    - "Stay" button (ChineseSilver background)
+    - "Logout" button (Danger red dengan exit icon)
+  - Decorative floating blur circles
+  - Spring-based entrance/exit animations
+  - Click outside to dismiss
+- Smooth transitions dengan spring physics
+- Integration dengan ProfileViewModel.logout()
+- Navigation ke SignIn screen dengan clear back stack
+
 ## 🏗️ Architecture
 
 ```
@@ -341,7 +371,8 @@ ProfileScreen (Orchestrator)
 │   │   ├── isComparisonMode
 │   │   ├── showBottomSheet
 │   │   ├── showPopup
-│   │   └── animatedStatIncrease
+│   │   ├── animatedStatIncrease
+│   │   └── isLoggingOut [NEW]
 │   ├── Data Sources:
 │   │   ├── UserRepository (Firebase)
 │   │   └── RoomRepository (Firebase)
@@ -351,7 +382,8 @@ ProfileScreen (Orchestrator)
 │       ├── selectStatCard()
 │       ├── toggleComparisonMode()
 │       ├── showPopup() / hidePopup()
-│       └── triggerStatIncrease()
+│       ├── triggerStatIncrease()
+│       └── logout(onLogoutComplete) [NEW]
 │
 └── UI Components
     ├── ProfileHeader (Avatar, Name, Bio, Info Pills, Edit)
@@ -378,7 +410,11 @@ ProfileScreen (Orchestrator)
     │   └── Page Indicators
     ├── BadgeDisplay (Horizontal Scroll)
     ├── AIInsightCard (Trends, Recommendations, Suggested Rooms)
-    └── MatchHistoryList (Match Cards)
+    ├── MatchHistoryList (Match Cards)
+    └── LogoutSection [NEW]
+        ├── Logout Button (Main CTA)
+        ├── Account Actions (Settings, About)
+        └── LogoutConfirmationDialog
 ```
 
 ## 📐 Layout Structure
@@ -424,6 +460,12 @@ Box(fillMaxSize) { // Main container
     Spacer(16dp)
     
     MatchHistoryList(matchHistory)
+    
+    Spacer(20dp)
+    
+    LogoutSection( // 🆕 Account Management
+      onLogoutClick
+    )
     
     Spacer(100dp) // Bottom nav padding
   }

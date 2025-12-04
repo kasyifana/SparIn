@@ -29,7 +29,8 @@ fun MatchHistoryList(
     matchHistory: List<MatchHistoryItem>,
     modifier: Modifier = Modifier,
     maxItems: Int? = null,
-    onViewAllClick: (() -> Unit)? = null
+    onViewAllClick: (() -> Unit)? = null,
+    onMatchClick: ((MatchHistoryItem) -> Unit)? = null
 ) {
     val displayedMatches = if (maxItems != null) {
         matchHistory.take(maxItems)
@@ -71,14 +72,18 @@ fun MatchHistoryList(
 
         // Match Cards
         displayedMatches.forEach { match ->
-            MatchHistoryCard(match = match)
+            MatchHistoryCard(
+                match = match,
+                onClick = { onMatchClick?.invoke(match) }
+            )
         }
     }
 }
 
 @Composable
 private fun MatchHistoryCard(
-    match: MatchHistoryItem
+    match: MatchHistoryItem,
+    onClick: () -> Unit = {}
 ) {
     val resultColor = when (match.result) {
         MatchResult.WIN -> MintBreeze
@@ -108,7 +113,8 @@ private fun MatchHistoryCard(
                 spotColor = Dreamland.copy(alpha = 0.15f)
             ),
         shape = RoundedCornerShape(20.dp),
-        color = CascadingWhite
+        color = CascadingWhite,
+        onClick = onClick
     ) {
         Box(
             modifier = Modifier

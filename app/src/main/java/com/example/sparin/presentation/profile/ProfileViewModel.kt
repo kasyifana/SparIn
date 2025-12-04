@@ -41,8 +41,39 @@ class ProfileViewModel(
     private val _animatedStatIncrease = MutableStateFlow<StatCardType?>(null)
     val animatedStatIncrease: StateFlow<StatCardType?> = _animatedStatIncrease.asStateFlow()
 
+    private val _isLoggingOut = MutableStateFlow(false)
+    val isLoggingOut: StateFlow<Boolean> = _isLoggingOut.asStateFlow()
+
     init {
         loadProfileData()
+    }
+
+    /**
+     * Logout function
+     * Signs out the current user and clears session data
+     */
+    fun logout(onLogoutComplete: () -> Unit) {
+        viewModelScope.launch {
+            _isLoggingOut.value = true
+            try {
+                // Sign out from Firebase Auth or your auth provider
+                userRepository.signOut()
+                
+                // Clear any cached data if needed
+                // userRepository.clearCache()
+                
+                // Small delay for smooth UX
+                kotlinx.coroutines.delay(500)
+                
+                _isLoggingOut.value = false
+                onLogoutComplete()
+            } catch (e: Exception) {
+                _isLoggingOut.value = false
+                // Handle error - could show a toast or error state
+                // For now, still navigate away on error
+                onLogoutComplete()
+            }
+        }
     }
 
     // Interactive state functions
