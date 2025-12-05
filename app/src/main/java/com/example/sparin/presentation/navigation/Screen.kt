@@ -18,6 +18,12 @@ sealed class Screen(val route: String) {
     object Chat : Screen("chat")
     object Profile : Screen("profile")
     
+    // Competitive Mode Screens
+    object CompetitiveRadar : Screen("competitive_radar/{sport}/{matchType}") {
+        fun createRoute(sport: String = "All", matchType: String = "1v1") = 
+            "competitive_radar/$sport/$matchType"
+    }
+    
     // Detail Screens
     object CreateRoom : Screen("create_room")
     object RoomDetail : Screen("room_detail/{roomId}") {

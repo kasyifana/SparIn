@@ -119,6 +119,29 @@ fun NavGraph(
             DiscoverCompetitiveScreen(navController = navController)
         }
         
+        // Competitive Radar Scanning Screen
+        composable(
+            route = Screen.CompetitiveRadar.route,
+            arguments = listOf(
+                navArgument("sport") {
+                    type = NavType.StringType
+                    defaultValue = "All"
+                },
+                navArgument("matchType") {
+                    type = NavType.StringType
+                    defaultValue = "1v1"
+                }
+            )
+        ) { backStackEntry ->
+            val sport = backStackEntry.arguments?.getString("sport") ?: "All"
+            val matchType = backStackEntry.arguments?.getString("matchType") ?: "1v1"
+            com.example.sparin.presentation.discover.CompetitiveRadarScreen(
+                navController = navController,
+                selectedSport = sport,
+                matchType = matchType
+            )
+        }
+        
         composable(
             route = Screen.Chat.route,
             exitTransition = {

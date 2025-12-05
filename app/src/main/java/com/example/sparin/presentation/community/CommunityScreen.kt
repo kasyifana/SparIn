@@ -43,6 +43,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import java.util.UUID
 
+//Nama : Avit Febriansyah (23523238)
 // ==================== DATA CLASSES ====================
 
 data class SportCategory(
