@@ -37,6 +37,15 @@ import org.koin.androidx.compose.koinViewModel
 import kotlin.math.cos
 import kotlin.math.sin
 
+// ==================== GEN-Z COLOR PALETTE ====================
+
+private val GenZBlue = Color(0xFF8CCFFF)
+private val GenZTeal = Color(0xFF35C8C3)
+private val GenZCyan = Color(0xFF57D3FF)
+private val GenZLavender = Color(0xFFB8B5FF)
+private val GenZGradientStart = Color(0xFF35C8C3)
+private val GenZGradientEnd = Color(0xFF57D3FF)
+
 /**
  * Premium Home Screen for SparIN
  * Gen-Z aesthetic: pastel gradients, soft-neumorphism, frosted cards, floating shadows
@@ -75,7 +84,11 @@ fun HomeScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(CascadingWhite, SoftLavender.copy(alpha = 0.2f))
+                    colors = listOf(
+                        GenZGradientStart.copy(alpha = 0.03f),
+                        GenZGradientEnd.copy(alpha = 0.05f),
+                        CascadingWhite
+                    )
                 )
             )
     ) {
@@ -144,41 +157,55 @@ private fun HomeBackgroundBlobs() {
     Canvas(
         modifier = Modifier
             .fillMaxSize()
-            .blur(80.dp)
+            .blur(70.dp)
     ) {
+        // Teal blob - top right
         drawCircle(
-            color = ChineseSilver.copy(alpha = 0.25f),
-            radius = 200f,
+            color = GenZTeal.copy(alpha = 0.15f),
+            radius = 220f,
             center = Offset(
-                x = size.width * 0.1f + cos(Math.toRadians(offset1.toDouble())).toFloat() * 30f,
-                y = size.height * 0.05f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 20f
+                x = size.width * 0.85f + cos(Math.toRadians(offset1.toDouble())).toFloat() * 30f,
+                y = size.height * 0.1f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 20f
             )
         )
 
+        // Blue blob - left side
         drawCircle(
-            color = PeachGlow.copy(alpha = 0.15f),
-            radius = 150f,
-            center = Offset(
-                x = size.width * 0.9f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 25f,
-                y = size.height * 0.15f + sin(Math.toRadians(offset2.toDouble())).toFloat() * 30f
-            )
-        )
-
-        drawCircle(
-            color = MintBreeze.copy(alpha = 0.15f),
+            color = GenZBlue.copy(alpha = 0.12f),
             radius = 180f,
             center = Offset(
-                x = size.width * 0.2f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 35f,
-                y = size.height * 0.45f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 25f
+                x = size.width * 0.15f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 25f,
+                y = size.height * 0.3f + sin(Math.toRadians(offset2.toDouble())).toFloat() * 30f
             )
         )
 
+        // Lavender blob - center
         drawCircle(
-            color = SkyMist.copy(alpha = 0.12f),
+            color = GenZLavender.copy(alpha = 0.1f),
+            radius = 160f,
+            center = Offset(
+                x = size.width * 0.5f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 35f,
+                y = size.height * 0.5f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 25f
+            )
+        )
+
+        // Cyan blob - bottom right
+        drawCircle(
+            color = GenZCyan.copy(alpha = 0.1f),
             radius = 140f,
             center = Offset(
-                x = size.width * 0.85f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 20f,
-                y = size.height * 0.7f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 30f
+                x = size.width * 0.8f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 20f,
+                y = size.height * 0.75f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 30f
+            )
+        )
+
+        // Peach blob - bottom left
+        drawCircle(
+            color = PeachGlow.copy(alpha = 0.12f),
+            radius = 150f,
+            center = Offset(
+                x = size.width * 0.2f + sin(Math.toRadians(offset2.toDouble())).toFloat() * 25f,
+                y = size.height * 0.8f + cos(Math.toRadians(offset1.toDouble())).toFloat() * 20f
             )
         )
     }
@@ -968,7 +995,7 @@ private fun CampaignBanner(campaignState: CampaignState) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .height(160.dp)
+            .height(180.dp)
             .shadow(
                 elevation = 16.dp,
                 shape = RoundedCornerShape(28.dp),
@@ -982,67 +1009,57 @@ private fun CampaignBanner(campaignState: CampaignState) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    brush = Brush.horizontalGradient(
+                    brush = Brush.linearGradient(
                         colors = listOf(
-                            ChineseSilver.copy(alpha = 0.9f),
-                            ChineseSilver.copy(alpha = 0.7f),
-                            Crunch.copy(alpha = 0.6f)
-                        )
+                            GenZGradientStart,
+                            GenZGradientEnd,
+                            GenZBlue
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                     )
                 )
         ) {
             // Floating 3D elements
             Box(
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(60.dp)
                     .align(Alignment.TopEnd)
-                    .offset(x = (-20).dp, y = (15 + float1).dp)
+                    .offset(x = 15.dp, y = (-15 + float1).dp)
                     .background(
-                        color = PeachGlow.copy(alpha = 0.5f),
+                        color = Color.White.copy(alpha = 0.15f),
                         shape = CircleShape
                     )
-                    .blur(8.dp)
+                    .blur(12.dp)
             )
 
             Box(
                 modifier = Modifier
-                    .size(35.dp)
+                    .size(45.dp)
                     .align(Alignment.CenterEnd)
-                    .offset(x = (-50).dp, y = (10 + float2).dp)
+                    .offset(x = (-40).dp, y = (30 + float2).dp)
                     .background(
-                        color = MintBreeze.copy(alpha = 0.6f),
+                        color = Color.White.copy(alpha = 0.12f),
                         shape = CircleShape
                     )
-                    .blur(6.dp)
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = (-80).dp, y = (-20 + float1).dp)
-                    .background(
-                        color = Crunch.copy(alpha = 0.4f),
-                        shape = CircleShape
-                    )
-                    .blur(5.dp)
+                    .blur(10.dp)
             )
 
             // Sport icons floating
             Text(
                 text = "🏆",
-                fontSize = 32.sp,
+                fontSize = 36.sp,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .offset(x = (-30).dp, y = (25 + float2).dp)
+                    .offset(x = (-25).dp, y = (20 + float1).dp)
             )
 
             Text(
                 text = "⚽",
-                fontSize = 24.sp,
+                fontSize = 32.sp,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .offset(x = (-15).dp, y = float1.dp)
+                    .offset(x = (-20).dp, y = float2.dp)
             )
 
             // Content
@@ -1055,7 +1072,7 @@ private fun CampaignBanner(campaignState: CampaignState) {
                 Text(
                     text = "Upcoming Events",
                     style = MaterialTheme.typography.labelMedium,
-                    color = WarmHaze
+                    color = Color.White.copy(alpha = 0.9f)
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -1066,39 +1083,41 @@ private fun CampaignBanner(campaignState: CampaignState) {
                         fontWeight = FontWeight.Bold,
                         lineHeight = 26.sp
                     ),
-                    color = Lead
+                    color = Color.White
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Surface(
+                Button(
+                    onClick = { },
                     modifier = Modifier
                         .shadow(
-                            elevation = 6.dp,
-                            shape = RoundedCornerShape(12.dp),
-                            ambientColor = Crunch.copy(alpha = 0.3f)
-                        )
-                        .clickable { },
-                    shape = RoundedCornerShape(12.dp),
-                    color = Crunch
+                            elevation = 10.dp,
+                            shape = RoundedCornerShape(24.dp),
+                            ambientColor = Color.Black.copy(alpha = 0.15f)
+                        ),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White
+                    ),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = "See More",
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.SemiBold
                             ),
-                            color = Lead
+                            color = GenZTeal
                         )
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = Lead
+                            modifier = Modifier.size(18.dp),
+                            tint = GenZTeal
                         )
                     }
                 }
