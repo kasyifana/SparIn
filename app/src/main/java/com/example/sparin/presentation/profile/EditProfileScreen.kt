@@ -34,6 +34,12 @@ import org.koin.androidx.compose.koinViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.sparin.ui.theme.*
+import androidx.compose.ui.geometry.Offset
+
+// Gen-Z vibrant blue matching home page upcoming events
+private val GenZBlue = Color(0xFF8CCFFF)
+private val GenZGradientStart = Color(0xFF35C8C3)
+private val GenZGradientEnd = Color(0xFF57D3FF)
 
 /**
  * EditProfileScreen - Edit user profile with SparIN design system
@@ -58,14 +64,7 @@ fun EditProfileScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            CascadingWhite,
-                            SoftLavender.copy(alpha = 0.2f)
-                        )
-                    )
-                )
+                .background(CascadingWhite)
                 .padding(paddingValues)
         ) {
             Column(
@@ -229,20 +228,13 @@ private fun ProfilePhotoPicker(
             modifier = Modifier
                 .size(120.dp)
                 .shadow(
-                    elevation = 12.dp,
+                    elevation = 8.dp,
                     shape = CircleShape,
-                    ambientColor = Dreamland.copy(alpha = 0.4f),
-                    spotColor = Dreamland.copy(alpha = 0.4f)
+                    ambientColor = GenZBlue.copy(alpha = 0.3f),
+                    spotColor = GenZBlue.copy(alpha = 0.3f)
                 )
                 .clip(CircleShape)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            ChineseSilver,
-                            SoftLavender
-                        )
-                    )
-                )
+                .background(ChineseSilver)
                 .border(4.dp, CascadingWhite, CircleShape)
                 .clickable { launcher.launch("image/*") },
             contentAlignment = Alignment.Center
@@ -253,14 +245,14 @@ private fun ProfilePhotoPicker(
                     imageVector = Icons.Rounded.Person,
                     contentDescription = "Profile Photo",
                     modifier = Modifier.size(60.dp),
-                    tint = WarmHaze
+                    tint = Lead.copy(alpha = 0.6f)
                 )
             } else {
                 Icon(
                     imageVector = Icons.Rounded.Person,
                     contentDescription = "Default Avatar",
                     modifier = Modifier.size(60.dp),
-                    tint = WarmHaze
+                    tint = Lead.copy(alpha = 0.6f)
                 )
             }
         }
@@ -272,10 +264,20 @@ private fun ProfilePhotoPicker(
                 .shadow(
                     elevation = 8.dp,
                     shape = RoundedCornerShape(20.dp),
-                    ambientColor = Crunch.copy(alpha = 0.3f)
+                    ambientColor = GenZBlue.copy(alpha = 0.3f)
                 )
                 .clip(RoundedCornerShape(20.dp))
-                .background(Crunch)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            GenZGradientStart,
+                            GenZGradientEnd,
+                            GenZBlue
+                        ),
+                        start = Offset(0f, 0f),
+                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                    )
+                )
                 .clickable { launcher.launch("image/*") }
                 .padding(horizontal = 20.dp, vertical = 10.dp)
         ) {
@@ -287,13 +289,13 @@ private fun ProfilePhotoPicker(
                     imageVector = Icons.Rounded.CameraAlt,
                     contentDescription = "Change Photo",
                     modifier = Modifier.size(18.dp),
-                    tint = Lead
+                    tint = Color.White
                 )
                 Text(
                     text = "Change Photo",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold,
-                        color = Lead
+                        color = Color.White
                     )
                 )
             }
@@ -330,7 +332,7 @@ private fun EditTextField(
             placeholder = {
                 Text(
                     text = placeholder,
-                    color = WarmHaze.copy(alpha = 0.5f)
+                    color = Lead.copy(alpha = 0.4f)
                 )
             },
             modifier = Modifier
@@ -346,7 +348,7 @@ private fun EditTextField(
                 unfocusedContainerColor = CascadingWhite,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                cursorColor = Crunch,
+                cursorColor = GenZBlue,
                 focusedTextColor = Lead,
                 unfocusedTextColor = Lead
             ),
@@ -403,10 +405,22 @@ private fun GenderChip(
             .shadow(
                 elevation = if (isSelected) 8.dp else 4.dp,
                 shape = RoundedCornerShape(16.dp),
-                ambientColor = if (isSelected) Crunch.copy(alpha = 0.3f) else Dreamland.copy(alpha = 0.2f)
+                ambientColor = if (isSelected) GenZBlue.copy(alpha = 0.3f) else Dreamland.copy(alpha = 0.2f)
             )
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isSelected) Crunch else ChineseSilver)
+            .background(
+                if (isSelected) Brush.linearGradient(
+                    colors = listOf(
+                        GenZGradientStart,
+                        GenZGradientEnd,
+                        GenZBlue
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                ) else Brush.linearGradient(
+                    colors = listOf(ChineseSilver, ChineseSilver)
+                )
+            )
             .clickable(onClick = onClick)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center
@@ -415,7 +429,7 @@ private fun GenderChip(
             text = gender.displayName,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Lead else WarmHaze
+                color = if (isSelected) Color.White else Lead
             )
         )
     }
@@ -544,10 +558,22 @@ private fun SkillLevelChip(
             .shadow(
                 elevation = if (isSelected) 8.dp else 4.dp,
                 shape = RoundedCornerShape(20.dp),
-                ambientColor = if (isSelected) Crunch.copy(alpha = 0.3f) else Dreamland.copy(alpha = 0.2f)
+                ambientColor = if (isSelected) GenZBlue.copy(alpha = 0.3f) else Dreamland.copy(alpha = 0.2f)
             )
             .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) Crunch else ChineseSilver)
+            .background(
+                if (isSelected) Brush.linearGradient(
+                    colors = listOf(
+                        GenZGradientStart,
+                        GenZGradientEnd,
+                        GenZBlue
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                ) else Brush.linearGradient(
+                    colors = listOf(ChineseSilver, ChineseSilver)
+                )
+            )
             .clickable(onClick = onClick)
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center
@@ -556,7 +582,7 @@ private fun SkillLevelChip(
             text = level.displayName,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Lead else WarmHaze,
+                color = if (isSelected) Color.White else Lead,
                 fontSize = 13.sp
             ),
             textAlign = TextAlign.Center
@@ -635,10 +661,22 @@ private fun SportChip(
             .shadow(
                 elevation = if (isSelected) 8.dp else 4.dp,
                 shape = RoundedCornerShape(20.dp),
-                ambientColor = if (isSelected) Crunch.copy(alpha = 0.3f) else Dreamland.copy(alpha = 0.2f)
+                ambientColor = if (isSelected) GenZBlue.copy(alpha = 0.3f) else Dreamland.copy(alpha = 0.2f)
             )
             .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) Crunch else ChineseSilver)
+            .background(
+                if (isSelected) Brush.linearGradient(
+                    colors = listOf(
+                        GenZGradientStart,
+                        GenZGradientEnd,
+                        GenZBlue
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                ) else Brush.linearGradient(
+                    colors = listOf(ChineseSilver, ChineseSilver)
+                )
+            )
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center
@@ -655,7 +693,7 @@ private fun SportChip(
                 text = name,
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) Lead else WarmHaze,
+                    color = if (isSelected) Color.White else Lead,
                     fontSize = 12.sp
                 )
             )
@@ -670,37 +708,43 @@ private fun SaveButton(
     isLoading: Boolean,
     onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
-        enabled = !isLoading,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .shadow(
                 elevation = 12.dp,
                 shape = RoundedCornerShape(26.dp),
-                ambientColor = Crunch.copy(alpha = 0.4f),
-                spotColor = Crunch.copy(alpha = 0.4f)
-            ),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Crunch,
-            contentColor = Lead,
-            disabledContainerColor = Dreamland,
-            disabledContentColor = WarmHaze
-        ),
-        shape = RoundedCornerShape(26.dp)
+                ambientColor = GenZBlue.copy(alpha = 0.4f),
+                spotColor = GenZBlue.copy(alpha = 0.4f)
+            )
+            .clip(RoundedCornerShape(26.dp))
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        GenZGradientStart,
+                        GenZGradientEnd,
+                        GenZBlue
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                )
+            )
+            .clickable(enabled = !isLoading, onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                color = Lead,
+                color = Color.White,
                 strokeWidth = 3.dp
             )
         } else {
             Text(
                 text = "Save Profile",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             )
         }

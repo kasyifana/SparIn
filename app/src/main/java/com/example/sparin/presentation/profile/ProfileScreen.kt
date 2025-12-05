@@ -66,7 +66,7 @@ fun ProfileScreen(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         CascadingWhite,
-                        SoftLavender.copy(alpha = 0.15f)
+                        SoftLavender.copy(alpha = 0.150f)
                     )
                 )
             )

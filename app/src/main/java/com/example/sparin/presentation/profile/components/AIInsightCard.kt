@@ -111,7 +111,7 @@ fun AIInsightCard(
                         brush = Brush.linearGradient(
                             colors = listOf(
                                 ChineseSilver.copy(alpha = 0.7f),
-                                SoftLavender.copy(alpha = 0.5f),
+                                SkyMist.copy(alpha = 0.5f),
                                 CascadingWhite.copy(alpha = 0.9f)
                             )
                         )
