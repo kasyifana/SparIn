@@ -1,4 +1,4 @@
-package com.example.sparin.presentation.profile.components
+package com.example.sparinprofile.presentation.profile.components
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -19,32 +20,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sparin.data.model.UserStats
-import com.example.sparin.presentation.profile.*
-import com.example.sparin.ui.theme.*
+import com.example.sparinprofile.presentation.profile.UserStats
+import com.example.sparinprofile.ui.theme.*
 
-/**
- * StatsSection - Interactive Statistics Display
- * Adapted from external design with Light Mode colors
- * Features: Tap to expand/collapse individual stats
- */
 @Composable
 fun StatsSection(
-    stats: UserStats,
-    viewModel: ProfileViewModel? = null,
-    modifier: Modifier = Modifier
+    stats: UserStats
 ) {
     var expandedStat by remember { mutableStateOf<StatType?>(null) }
     
     Column(
-        modifier = modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         // Section Header
         Text(
             text = "Performance Stats 🏆",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = LightColors.TextPrimary,
+            color = DarkColors.TextPrimary,
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
@@ -57,12 +50,12 @@ fun StatsSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                InteractiveStatCardLight(
+                InteractiveStatCard(
                     modifier = Modifier.weight(1f),
                     type = StatType.WINRATE,
                     icon = "📊",
                     label = "Winrate",
-                    value = "${String.format("%.1f", stats.winrate)}%",
+                    value = "${stats.winrate}%",
                     accentColor = Crunch,
                     isExpanded = expandedStat == StatType.WINRATE,
                     onTap = {
@@ -70,7 +63,7 @@ fun StatsSection(
                     }
                 )
                 
-                InteractiveStatCardLight(
+                InteractiveStatCard(
                     modifier = Modifier.weight(1f),
                     type = StatType.TOTAL_MATCHES,
                     icon = "🎮",
@@ -89,7 +82,7 @@ fun StatsSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                InteractiveStatCardLight(
+                InteractiveStatCard(
                     modifier = Modifier.weight(1f),
                     type = StatType.TOTAL_WINS,
                     icon = "🏆",
@@ -102,7 +95,7 @@ fun StatsSection(
                     }
                 )
                 
-                InteractiveStatCardLight(
+                InteractiveStatCard(
                     modifier = Modifier.weight(1f),
                     type = StatType.RANK,
                     icon = "⭐",
@@ -117,7 +110,7 @@ fun StatsSection(
             }
             
             // Row 3: ELO (full width)
-            InteractiveStatCardLight(
+            InteractiveStatCard(
                 modifier = Modifier.fillMaxWidth(),
                 type = StatType.ELO,
                 icon = "🎯",
@@ -142,7 +135,7 @@ enum class StatType {
 }
 
 @Composable
-fun InteractiveStatCardLight(
+fun InteractiveStatCard(
     modifier: Modifier = Modifier,
     type: StatType,
     icon: String,
@@ -180,14 +173,14 @@ fun InteractiveStatCardLight(
             )
             .clickable(onClick = onTap),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = DarkColors.SurfaceDefault,
         border = if (isExpanded) {
             androidx.compose.foundation.BorderStroke(2.dp, accentColor)
         } else null
     ) {
         Box {
             // Animated background blobs
-            AnimatedStatBlobsLight(accentColor)
+            AnimatedStatBlobs(accentColor)
             
             Column(
                 modifier = Modifier
@@ -209,7 +202,7 @@ fun InteractiveStatCardLight(
                     text = label,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = LightColors.TextSecondary
+                    color = DarkColors.TextSecondary
                 )
                 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -219,11 +212,11 @@ fun InteractiveStatCardLight(
                     text = value,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = LightColors.TextPrimary
+                    color = DarkColors.TextPrimary
                 )
                 
                 // Expanded details
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = isExpanded,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically()
@@ -232,11 +225,11 @@ fun InteractiveStatCardLight(
                         modifier = Modifier.padding(top = 12.dp)
                     ) {
                         Divider(
-                            color = LightColors.BorderLight,
+                            color = DarkColors.BorderLight,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                         
-                        StatDetailsLight(type)
+                        StatDetails(type)
                     }
                 }
             }
@@ -245,7 +238,7 @@ fun InteractiveStatCardLight(
 }
 
 @Composable
-fun AnimatedStatBlobsLight(accentColor: Color) {
+fun AnimatedStatBlobs(accentColor: Color) {
     val infiniteTransition = rememberInfiniteTransition(label = "blobs")
     
     val rotation by infiniteTransition.animateFloat(
@@ -268,7 +261,7 @@ fun AnimatedStatBlobsLight(accentColor: Color) {
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            accentColor.copy(alpha = 0.15f),
+                            accentColor.copy(alpha = 0.2f),
                             Color.Transparent
                         )
                     ),
@@ -285,7 +278,7 @@ fun AnimatedStatBlobsLight(accentColor: Color) {
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            accentColor.copy(alpha = 0.12f),
+                            accentColor.copy(alpha = 0.15f),
                             Color.Transparent
                         )
                     ),
@@ -296,48 +289,48 @@ fun AnimatedStatBlobsLight(accentColor: Color) {
 }
 
 @Composable
-fun StatDetailsLight(type: StatType) {
+fun StatDetails(type: StatType) {
     when (type) {
         StatType.WINRATE -> {
             Column {
-                DetailRowLight("Last Month", "72.5%")
-                DetailRowLight("This Month", "75.5%")
-                DetailRowLight("Trend", "↑ 3.0%")
+                DetailRow("Last Month", "72.5%")
+                DetailRow("This Month", "75.5%")
+                DetailRow("Trend", "↑ 3.0%")
             }
         }
         StatType.TOTAL_MATCHES -> {
             Column {
-                DetailRowLight("Badminton", "24 matches")
-                DetailRowLight("Futsal", "16 matches")
-                DetailRowLight("Basketball", "8 matches")
+                DetailRow("Badminton", "24 matches")
+                DetailRow("Futsal", "16 matches")
+                DetailRow("Basketball", "8 matches")
             }
         }
         StatType.TOTAL_WINS -> {
             Column {
-                DetailRowLight("This Week", "5 wins")
-                DetailRowLight("This Month", "18 wins")
-                DetailRowLight("Best Streak", "7 wins")
+                DetailRow("This Week", "5 wins")
+                DetailRow("This Month", "18 wins")
+                DetailRow("Best Streak", "7 wins")
             }
         }
         StatType.RANK -> {
             Column {
-                DetailRowLight("Current XP", "2,450 / 3,000")
-                DetailRowLight("Next Rank", "Platinum I")
-                DetailRowLight("Progress", "82%")
+                DetailRow("Current XP", "2,450 / 3,000")
+                DetailRow("Next Rank", "Platinum I")
+                DetailRow("Progress", "82%")
             }
         }
         StatType.ELO -> {
             Column {
-                DetailRowLight("Peak ELO", "1,950")
-                DetailRowLight("Percentile", "Top 15%")
-                DetailRowLight("Change", "↑ 50 this week")
+                DetailRow("Peak ELO", "1,950")
+                DetailRow("Percentile", "Top 15%")
+                DetailRow("Change", "↑ 50 this week")
             }
         }
     }
 }
 
 @Composable
-fun DetailRowLight(label: String, value: String) {
+fun DetailRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -347,35 +340,27 @@ fun DetailRowLight(label: String, value: String) {
         Text(
             text = label,
             fontSize = 12.sp,
-            color = LightColors.TextSecondary
+            color = DarkColors.TextSecondary
         )
         Text(
             text = value,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = LightColors.TextPrimary
+            color = DarkColors.TextPrimary
         )
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Preview(showBackground = true, backgroundColor = 0xFF202022)
 @Composable
 fun StatsSectionPreview() {
-    SparInTheme(darkTheme = false) {
-        Box(
-            modifier = Modifier
-                .background(LightColors.BgPrimary)
-                .padding(24.dp)
-        ) {
-            StatsSection(
-                stats = UserStats(
-                    winrate = 75.5,
-                    totalMatches = 48,
-                    totalWins = 36,
-                    rank = "Gold III",
-                    elo = 1850
-                )
-            )
-        }
-    }
+    StatsSection(
+        stats = UserStats(
+            winrate = 75.5f,
+            totalMatches = 48,
+            totalWins = 36,
+            rank = "Gold III",
+            elo = 1850
+        )
+    )
 }

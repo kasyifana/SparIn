@@ -8,6 +8,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -15,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.example.sparin.data.model.UserStats
 import com.example.sparin.ui.theme.*
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * Horizontal Pager for Stats Clusters
@@ -25,14 +28,26 @@ import com.example.sparin.ui.theme.*
 fun StatsPager(
     stats: UserStats,
     modifier: Modifier = Modifier,
+    userScrollEnabled: Boolean = true,
+    onPageChanged: () -> Unit = {},
     content: @Composable (page: Int, stats: UserStats) -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     
+    // Detect page changes and call onPageChanged
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }
+            .distinctUntilChanged()
+            .collect {
+                onPageChanged()
+            }
+    }
+    
     Column(modifier = modifier) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            userScrollEnabled = userScrollEnabled
         ) { page ->
             Box(
                 modifier = Modifier.fillMaxWidth(),

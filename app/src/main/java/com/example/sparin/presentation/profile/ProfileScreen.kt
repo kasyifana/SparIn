@@ -67,6 +67,20 @@ fun ProfileScreen(
                     onEditProfile = {
                         navController.navigate(Screen.EditProfile.route)
                     },
+                    onViewMatchHistory = {
+                        navController.navigate(Screen.MatchHistory.route)
+                    },
+                    onMatchClick = { match ->
+                        navController.navigate(Screen.MatchDetail.createRoute(match.id))
+                    },
+                    onLogout = {
+                        viewModel.logout {
+                            // Navigate to sign in screen and clear back stack
+                            navController.navigate(Screen.SignIn.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    },
                     viewModel = viewModel
                 )
             }
@@ -88,6 +102,9 @@ private fun ProfileContent(
     badges: List<Badge>,
     aiInsights: AIInsights,
     onEditProfile: () -> Unit,
+    onViewMatchHistory: () -> Unit,
+    onMatchClick: (MatchHistoryItem) -> Unit,
+    onLogout: () -> Unit,
     viewModel: ProfileViewModel
 ) {
     val scrollState = rememberScrollState()
@@ -126,8 +143,20 @@ private fun ProfileContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Match History List
-        MatchHistoryList(matchHistory = matchHistory)
+        // Match History List (Limited to 3, View All for full list)
+        MatchHistoryList(
+            matchHistory = matchHistory,
+            maxItems = 3,
+            onViewAllClick = onViewMatchHistory,
+            onMatchClick = onMatchClick
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Logout Section
+        LogoutSection(
+            onLogoutClick = onLogout
+        )
 
         Spacer(modifier = Modifier.height(100.dp)) // Bottom padding for nav bar
     }

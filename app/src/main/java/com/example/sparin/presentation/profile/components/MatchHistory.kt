@@ -27,8 +27,17 @@ import com.example.sparin.ui.theme.*
 @Composable
 fun MatchHistoryList(
     matchHistory: List<MatchHistoryItem>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    maxItems: Int? = null,
+    onViewAllClick: (() -> Unit)? = null,
+    onMatchClick: ((MatchHistoryItem) -> Unit)? = null
 ) {
+    val displayedMatches = if (maxItems != null) {
+        matchHistory.take(maxItems)
+    } else {
+        matchHistory
+    }
+    
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -48,27 +57,33 @@ fun MatchHistoryList(
                 color = Lead
             )
 
-            TextButton(onClick = { }) {
-                Text(
-                    text = "View All",
-                    color = Crunch,
-                    fontWeight = FontWeight.Medium
-                )
+            if (onViewAllClick != null && matchHistory.size > (maxItems ?: 0)) {
+                TextButton(onClick = onViewAllClick) {
+                    Text(
+                        text = "View All",
+                        color = Crunch,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(4.dp))
 
         // Match Cards
-        matchHistory.forEach { match ->
-            MatchHistoryCard(match = match)
+        displayedMatches.forEach { match ->
+            MatchHistoryCard(
+                match = match,
+                onClick = { onMatchClick?.invoke(match) }
+            )
         }
     }
 }
 
 @Composable
 private fun MatchHistoryCard(
-    match: MatchHistoryItem
+    match: MatchHistoryItem,
+    onClick: () -> Unit = {}
 ) {
     val resultColor = when (match.result) {
         MatchResult.WIN -> MintBreeze
@@ -98,7 +113,8 @@ private fun MatchHistoryCard(
                 spotColor = Dreamland.copy(alpha = 0.15f)
             ),
         shape = RoundedCornerShape(20.dp),
-        color = CascadingWhite
+        color = CascadingWhite,
+        onClick = onClick
     ) {
         Box(
             modifier = Modifier

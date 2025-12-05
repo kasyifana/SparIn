@@ -29,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.koin.androidx.compose.koinViewModel
+
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.sparin.ui.theme.*
@@ -41,7 +43,7 @@ import com.example.sparin.ui.theme.*
 @Composable
 fun EditProfileScreen(
     navController: NavHostController,
-    viewModel: EditProfileViewModel = viewModel()
+    viewModel: EditProfileViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
