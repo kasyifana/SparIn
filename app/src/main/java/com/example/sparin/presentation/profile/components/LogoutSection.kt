@@ -15,12 +15,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -270,97 +268,6 @@ private fun LogoutCard(
                         }
                     }
                 }
-                
-                // Divider with gradient
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Dreamland.copy(alpha = 0.3f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-                
-                // Quick Actions Row (matching design)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    QuickActionItem(
-                        icon = Icons.Rounded.Settings,
-                        label = "Settings",
-                        accentColor = MintBreeze,
-                        modifier = Modifier.weight(1f),
-                        onClick = { /* Navigate to settings */ }
-                    )
-                    
-                    QuickActionItem(
-                        icon = Icons.Rounded.Info,
-                        label = "About",
-                        accentColor = PeachGlow,
-                        modifier = Modifier.weight(1f),
-                        onClick = { /* Navigate to about */ }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun QuickActionItem(
-    icon: ImageVector,
-    label: String,
-    accentColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
-) {
-    Surface(
-        modifier = modifier
-            .height(70.dp)
-            .shadow(
-                elevation = 6.dp,
-                shape = RoundedCornerShape(16.dp),
-                ambientColor = accentColor.copy(alpha = 0.15f)
-            )
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        color = NeumorphLight
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .border(
-                    width = 1.dp,
-                    color = accentColor.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(16.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = accentColor.copy(alpha = 0.9f),
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    color = Lead,
-                    fontSize = 13.sp
-                )
             }
         }
     }
