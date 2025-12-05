@@ -499,9 +499,9 @@ private fun CommunityHeader(
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            GenZTeal.copy(alpha = 0.1f),
-                            GenZBlue.copy(alpha = 0.08f),
-                            GenZCyan.copy(alpha = 0.1f)
+                            GenZTeal.copy(alpha = 0f),
+                            GenZBlue.copy(alpha = 0f),
+                            GenZCyan.copy(alpha = 0f)
                         )
                     )
                 )

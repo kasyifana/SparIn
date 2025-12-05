@@ -247,9 +247,9 @@ private fun GreetingHeader(userState: UserState) {
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            ChineseSilver.copy(alpha = 0.2f),
-                            Dreamland.copy(alpha = 0.1f),
-                            ChineseSilver.copy(alpha = 0.15f)
+                            ChineseSilver.copy(alpha = 0f),
+                            Dreamland.copy(alpha = 0f),
+                            ChineseSilver.copy(alpha = 0f)
                         )
                     )
                 )
