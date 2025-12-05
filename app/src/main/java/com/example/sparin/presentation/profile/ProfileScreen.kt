@@ -26,7 +26,12 @@ import androidx.navigation.compose.rememberNavController
 import com.example.sparin.presentation.navigation.Screen
 import com.example.sparin.presentation.profile.components.*
 import com.example.sparin.data.model.UserStats
+import com.example.sparin.data.model.Badge
 import com.example.sparin.ui.theme.*
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -40,6 +45,19 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadProfileData()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Box(
         modifier = Modifier

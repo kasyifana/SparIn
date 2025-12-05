@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sparin.presentation.profile.Badge
+import com.example.sparin.data.model.Badge
 import com.example.sparin.ui.theme.*
 
 /**

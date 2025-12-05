@@ -24,7 +24,8 @@ data class User(
     val subscription: String = "free",
     val hasCompletedPersonalization: Boolean = false,  // Track personalization status
     val createdAt: Long = System.currentTimeMillis(),
-    val lastSeen: Long = System.currentTimeMillis()
+    val lastSeen: Long = System.currentTimeMillis(),
+    val badges: List<Badge> = emptyList()
 )
 
 /**
@@ -38,4 +39,13 @@ data class UserStats(
     val points: Int = 0,
     val rank: String = "Rookie",
     val elo: Int = 1000
+)
+
+/**
+ * Badge data class for Achievements
+ */
+data class Badge(
+    val icon: String = "",
+    val title: String = "",
+    val description: String = ""
 )

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.sparin.data.model.Room
 import com.example.sparin.data.model.User
 import com.example.sparin.data.model.UserStats
+import com.example.sparin.data.model.Badge
 import com.example.sparin.data.repository.RoomRepository
 import com.example.sparin.data.repository.UserRepository
 import com.example.sparin.domain.util.Resource
@@ -112,7 +113,7 @@ class ProfileViewModel(
         }
     }
 
-    private fun loadProfileData() {
+    fun loadProfileData() {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
 
@@ -233,12 +234,13 @@ class ProfileViewModel(
                     }
                 }
 
-                // Mock badges for now (can be dynamic later)
-                val badges = listOf(
-                    Badge("🏆", "Champion", "Won 5 tournaments"),
-                    Badge("🔥", "Hot Streak", "10 wins in a row"),
-                    Badge("⭐", "Rising Star", "Fastest climber")
-                )
+                // Use real badges from user profile
+                var badges = user.badges
+
+                // Temporary: Seed badges if empty to demonstrate functionality
+                if (badges.isEmpty()) {
+                    badges = seedDefaultBadges(user.uid)
+                }
 
                 // Mock AI insights for now
                 val aiInsights = AIInsights(
@@ -289,6 +291,23 @@ class ProfileViewModel(
         val sdf = java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault())
         return sdf.format(java.util.Date(timestamp))
     }
+
+    private suspend fun seedDefaultBadges(userId: String): List<Badge> {
+        val defaultBadges = listOf(
+            Badge("🏆", "Newcomer", "Joined SparIN"),
+            Badge("🔥", "Ready to Play", "Set up profile")
+        )
+        try {
+            // Update Firestore
+            userRepository.updateUserProfile(
+                userId,
+                mapOf("badges" to defaultBadges)
+            )
+            return defaultBadges
+        } catch (e: Exception) {
+            return emptyList()
+        }
+    }
 }
 
 // ==================== UI State ====================
@@ -330,11 +349,7 @@ enum class MatchResult {
     WIN, LOSS, DRAW
 }
 
-data class Badge(
-    val icon: String,
-    val title: String,
-    val description: String
-)
+
 
 data class AIInsights(
     val performanceTrend: String,
