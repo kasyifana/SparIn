@@ -46,6 +46,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
+    
+    // Splash Screen API - for instant splash
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))

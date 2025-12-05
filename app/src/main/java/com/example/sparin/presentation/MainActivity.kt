@@ -41,19 +41,8 @@ class MainActivity : ComponentActivity() {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         
-        // Determine start destination based on auth and personalization status
-        val startDestination = remember {
-            when {
-                !authRepository.isUserSignedIn() -> {
-                    // Not signed in -> Onboarding
-                    Screen.Onboarding.route
-                }
-                else -> {
-                    // Signed in - check if personalization is complete
-                    Screen.Home.route
-                }
-            }
-        }
+        // Always start with Splash screen
+        val startDestination = Screen.Splash.route
         
         // Screens yang menampilkan bottom nav
         val screensWithBottomNav = listOf(
@@ -71,7 +60,8 @@ class MainActivity : ComponentActivity() {
             NavGraph(
                 navController = navController,
                 startDestination = startDestination,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                isUserSignedIn = authRepository.isUserSignedIn()
             )
             
             // Floating Bottom Navigation Bar

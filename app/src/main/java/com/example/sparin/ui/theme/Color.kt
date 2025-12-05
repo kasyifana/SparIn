@@ -224,3 +224,34 @@ val VolleyOrchid = Color(0xFF9B7BB8)
 val GymTaupe = Color(0xFF8B7355)
 val RunningGold = Color(0xFFD4B84A)
 val CyclingAzure = Color(0xFF5A8ED4)
+
+// ============================================
+// SPRINTIN SPLASH SCREEN COLORS (iOS Premium Yellow)
+// ============================================
+object SprintinColors {
+    // Primary Yellow Palette
+    val SportYellow = Color(0xFFFFD33D)       // Primary - vibrant sport yellow
+    val SoftGoldYellow = Color(0xFFFFEB7A)    // Highlight - soft gold accent
+    val DeepCharcoal = Color(0xFF1D1D1D)      // Contrast - premium dark
+    val PureWhite = Color(0xFFFFFFFF)         // iOS clean background
+    
+    // Gradient Yellows
+    val YellowGradientStart = Color(0xFFFFE066)
+    val YellowGradientEnd = Color(0xFFFFD33D)
+    
+    // Subtle Overlays
+    val WhiteOverlay10 = Color(0x1AFFFFFF)
+    val WhiteOverlay20 = Color(0x33FFFFFF)
+    val YellowOverlay10 = Color(0x1AFFD33D)
+    val YellowOverlay30 = Color(0x4DFFD33D)
+    
+    // Shadows
+    val YellowShadow = Color(0x40FFD33D)
+    val SoftShadow = Color(0x0D000000)
+    
+    // Droplet Colors
+    val DropletYellow = Color(0xFFFFD33D)
+    val DropletGold = Color(0xFFFFEB7A)
+    val DropletHighlight = Color(0xFFFFF5CC)
+}
+

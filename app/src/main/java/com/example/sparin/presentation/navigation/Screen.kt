@@ -4,6 +4,9 @@ package com.example.sparin.presentation.navigation
  * Sealed class untuk Screen routes
  */
 sealed class Screen(val route: String) {
+    // Splash Screen
+    object Splash : Screen("splash")
+    
     // Onboarding & Auth
     object Onboarding : Screen("onboarding")
     object SignIn : Screen("sign_in")

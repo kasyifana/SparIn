@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.sparin.presentation.splash.SprintinSplashScreen
 import com.example.sparin.presentation.auth.SignInScreen
 import com.example.sparin.presentation.onboarding.OnboardingScreen
 import com.example.sparin.presentation.personalization.PersonalizationScreen
@@ -39,13 +40,30 @@ import java.nio.charset.StandardCharsets
 fun NavGraph(
     navController: NavHostController,
     startDestination: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isUserSignedIn: Boolean = false
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier
     ) {
+        // Splash Screen
+        composable(Screen.Splash.route) {
+            SprintinSplashScreen(
+                onSplashComplete = {
+                    val nextDestination = if (isUserSignedIn) {
+                        Screen.Home.route
+                    } else {
+                        Screen.Onboarding.route
+                    }
+                    navController.navigate(nextDestination) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
         // Onboarding & Auth Flow
         composable(Screen.Onboarding.route) {
             OnboardingScreen(
