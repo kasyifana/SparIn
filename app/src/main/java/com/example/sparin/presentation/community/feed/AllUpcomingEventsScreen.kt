@@ -38,11 +38,15 @@ import com.example.sparin.ui.theme.*
 import kotlin.math.cos
 import kotlin.math.sin
 
-// ==================== GEN-Z COLOR PALETTE ====================
-private val GenZBlue = Color(0xFF8CCFFF)
-private val GenZTeal = Color(0xFF35C8C3)
-private val GenZCyan = Color(0xFF57D3FF)
-private val GenZLavender = Color(0xFFB8B5FF)
+// ==================== PREMIUM VIBRANT COLOR PALETTE ====================
+private val VibrantPurple = Color(0xFF8B5CF6)      // Premium purple
+private val ElectricBlue = Color(0xFF00D4FF)       // Bright cyan-blue
+private val NeonMagenta = Color(0xFFFF2D78)        // Hot pink
+private val EnergyOrange = Color(0xFFFF6B35)       // Vibrant orange
+private val NeonLime = Color(0xFFC8FF00)           // Electric lime
+private val GoldenYellow = Color(0xFFFFD700)       // Premium gold
+private val EmeraldGreen = Color(0xFF10B981)       // Fresh green
+private val SoftPurple = Color(0xFFE9D5FF)         // Light purple tint
 
 // ==================== DATA CLASS ====================
 data class UpcomingEvent(
@@ -151,8 +155,8 @@ fun AllUpcomingEventsScreen(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         CascadingWhite,
-                        GenZBlue.copy(alpha = 0.06f),
-                        SoftLavender.copy(alpha = 0.1f)
+                        SoftPurple.copy(alpha = 0.15f),
+                        ElectricBlue.copy(alpha = 0.08f)
                     )
                 )
             )
@@ -192,13 +196,15 @@ fun AllUpcomingEventsScreen(
             }
 
             // Events List
-            items(events, key = { it.id }) { event ->
+            items(events.size) { index ->
+                val event = events[index]
                 EventListCard(
                     event = event,
                     onClick = { 
                         selectedEvent = event
                         showEventDetail = true
-                    }
+                    },
+                    colorIndex = index
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -249,7 +255,7 @@ private fun EventsBackgroundBlobs() {
             .blur(70.dp)
     ) {
         drawCircle(
-            color = GenZTeal.copy(alpha = 0.12f),
+            color = VibrantPurple.copy(alpha = 0.12f),
             radius = 150f,
             center = Offset(
                 x = size.width * 0.85f + cos(Math.toRadians(offset1.toDouble())).toFloat() * 25f,
@@ -258,7 +264,7 @@ private fun EventsBackgroundBlobs() {
         )
 
         drawCircle(
-            color = GenZBlue.copy(alpha = 0.15f),
+            color = ElectricBlue.copy(alpha = 0.15f),
             radius = 130f,
             center = Offset(
                 x = size.width * 0.15f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 20f,
@@ -267,7 +273,7 @@ private fun EventsBackgroundBlobs() {
         )
 
         drawCircle(
-            color = GenZLavender.copy(alpha = 0.1f),
+            color = SoftPurple.copy(alpha = 0.1f),
             radius = 120f,
             center = Offset(
                 x = size.width * 0.6f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 30f,
@@ -297,9 +303,9 @@ private fun EventsHeader(
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            GenZTeal.copy(alpha = 0.08f),
-                            GenZBlue.copy(alpha = 0.06f),
-                            GenZCyan.copy(alpha = 0.08f)
+                            VibrantPurple.copy(alpha = 0.08f),
+                            ElectricBlue.copy(alpha = 0.06f),
+                            NeonMagenta.copy(alpha = 0.08f)
                         )
                     )
                 )
@@ -374,7 +380,7 @@ private fun EventsStatsCard(
                 .fillMaxWidth()
                 .background(
                     brush = Brush.linearGradient(
-                        colors = listOf(GenZTeal, GenZCyan)
+                        colors = listOf(VibrantPurple, NeonMagenta)
                     )
                 )
                 .padding(24.dp)
@@ -427,8 +433,21 @@ private fun EventsStatsCard(
 private fun EventListCard(
     event: UpcomingEvent,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colorIndex: Int = 0
 ) {
+    // Different gradient pairs for variety
+    val gradientPairs = listOf(
+        listOf(VibrantPurple, ElectricBlue),           // Purple to Cyan
+        listOf(EnergyOrange, NeonMagenta),              // Orange to Pink
+        listOf(EmeraldGreen, ElectricBlue),             // Green to Cyan
+        listOf(NeonMagenta, VibrantPurple),             // Pink to Purple
+        listOf(ElectricBlue, EmeraldGreen),             // Cyan to Green
+        listOf(VibrantPurple, EnergyOrange)             // Purple to Orange
+    )
+    
+    val gradientColors = gradientPairs[colorIndex % gradientPairs.size]
+    
     // Poster-style event card - informational only
     Surface(
         modifier = modifier
@@ -444,8 +463,8 @@ private fun EventListCard(
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            GenZTeal.copy(alpha = 0.95f),
-                            GenZCyan.copy(alpha = 0.9f)
+                            gradientColors[0].copy(alpha = 0.95f),
+                            gradientColors[1].copy(alpha = 0.9f)
                         )
                     )
                 )
@@ -644,8 +663,8 @@ private fun EventDetailDialog(
                             .background(
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        GenZTeal,
-                                        GenZCyan
+                                        VibrantPurple,
+                                        NeonMagenta
                                     )
                                 )
                             )
@@ -752,7 +771,7 @@ private fun EventDetailDialog(
                                 icon = Icons.Rounded.CalendarToday,
                                 title = "Date",
                                 value = event.date,
-                                color = GenZTeal,
+                                color = VibrantPurple,
                                 modifier = Modifier.weight(1f)
                             )
                             
@@ -761,7 +780,7 @@ private fun EventDetailDialog(
                                 icon = Icons.Rounded.Schedule,
                                 title = "Time",
                                 value = event.time,
-                                color = GenZBlue,
+                                color = ElectricBlue,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -773,7 +792,7 @@ private fun EventDetailDialog(
                                 .shadow(
                                     elevation = 8.dp,
                                     shape = RoundedCornerShape(20.dp),
-                                    ambientColor = GenZLavender.copy(alpha = 0.1f)
+                                    ambientColor = SoftPurple.copy(alpha = 0.1f)
                                 ),
                             shape = RoundedCornerShape(20.dp),
                             color = NeumorphLight
@@ -786,14 +805,14 @@ private fun EventDetailDialog(
                                 Surface(
                                     modifier = Modifier.size(48.dp),
                                     shape = RoundedCornerShape(14.dp),
-                                    color = GenZLavender.copy(alpha = 0.15f)
+                                    color = SoftPurple.copy(alpha = 0.15f)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Rounded.LocationOn,
                                             contentDescription = null,
                                             modifier = Modifier.size(24.dp),
-                                            tint = GenZLavender
+                                            tint = SoftPurple
                                         )
                                     }
                                 }
@@ -821,14 +840,14 @@ private fun EventDetailDialog(
                                         .size(40.dp)
                                         .clickable { /* Open maps */ },
                                     shape = CircleShape,
-                                    color = GenZLavender.copy(alpha = 0.15f)
+                                    color = SoftPurple.copy(alpha = 0.15f)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Rounded.Map,
                                             contentDescription = "Open Maps",
                                             modifier = Modifier.size(20.dp),
-                                            tint = GenZLavender
+                                            tint = SoftPurple
                                         )
                                     }
                                 }
@@ -881,7 +900,7 @@ private fun EventDetailDialog(
                                 .height(52.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = GenZTeal
+                                containerColor = VibrantPurple
                             )
                         ) {
                             Text(

@@ -258,14 +258,27 @@ private val upcomingEvents = listOf(
     )
 )
 
-// ==================== GEN-Z COLOR PALETTE ====================
+// ==================== PREMIUM VIBRANT COLOR PALETTE ====================
 
-private val GenZBlue = Color(0xFF8CCFFF)
-private val GenZTeal = Color(0xFF35C8C3)
-private val GenZCyan = Color(0xFF57D3FF)
-private val GenZLavender = Color(0xFFB8B5FF)
-private val GenZGradientStart = Color(0xFF35C8C3)
-private val GenZGradientEnd = Color(0xFF57D3FF)
+// Primary Vibrant Colors
+private val VibrantPurple = Color(0xFF8B5CF6)      // Premium purple
+private val ElectricBlue = Color(0xFF00D4FF)       // Bright cyan-blue
+private val NeonMagenta = Color(0xFFFF2D78)        // Hot pink
+private val EnergyOrange = Color(0xFFFF6B35)       // Vibrant orange
+private val NeonLime = Color(0xFFC8FF00)           // Electric lime
+private val GoldenYellow = Color(0xFFFFD700)       // Premium gold
+
+// Gradient Colors for Cards
+private val CardGradient1Start = Color(0xFF8B5CF6)  // Purple
+private val CardGradient1End = Color(0xFF06B6D4)    // Cyan
+private val CardGradient2Start = Color(0xFFFF6B35)  // Orange
+private val CardGradient2End = Color(0xFFFF2D78)    // Pink
+private val CardGradient3Start = Color(0xFF10B981)  // Emerald
+private val CardGradient3End = Color(0xFF06B6D4)    // Cyan
+
+// Background accent colors
+private val PremiumDark = Color(0xFF1E1B4B)        // Deep purple-black
+private val SoftPurple = Color(0xFFE9D5FF)         // Light purple tint
 
 /**
  * Community Feed Screen - Shows posts and activities within a community
@@ -316,8 +329,8 @@ fun CommunityFeedScreen(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         CascadingWhite,
-                        GenZBlue.copy(alpha = 0.06f),
-                        SoftLavender.copy(alpha = 0.12f)
+                        SoftPurple.copy(alpha = 0.15f),
+                        ElectricBlue.copy(alpha = 0.08f)
                     )
                 )
             )
@@ -430,7 +443,7 @@ fun CommunityFeedScreen(
                     Surface(
                         modifier = Modifier.clickable { isLatestFirst = !isLatestFirst },
                         shape = RoundedCornerShape(12.dp),
-                        color = GenZTeal.copy(alpha = 0.12f)
+                        color = VibrantPurple.copy(alpha = 0.12f)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -441,14 +454,14 @@ fun CommunityFeedScreen(
                                 imageVector = if (isLatestFirst) Icons.Rounded.ArrowDownward else Icons.Rounded.ArrowUpward,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
-                                tint = GenZTeal
+                                tint = VibrantPurple
                             )
                             Text(
                                 text = if (isLatestFirst) "Latest" else "Oldest",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Medium
                                 ),
-                                color = GenZTeal
+                                color = VibrantPurple
                             )
                         }
                     }
@@ -548,7 +561,7 @@ private fun FeedBackgroundBlobs() {
             .blur(80.dp)
     ) {
         drawCircle(
-            color = GenZTeal.copy(alpha = 0.15f),
+            color = VibrantPurple.copy(alpha = 0.18f),
             radius = 160f,
             center = Offset(
                 x = size.width * 0.9f + cos(Math.toRadians(offset1.toDouble())).toFloat() * 30f,
@@ -557,7 +570,7 @@ private fun FeedBackgroundBlobs() {
         )
 
         drawCircle(
-            color = GenZBlue.copy(alpha = 0.18f),
+            color = ElectricBlue.copy(alpha = 0.2f),
             radius = 140f,
             center = Offset(
                 x = size.width * 0.1f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 25f,
@@ -566,11 +579,20 @@ private fun FeedBackgroundBlobs() {
         )
 
         drawCircle(
-            color = GenZLavender.copy(alpha = 0.12f),
+            color = NeonMagenta.copy(alpha = 0.12f),
             radius = 130f,
             center = Offset(
                 x = size.width * 0.7f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 35f,
                 y = size.height * 0.65f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 25f
+            )
+        )
+        
+        drawCircle(
+            color = EnergyOrange.copy(alpha = 0.1f),
+            radius = 100f,
+            center = Offset(
+                x = size.width * 0.3f + cos(Math.toRadians(offset2.toDouble())).toFloat() * 20f,
+                y = size.height * 0.85f + sin(Math.toRadians(offset1.toDouble())).toFloat() * 15f
             )
         )
     }
@@ -602,9 +624,9 @@ private fun FeedHeader(
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            GenZTeal.copy(alpha = 0.08f),
-                            GenZBlue.copy(alpha = 0.06f),
-                            GenZCyan.copy(alpha = 0.08f)
+                            VibrantPurple.copy(alpha = 0.1f),
+                            ElectricBlue.copy(alpha = 0.08f),
+                            NeonMagenta.copy(alpha = 0.06f)
                         )
                     )
                 )
@@ -707,13 +729,13 @@ private fun FeedHeader(
                                 Surface(
                                     modifier = Modifier.size(36.dp),
                                     shape = CircleShape,
-                                    color = GenZTeal.copy(alpha = 0.15f)
+                                    color = VibrantPurple.copy(alpha = 0.15f)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Rounded.Info,
                                             contentDescription = null,
-                                            tint = GenZTeal,
+                                            tint = VibrantPurple,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -751,13 +773,13 @@ private fun FeedHeader(
                                 Surface(
                                     modifier = Modifier.size(36.dp),
                                     shape = CircleShape,
-                                    color = GenZBlue.copy(alpha = 0.15f)
+                                    color = ElectricBlue.copy(alpha = 0.15f)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Rounded.People,
                                             contentDescription = null,
-                                            tint = GenZBlue,
+                                            tint = ElectricBlue,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -822,8 +844,9 @@ private fun CommunityBanner(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            GenZGradientStart,
-                            GenZGradientEnd
+                            VibrantPurple,
+                            ElectricBlue,
+                            CardGradient3Start
                         )
                     )
                 )
@@ -979,14 +1002,14 @@ private fun UpcomingEventsSection(
                 ) {
                     Text(
                         text = "See all",
-                        color = GenZTeal,
+                        color = VibrantPurple,
                         fontWeight = FontWeight.Medium
                     )
                     Icon(
                         imageVector = Icons.Rounded.ArrowForward,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = GenZTeal
+                        tint = VibrantPurple
                     )
                 }
             }
@@ -998,10 +1021,12 @@ private fun UpcomingEventsSection(
             contentPadding = PaddingValues(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(events) { event ->
+            items(events.size) { index ->
+                val event = events[index]
                 EventCard(
                     event = event,
-                    onClick = { onEventClick(event) }
+                    onClick = { onEventClick(event) },
+                    colorIndex = index
                 )
             }
         }
@@ -1011,8 +1036,20 @@ private fun UpcomingEventsSection(
 @Composable
 private fun EventCard(
     event: CommunityEvent,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    colorIndex: Int = 0
 ) {
+    // Different gradient pairs for variety
+    val gradientPairs = listOf(
+        listOf(VibrantPurple, ElectricBlue),           // Purple to Cyan
+        listOf(EnergyOrange, NeonMagenta),              // Orange to Pink
+        listOf(CardGradient3Start, ElectricBlue),       // Emerald to Cyan
+        listOf(NeonMagenta, VibrantPurple),             // Pink to Purple
+        listOf(ElectricBlue, CardGradient3Start)        // Cyan to Green
+    )
+    
+    val gradientColors = gradientPairs[colorIndex % gradientPairs.size]
+    
     // Poster-style event card - informational only, tap for details
     Surface(
         modifier = Modifier
@@ -1028,8 +1065,8 @@ private fun EventCard(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            GenZTeal.copy(alpha = 0.9f),
-                            GenZCyan.copy(alpha = 0.85f)
+                            gradientColors[0].copy(alpha = 0.95f),
+                            gradientColors[1].copy(alpha = 0.9f)
                         )
                     )
                 )
@@ -1190,7 +1227,7 @@ private fun PostCard(
                     Surface(
                         modifier = Modifier.size(44.dp),
                         shape = CircleShape,
-                        color = GenZTeal.copy(alpha = 0.15f)
+                        color = VibrantPurple.copy(alpha = 0.15f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(text = post.authorEmoji, fontSize = 22.sp)
@@ -1286,7 +1323,7 @@ private fun PostCard(
                             }
                         },
                     shape = RoundedCornerShape(16.dp),
-                    color = GenZBlue.copy(alpha = 0.05f)
+                    color = ElectricBlue.copy(alpha = 0.05f)
                 ) {
                     val imageUri = post.images.firstOrNull()
                     if (imageUri != null && imageUri.startsWith("content://")) {
@@ -1314,14 +1351,14 @@ private fun PostCard(
                                 Surface(
                                     modifier = Modifier.size(60.dp),
                                     shape = RoundedCornerShape(16.dp),
-                                    color = GenZBlue.copy(alpha = 0.15f)
+                                    color = ElectricBlue.copy(alpha = 0.15f)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Rounded.Image,
                                             contentDescription = null,
                                             modifier = Modifier.size(32.dp),
-                                            tint = GenZBlue
+                                            tint = ElectricBlue
                                         )
                                     }
                                 }
@@ -1329,7 +1366,7 @@ private fun PostCard(
                                 Text(
                                     text = "📷 Photo attached",
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = GenZBlue
+                                    color = ElectricBlue
                                 )
                             }
                         }
@@ -1368,7 +1405,7 @@ private fun PostCard(
                 PostActionButton(
                     icon = Icons.Rounded.ChatBubbleOutline,
                     label = (post.comments + post.commentsList.size - (post.commentsList.size.coerceAtMost(post.comments))).toString(),
-                    color = if (showComments) GenZTeal else WarmHaze,
+                    color = if (showComments) VibrantPurple else WarmHaze,
                     onClick = { showComments = !showComments }
                 )
 
@@ -1423,7 +1460,7 @@ private fun PostCard(
                         Surface(
                             modifier = Modifier.size(32.dp),
                             shape = CircleShape,
-                            color = GenZTeal.copy(alpha = 0.15f)
+                            color = VibrantPurple.copy(alpha = 0.15f)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(text = "😊", fontSize = 16.sp)
@@ -1481,7 +1518,7 @@ private fun PostCard(
                             modifier = Modifier
                                 .size(36.dp)
                                 .background(
-                                    if (newCommentText.isNotBlank()) GenZTeal else ChineseSilver.copy(alpha = 0.3f),
+                                    if (newCommentText.isNotBlank()) VibrantPurple else ChineseSilver.copy(alpha = 0.3f),
                                     CircleShape
                                 ),
                             enabled = newCommentText.isNotBlank()
@@ -1590,7 +1627,7 @@ private fun PostCard(
                                 imageVector = Icons.Rounded.Image,
                                 contentDescription = null,
                                 modifier = Modifier.size(80.dp),
-                                tint = GenZBlue
+                                tint = ElectricBlue
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
@@ -1637,7 +1674,7 @@ private fun CommentItem(comment: PostComment) {
         Surface(
             modifier = Modifier.size(28.dp),
             shape = CircleShape,
-            color = GenZLavender.copy(alpha = 0.2f)
+            color = SoftPurple.copy(alpha = 0.2f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(text = comment.authorEmoji, fontSize = 14.sp)
@@ -1736,7 +1773,7 @@ private fun CreatePostCard(
             .shadow(
                 elevation = 14.dp,
                 shape = RoundedCornerShape(24.dp),
-                ambientColor = GenZTeal.copy(alpha = 0.15f)
+                ambientColor = VibrantPurple.copy(alpha = 0.15f)
             ),
         shape = RoundedCornerShape(24.dp),
         color = NeumorphLight.copy(alpha = 0.98f)
@@ -1758,14 +1795,14 @@ private fun CreatePostCard(
                     Surface(
                         modifier = Modifier.size(44.dp),
                         shape = CircleShape,
-                        color = GenZTeal.copy(alpha = 0.15f)
+                        color = VibrantPurple.copy(alpha = 0.15f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Rounded.Person,
                                 contentDescription = null,
                                 modifier = Modifier.size(24.dp),
-                                tint = GenZTeal
+                                tint = VibrantPurple
                             )
                         }
                     }
@@ -1794,7 +1831,7 @@ private fun CreatePostCard(
                     Icon(
                         imageVector = if (isExpanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = GenZTeal
+                        tint = VibrantPurple
                     )
                 }
             }
@@ -1847,7 +1884,7 @@ private fun CreatePostCard(
                         .padding(top = 12.dp)
                         .height(180.dp),
                     shape = RoundedCornerShape(16.dp),
-                    color = GenZBlue.copy(alpha = 0.08f)
+                    color = ElectricBlue.copy(alpha = 0.08f)
                 ) {
                     Box(
                         contentAlignment = Alignment.Center
@@ -1909,7 +1946,7 @@ private fun CreatePostCard(
                                     imageVector = Icons.Rounded.CheckCircle,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp),
-                                    tint = GenZTeal
+                                    tint = VibrantPurple
                                 )
                                 Text(
                                     text = "Photo ready to post",
@@ -1937,7 +1974,7 @@ private fun CreatePostCard(
                     modifier = Modifier
                         .clickable { onPickImage() },
                     shape = RoundedCornerShape(14.dp),
-                    color = if (hasImage) GenZTeal.copy(alpha = 0.15f) else ChineseSilver.copy(alpha = 0.12f)
+                    color = if (hasImage) VibrantPurple.copy(alpha = 0.15f) else ChineseSilver.copy(alpha = 0.12f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -1948,14 +1985,14 @@ private fun CreatePostCard(
                             imageVector = Icons.Rounded.PhotoLibrary,
                             contentDescription = "Pick from gallery",
                             modifier = Modifier.size(20.dp),
-                            tint = if (hasImage) GenZTeal else WarmHaze
+                            tint = if (hasImage) VibrantPurple else WarmHaze
                         )
                         Text(
                             text = if (hasImage) "Change Photo" else "Gallery",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = if (hasImage) GenZTeal else WarmHaze
+                            color = if (hasImage) VibrantPurple else WarmHaze
                         )
                     }
                 }
@@ -1973,7 +2010,7 @@ private fun CreatePostCard(
                     modifier = Modifier.height(42.dp),
                     shape = RoundedCornerShape(21.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = GenZTeal,
+                        containerColor = VibrantPurple,
                         disabledContainerColor = ChineseSilver.copy(alpha = 0.3f)
                     ),
                     contentPadding = PaddingValues(horizontal = 24.dp)
@@ -2021,7 +2058,7 @@ private fun CommunityInfoDialog(
                 .shadow(
                     elevation = 20.dp,
                     shape = RoundedCornerShape(28.dp),
-                    ambientColor = GenZTeal.copy(alpha = 0.2f)
+                    ambientColor = VibrantPurple.copy(alpha = 0.2f)
                 ),
             shape = RoundedCornerShape(28.dp),
             color = Color.White
@@ -2036,7 +2073,7 @@ private fun CommunityInfoDialog(
                         .height(100.dp)
                         .background(
                             brush = Brush.linearGradient(
-                                colors = listOf(GenZGradientStart, GenZGradientEnd)
+                                colors = listOf(VibrantPurple, ElectricBlue, CardGradient3Start)
                             ),
                             shape = RoundedCornerShape(20.dp)
                         ),
@@ -2081,7 +2118,7 @@ private fun CommunityInfoDialog(
                     icon = Icons.Rounded.Person,
                     label = "Created by",
                     value = "${info.creatorEmoji} ${info.creatorName}",
-                    iconColor = GenZTeal
+                    iconColor = VibrantPurple
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -2091,7 +2128,7 @@ private fun CommunityInfoDialog(
                     icon = Icons.Rounded.CalendarToday,
                     label = "Created on",
                     value = info.createdDate,
-                    iconColor = GenZBlue
+                    iconColor = ElectricBlue
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -2101,7 +2138,7 @@ private fun CommunityInfoDialog(
                     icon = Icons.Rounded.LocationOn,
                     label = "Location",
                     value = info.location,
-                    iconColor = GenZLavender
+                    iconColor = SoftPurple
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -2111,7 +2148,7 @@ private fun CommunityInfoDialog(
                     icon = Icons.Rounded.People,
                     label = "Total Members",
                     value = "${info.totalMembers} members",
-                    iconColor = GenZCyan
+                    iconColor = NeonMagenta
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -2144,7 +2181,7 @@ private fun CommunityInfoDialog(
                         .height(48.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = GenZTeal
+                        containerColor = VibrantPurple
                     )
                 ) {
                     Text(
@@ -2238,7 +2275,7 @@ private fun MembersDialog(
                 .shadow(
                     elevation = 20.dp,
                     shape = RoundedCornerShape(28.dp),
-                    ambientColor = GenZBlue.copy(alpha = 0.2f)
+                    ambientColor = ElectricBlue.copy(alpha = 0.2f)
                 ),
             shape = RoundedCornerShape(28.dp),
             color = Color.White
@@ -2272,7 +2309,7 @@ private fun MembersDialog(
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.SemiBold
                             ),
-                            color = GenZTeal,
+                            color = VibrantPurple,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -2316,7 +2353,7 @@ private fun MembersDialog(
                             imageVector = Icons.Rounded.Search,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp),
-                            tint = if (searchQuery.isNotEmpty()) GenZTeal else WarmHaze
+                            tint = if (searchQuery.isNotEmpty()) VibrantPurple else WarmHaze
                         )
                         
                         BasicTextField(
@@ -2429,8 +2466,8 @@ private fun MemberItem(
     role: String
 ) {
     val roleColor = when (role) {
-        "Admin" -> GenZTeal
-        "Moderator" -> GenZBlue
+        "Admin" -> VibrantPurple
+        "Moderator" -> ElectricBlue
         else -> WarmHaze
     }
 
@@ -2450,7 +2487,7 @@ private fun MemberItem(
             Surface(
                 modifier = Modifier.size(44.dp),
                 shape = CircleShape,
-                color = GenZLavender.copy(alpha = 0.2f)
+                color = SoftPurple.copy(alpha = 0.2f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(text = emoji, fontSize = 20.sp)
@@ -2525,10 +2562,11 @@ private fun FeedEventDetailDialog(
                         .fillMaxWidth()
                         .height(200.dp)
                         .background(
-                            brush = Brush.verticalGradient(
+                            brush = Brush.linearGradient(
                                 colors = listOf(
-                                    GenZTeal,
-                                    GenZCyan
+                                    VibrantPurple,
+                                    ElectricBlue,
+                                    CardGradient3Start
                                 )
                             )
                         )
@@ -2630,7 +2668,7 @@ private fun FeedEventDetailDialog(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
-                            color = GenZTeal.copy(alpha = 0.08f)
+                            color = VibrantPurple.copy(alpha = 0.08f)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -2645,7 +2683,7 @@ private fun FeedEventDetailDialog(
                                     Icon(
                                         imageVector = Icons.Rounded.CalendarToday,
                                         contentDescription = null,
-                                        tint = GenZTeal,
+                                        tint = VibrantPurple,
                                         modifier = Modifier.size(24.dp)
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -2663,7 +2701,7 @@ private fun FeedEventDetailDialog(
                                     modifier = Modifier
                                         .width(1.dp)
                                         .height(40.dp)
-                                        .background(GenZTeal.copy(alpha = 0.3f))
+                                        .background(VibrantPurple.copy(alpha = 0.3f))
                                 )
                                 
                                 // Time
@@ -2673,7 +2711,7 @@ private fun FeedEventDetailDialog(
                                     Icon(
                                         imageVector = Icons.Rounded.Schedule,
                                         contentDescription = null,
-                                        tint = GenZTeal,
+                                        tint = VibrantPurple,
                                         modifier = Modifier.size(24.dp)
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -2698,14 +2736,14 @@ private fun FeedEventDetailDialog(
                         ) {
                             Surface(
                                 shape = CircleShape,
-                                color = GenZLavender.copy(alpha = 0.15f),
+                                color = SoftPurple.copy(alpha = 0.15f),
                                 modifier = Modifier.size(44.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Rounded.LocationOn,
                                         contentDescription = null,
-                                        tint = GenZLavender,
+                                        tint = SoftPurple,
                                         modifier = Modifier.size(22.dp)
                                     )
                                 }
@@ -2736,14 +2774,14 @@ private fun FeedEventDetailDialog(
                         ) {
                             Surface(
                                 shape = CircleShape,
-                                color = GenZBlue.copy(alpha = 0.15f),
+                                color = ElectricBlue.copy(alpha = 0.15f),
                                 modifier = Modifier.size(44.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Rounded.Person,
                                         contentDescription = null,
-                                        tint = GenZBlue,
+                                        tint = ElectricBlue,
                                         modifier = Modifier.size(22.dp)
                                     )
                                 }
@@ -2812,7 +2850,7 @@ private fun FeedEventDetailDialog(
                                         Surface(
                                             modifier = Modifier.size(6.dp),
                                             shape = CircleShape,
-                                            color = GenZTeal
+                                            color = VibrantPurple
                                         ) {}
                                         Text(
                                             text = highlight,
@@ -2856,7 +2894,7 @@ private fun FeedEventDetailDialog(
                                                 imageVector = Icons.Rounded.CheckCircle,
                                                 contentDescription = null,
                                                 modifier = Modifier.size(18.dp),
-                                                tint = GenZTeal
+                                                tint = VibrantPurple
                                             )
                                             Text(
                                                 text = req,
@@ -2895,7 +2933,7 @@ private fun FeedEventDetailDialog(
                                 .height(50.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = GenZTeal
+                                containerColor = VibrantPurple
                             )
                         ) {
                             Text(

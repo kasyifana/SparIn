@@ -2406,7 +2406,8 @@ private fun SportSelectionSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             modalSportOptions.forEach { sport ->
@@ -2538,7 +2539,8 @@ private fun MatchTypeSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             matchTypes.forEach { type ->

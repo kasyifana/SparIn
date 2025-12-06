@@ -2,10 +2,12 @@ package com.example.sparin.presentation.discover
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -14,6 +16,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -30,6 +35,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -42,6 +48,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,6 +56,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.sparin.presentation.navigation.Screen
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -109,7 +117,8 @@ private data class CompetitorPin(
     val distance: Float, // in km
     val angle: Float, // position on radar in degrees
     val radiusPercent: Float, // 0-1 from center
-    val status: CompetitorStatus
+    val status: CompetitorStatus,
+    val bio: String = "" // Trash talk / challenging bio text
 )
 
 private enum class SkillTier(val label: String, val color: Color, val icon: String) {
@@ -187,6 +196,30 @@ private object GenZPhrases {
         "Let's get this W! 🏆"
     )
     
+    // Trash Talk Bio Phrases - Provocative & Challenging
+    val trashTalkBios = listOf(
+        "Gue udah siap buat bikin lo menyesal 😈🔥",
+        "Kalau lo berani, gas langsung aja. No bacot! 💀",
+        "Yang kemarin2 pada mana? Semuanya kabur 🏃💨",
+        "Gue main santai aja, tapi lo tetep bakal kalah 😏",
+        "Siap mental dulu sebelum lawan gue 🧠⚡",
+        "Jangan nangis ya kalau kekalahan 😢✌️",
+        "Ranking gue bukan pajangan doang 👑",
+        "Lo yakin mau lawan? Pikir 2x deh 🤔💭",
+        "Dateng aja dulu, nanti gue ajarin 📚🔥",
+        "Gue ga pernah kalah dari yang level lo 😤",
+        "Easy clap buat gue, good luck buat lo 👏",
+        "Warm up doang lo buat gue mah 🏋️",
+        "Yang penting have fun... sebelum lo kalah 😂",
+        "Skill gue? Certified sih, beda sama yg lain 💯",
+        "Pede banget? Sini buktiin! 🎯",
+        "Lo cuma statistik di record gue 📊",
+        "Siap2 jadi sparring partner gue aja 🥋",
+        "Main sama gue = pengalaman pahit 😈",
+        "Gue sih oke aja, lo yg harus siap mental 💪",
+        "Rookie atau pro sama aja, tetep menang gue 🏆"
+    )
+    
     fun getRandomPhrase(list: List<String>): String = list.random()
 }
 
@@ -200,13 +233,13 @@ private data class MatchResult(
 
 // Mock detected competitors
 private val mockCompetitors = listOf(
-    CompetitorPin("1", "BadmintonPro11", "Badminton", "🏸", SkillTier.GOLD, 0.4f, 45f, 0.35f, CompetitorStatus.ACTIVE),
-    CompetitorPin("2", "FutsalAce", "Futsal", "⚽", SkillTier.PLATINUM, 0.7f, 120f, 0.55f, CompetitorStatus.SEARCHING),
-    CompetitorPin("3", "BoxerKing99", "Boxing", "🥊", SkillTier.ELITE, 1.2f, 200f, 0.75f, CompetitorStatus.RANKED),
-    CompetitorPin("4", "HoopMaster", "Basketball", "🏀", SkillTier.SILVER, 0.6f, 280f, 0.45f, CompetitorStatus.ACTIVE),
-    CompetitorPin("5", "RunnerX", "Running", "🏃", SkillTier.BRONZE, 1.5f, 340f, 0.85f, CompetitorStatus.SEARCHING),
-    CompetitorPin("6", "TennisAce", "Tennis", "🎾", SkillTier.GOLD, 0.9f, 160f, 0.6f, CompetitorStatus.ACTIVE),
-    CompetitorPin("7", "MuayFighter", "Muaythai", "🥋", SkillTier.PLATINUM, 0.5f, 80f, 0.4f, CompetitorStatus.RANKED)
+    CompetitorPin("1", "BadmintonPro11", "Badminton", "🏸", SkillTier.GOLD, 0.4f, 45f, 0.35f, CompetitorStatus.ACTIVE, "Smash gue beda level, siap mental dulu 🏸💀"),
+    CompetitorPin("2", "FutsalAce", "Futsal", "⚽", SkillTier.PLATINUM, 0.7f, 120f, 0.55f, CompetitorStatus.SEARCHING, "Gue udah sering bikin kiper nangis 😈⚽"),
+    CompetitorPin("3", "BoxerKing99", "Boxing", "🥊", SkillTier.ELITE, 1.2f, 200f, 0.75f, CompetitorStatus.RANKED, "Yang kemarin2 pada mana? Semuanya kabur 🏃💨"),
+    CompetitorPin("4", "HoopMaster", "Basketball", "🏀", SkillTier.SILVER, 0.6f, 280f, 0.45f, CompetitorStatus.ACTIVE, "Ankle lo aman ga? Nanti gue break 🏀😏"),
+    CompetitorPin("5", "RunnerX", "Running", "🏃", SkillTier.BRONZE, 1.5f, 340f, 0.85f, CompetitorStatus.SEARCHING, "Lo finish, gue udah pulang 🏃‍♂️💨"),
+    CompetitorPin("6", "TennisAce", "Tennis", "🎾", SkillTier.GOLD, 0.9f, 160f, 0.6f, CompetitorStatus.ACTIVE, "Ace after ace, siap2 aja 🎾🔥"),
+    CompetitorPin("7", "MuayFighter", "Muaythai", "🥋", SkillTier.PLATINUM, 0.5f, 80f, 0.4f, CompetitorStatus.RANKED, "Gue latihan tiap hari, lo yakin? 🥋👑")
 )
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -232,6 +265,10 @@ fun CompetitiveRadarScreen(
     
     // View mode for bottom sheet
     var viewMode by remember { mutableStateOf("category") } // "category" or "all"
+    
+    // Sparring detail states
+    var selectedCompetitor by remember { mutableStateOf<CompetitorPin?>(null) }
+    var showSparringDetail by remember { mutableStateOf(false) }
     
     // Phrase rotation during scanning
     LaunchedEffect(radarPhase) { 
@@ -392,8 +429,50 @@ fun CompetitiveRadarScreen(
                 selectedSport = selectedSport,
                 viewMode = viewMode,
                 onViewModeChange = { viewMode = it },
-                onCompetitorClick = { /* Handle selection */ }
+                onCompetitorClick = { competitor ->
+                    selectedCompetitor = competitor
+                    showSparringDetail = true
+                }
             )
+        }
+        
+        // ═══ SPARRING DETAIL BOTTOM SHEET ═══
+        AnimatedVisibility(
+            visible = showSparringDetail && selectedCompetitor != null,
+            enter = fadeIn(tween(200)) + slideInVertically(
+                initialOffsetY = { it / 2 },
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ),
+            exit = fadeOut(tween(150)) + slideOutVertically(
+                targetOffsetY = { it / 2 },
+                animationSpec = tween(200)
+            ),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            selectedCompetitor?.let { competitor ->
+                SparringDetailSheet(
+                    competitor = competitor,
+                    onDismiss = {
+                        showSparringDetail = false
+                        selectedCompetitor = null
+                    },
+                    onConfirmSparring = {
+                        // Navigate to chat room for sparring discussion
+                        showSparringDetail = false
+                        navController.navigate(
+                            Screen.ChatRoom.createRoute(
+                                roomId = "sparring_${competitor.id}_${System.currentTimeMillis()}",
+                                mode = "competitive",
+                                roomTitle = "Sparring: ${competitor.name}",
+                                sport = competitor.sport
+                            )
+                        )
+                    }
+                )
+            }
         }
         
         // Auto-matching footer indicator (only during scanning)
@@ -1319,8 +1398,28 @@ private fun RadarSparkParticles() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MATCH RESULT POPUP — CLEAN, COMPACT & PREMIUM! 🎯
+// DARK RED PREMIUM POPUP - ULTRA AESTHETIC DESIGN
 // ═══════════════════════════════════════════════════════════════════════════
+
+// Premium Dark Red Colors for Popup
+private val PopupDarkBase = Color(0xFF0D0A0B)
+private val PopupDarkSurface = Color(0xFF141012)
+private val PopupDarkCard = Color(0xFF1A1416)
+private val PopupDarkElevated = Color(0xFF251C1F)
+private val PopupDarkBorder = Color(0xFF3D2830)
+
+private val PopupCrimsonAccent = Color(0xFFFF3B5C)
+private val PopupCrimsonBright = Color(0xFFFF5470)
+private val PopupCrimsonDeep = Color(0xFFCC2244)
+private val PopupCrimsonGlow = Color(0xFFFF6B80)
+private val PopupCrimsonMuted = Color(0xFF993344)
+
+private val PopupGold = Color(0xFFFFD700)
+private val PopupGoldMuted = Color(0xFFD4AF37)
+
+private val PopupTextPrimary = Color(0xFFFAF8F9)
+private val PopupTextSecondary = Color(0xFFB8A8AC)
+private val PopupTextMuted = Color(0xFF786068)
 
 @Composable
 private fun MatchResultPopup(
@@ -1329,25 +1428,57 @@ private fun MatchResultPopup(
     onViewCategory: () -> Unit,
     onViewAllSports: () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "result_popup")
+    val infiniteTransition = rememberInfiniteTransition(label = "dark_popup")
     
-    // Subtle glow animation
-    val glowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
+    // Ultra smooth breathing glow
+    val breatheGlow by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = EaseInOutSine),
+            animation = tween(2500, easing = EaseInOutSine),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "glow"
+        label = "breathe"
+    )
+    
+    // Subtle shimmer effect
+    val shimmerOffset by infiniteTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmer"
+    )
+    
+    // Pulse for icon
+    val iconPulse by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "icon_pulse"
+    )
+    
+    // Spring scale animation for premium bounce feel
+    var isPressed by remember { mutableStateOf(false) }
+    val cardScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "card_scale"
     )
     
     val hasMatch = matchResult.hasExactMatch
     val matchCount = matchResult.exactMatches.size
     val nearbyCount = matchResult.nearbyCompetitors.size
-    val totalCount = matchCount + nearbyCount
     
-    // Group by sport - max 5 to keep compact
+    // Group by sport
     val sportGroups = (matchResult.exactMatches + matchResult.nearbyCompetitors)
         .groupBy { it.sport }
         .mapValues { it.value.size }
@@ -1360,16 +1491,17 @@ private fun MatchResultPopup(
             .padding(horizontal = 20.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Soft glow behind popup
+        // Premium multi-layer glow effect - Dark Red
         Box(
             modifier = Modifier
-                .size(280.dp)
-                .blur(60.dp)
-                .graphicsLayer { alpha = glowPulse * 0.4f }
+                .size(350.dp)
+                .blur(100.dp)
+                .graphicsLayer { alpha = breatheGlow * 0.5f }
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            if (hasMatch) RadarGold.copy(alpha = 0.5f) else RadarCrimsonPrimary.copy(alpha = 0.4f),
+                            if (hasMatch) PopupGold.copy(alpha = 0.4f) else PopupCrimsonAccent.copy(alpha = 0.5f),
+                            if (hasMatch) PopupGoldMuted.copy(alpha = 0.2f) else PopupCrimsonDeep.copy(alpha = 0.3f),
                             Color.Transparent
                         )
                     ),
@@ -1377,159 +1509,279 @@ private fun MatchResultPopup(
                 )
         )
         
-        // Main popup card - compact design
+        // Secondary crimson glow
+        Box(
+            modifier = Modifier
+                .size(280.dp)
+                .blur(60.dp)
+                .graphicsLayer { alpha = breatheGlow * 0.35f }
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            PopupCrimsonGlow.copy(alpha = 0.25f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
+        
+        // Main Dark Glass Card
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            color = RadarDarkCard.copy(alpha = 0.97f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    scaleX = cardScale
+                    scaleY = cardScale
+                }
+                .shadow(
+                    elevation = 40.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    ambientColor = if (hasMatch) PopupGold.copy(alpha = 0.2f) else PopupCrimsonAccent.copy(alpha = 0.25f),
+                    spotColor = Color.Black.copy(alpha = 0.6f)
+                ),
+            shape = RoundedCornerShape(28.dp),
+            color = PopupDarkCard.copy(alpha = 0.97f)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .drawWithContent {
+                        drawContent()
+                        // Premium shimmer overlay - dark red tint
+                        val shimmerBrush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                PopupCrimsonGlow.copy(alpha = 0.08f),
+                                Color.Transparent
+                            ),
+                            start = Offset(shimmerOffset * size.width, 0f),
+                            end = Offset((shimmerOffset + 0.5f) * size.width, size.height)
+                        )
+                        drawRect(shimmerBrush)
+                    }
                     .border(
                         width = 1.dp,
                         brush = Brush.linearGradient(
-                            colors = if (hasMatch) listOf(
-                                RadarGold.copy(alpha = 0.6f),
-                                RadarGold.copy(alpha = 0.2f)
-                            ) else listOf(
-                                RadarCrimsonBright.copy(alpha = 0.5f),
-                                RadarCrimsonPrimary.copy(alpha = 0.2f)
+                            colors = listOf(
+                                PopupCrimsonAccent.copy(alpha = 0.5f),
+                                PopupDarkBorder.copy(alpha = 0.6f),
+                                PopupCrimsonAccent.copy(alpha = 0.3f)
                             )
                         ),
-                        shape = RoundedCornerShape(24.dp)
+                        shape = RoundedCornerShape(28.dp)
                     )
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Compact Header
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = if (hasMatch) "🎯" else "👀",
-                            fontSize = 36.sp
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = if (hasMatch) "WE GOT A HIT!" else "No $selectedSport Yet",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Black
-                                ),
-                                color = if (hasMatch) RadarGold else RadarTextSecondary
+                    // Premium Dark Drag Handle
+                    Box(
+                        modifier = Modifier
+                            .width(36.dp)
+                            .height(4.dp)
+                            .background(
+                                color = PopupDarkBorder.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(2.dp)
                             )
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // Premium Icon with Crimson Glow Ring
+                    Box(
+                        modifier = Modifier.size(88.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Outer glow ring
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer { 
+                                    alpha = breatheGlow
+                                    scaleX = iconPulse
+                                    scaleY = iconPulse
+                                }
+                                .background(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            if (hasMatch) PopupGold.copy(alpha = 0.35f) else PopupCrimsonAccent.copy(alpha = 0.4f),
+                                            if (hasMatch) PopupGoldMuted.copy(alpha = 0.15f) else PopupCrimsonDeep.copy(alpha = 0.15f),
+                                            Color.Transparent
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                )
+                        )
+                        
+                        // Middle glow
+                        Box(
+                            modifier = Modifier
+                                .size(68.dp)
+                                .graphicsLayer { alpha = breatheGlow * 0.6f }
+                                .background(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            if (hasMatch) PopupGold.copy(alpha = 0.3f) else PopupCrimsonBright.copy(alpha = 0.3f),
+                                            Color.Transparent
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                )
+                        )
+                        
+                        // Icon container
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = if (hasMatch) listOf(
+                                            PopupGold,
+                                            PopupGoldMuted
+                                        ) else listOf(
+                                            PopupCrimsonAccent,
+                                            PopupCrimsonDeep
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                )
+                                .border(
+                                    width = 2.dp,
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            Color.White.copy(alpha = 0.4f),
+                                            Color.White.copy(alpha = 0.1f)
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = if (hasMatch) 
-                                    "$matchCount players match your vibe" 
-                                else 
-                                    "$nearbyCount other athletes nearby",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (hasMatch) RadarTextSecondary else RadarCrimsonBright
+                                text = if (hasMatch) "🎯" else "📡",
+                                fontSize = 26.sp
                             )
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                     
-                    // Compact sport chips - horizontal scroll if needed
+                    // Premium Title - Dark Typography
+                    Text(
+                        text = if (hasMatch) "Match Found!" else "Scanning Complete",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp
+                        ),
+                        color = PopupTextPrimary
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Premium Subtitle
+                    Text(
+                        text = if (hasMatch) 
+                            "$matchCount ${if (matchCount == 1) "player matches" else "players match"} your criteria" 
+                        else 
+                            "$nearbyCount athletes available nearby",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Normal,
+                            letterSpacing = 0.sp
+                        ),
+                        color = PopupTextSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(20.dp))
+                    
+                    // Sport Pills - Dark Red Style
                     if (sportGroups.isNotEmpty()) {
-                        Text(
-                            text = "Available nearby:",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = RadarTextMuted
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // Compact chips row
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                .horizontalScroll(rememberScrollState())
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
                         ) {
                             sportGroups.forEach { (sport, count) ->
                                 val isSelected = sport.equals(selectedSport, ignoreCase = true)
+                                
                                 Surface(
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(16.dp),
                                     color = if (isSelected) 
-                                        RadarGold.copy(alpha = 0.2f) 
+                                        PopupCrimsonAccent.copy(alpha = 0.2f) 
                                     else 
-                                        RadarDarkElevated.copy(alpha = 0.8f)
+                                        PopupDarkElevated.copy(alpha = 0.8f),
+                                    modifier = Modifier
+                                        .border(
+                                            width = if (isSelected) 1.dp else 0.5.dp,
+                                            color = if (isSelected) PopupCrimsonAccent.copy(alpha = 0.6f) else PopupDarkBorder,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        Text(getSportEmoji(sport), fontSize = 12.sp)
                                         Text(
-                                            text = "$count",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold
-                                            ),
-                                            color = if (isSelected) RadarGold else RadarTextPrimary
+                                            text = getSportEmoji(sport),
+                                            fontSize = 14.sp
                                         )
+                                        Text(
+                                            text = sport,
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = FontWeight.Medium,
+                                                letterSpacing = 0.sp
+                                            ),
+                                            color = if (isSelected) PopupCrimsonBright else PopupTextSecondary
+                                        )
+                                        // Count badge
+                                        Box(
+                                            modifier = Modifier
+                                                .size(18.dp)
+                                                .background(
+                                                    color = if (isSelected) 
+                                                        PopupCrimsonAccent 
+                                                    else 
+                                                        PopupTextMuted.copy(alpha = 0.4f),
+                                                    shape = CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "$count",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 9.sp
+                                                ),
+                                                color = if (isSelected) Color.White else PopupTextMuted
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     
-                    // Compact Action Buttons - side by side
-                    Row(
+                    // Premium Dark Buttons
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // All Sports Button
-                        Surface(
-                            onClick = onViewAllSports,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            color = RadarDarkElevated
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .border(
-                                        width = 1.dp,
-                                        color = RadarGlassBorder.copy(alpha = 0.5f),
-                                        shape = RoundedCornerShape(12.dp)
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text("🏅", fontSize = 14.sp)
-                                    Text(
-                                        text = "All Sports",
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.Medium
-                                        ),
-                                        color = RadarTextSecondary
-                                    )
-                                }
-                            }
-                        }
-                        
-                        // Primary Action Button
+                        // Primary CTA Button - Crimson Gradient
                         Surface(
                             onClick = onViewCategory,
                             modifier = Modifier
-                                .weight(1.2f)
-                                .height(44.dp),
-                            shape = RoundedCornerShape(12.dp),
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
                             color = Color.Transparent
                         ) {
                             Box(
@@ -1538,41 +1790,99 @@ private fun MatchResultPopup(
                                     .background(
                                         brush = Brush.horizontalGradient(
                                             colors = if (hasMatch) listOf(
-                                                RadarGold,
-                                                RadarCrimsonBright
+                                                PopupGold,
+                                                PopupGoldMuted
                                             ) else listOf(
-                                                RadarCrimsonPrimary,
-                                                RadarCrimsonBright
+                                                PopupCrimsonAccent,
+                                                PopupCrimsonDeep
                                             )
                                         ),
+                                        shape = RoundedCornerShape(14.dp)
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                Color.White.copy(alpha = 0.3f),
+                                                Color.White.copy(alpha = 0.05f)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(14.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = if (hasMatch) "View Matches" else "Explore Nearby",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            letterSpacing = (-0.2).sp
+                                        ),
+                                        color = if (hasMatch) PopupDarkBase else Color.White
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Rounded.ArrowForward,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = if (hasMatch) PopupDarkBase else Color.White
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Secondary Button - Dark Elevated
+                        Surface(
+                            onClick = onViewAllSports,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = PopupDarkElevated.copy(alpha = 0.9f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .border(
+                                        width = 0.5.dp,
+                                        color = PopupDarkBorder,
                                         shape = RoundedCornerShape(12.dp)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = if (hasMatch) "View Match" else "Explore",
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = Color.White
+                                        text = "🏅",
+                                        fontSize = 14.sp
                                     )
-                                    Text("→", color = Color.White, fontSize = 14.sp)
+                                    Text(
+                                        text = "Browse All Sports",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.Medium,
+                                            letterSpacing = (-0.2).sp
+                                        ),
+                                        color = PopupTextSecondary
+                                    )
                                 }
                             }
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
                     
-                    // Challenge text
+                    // Subtle motivational text - Dark style
                     Text(
-                        text = GenZPhrases.getRandomPhrase(GenZPhrases.challengePhrases),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = RadarTextMuted,
+                        text = if (hasMatch) "Ready to compete? 🔥" else "Great opportunities await ✨",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.Normal,
+                            letterSpacing = 0.sp
+                        ),
+                        color = PopupTextMuted,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -1596,6 +1906,821 @@ private fun getSportEmoji(sport: String): String {
         "volleyball" -> "🏐"
         else -> "🏅"
     }
+}
+
+// Helper function to get sport capacity info
+private fun getSportCapacityInfo(sport: String): Pair<String, String> {
+    return when (sport.lowercase()) {
+        "badminton" -> Pair("1v1 / 2v2", "Singles or Doubles match")
+        "futsal" -> Pair("5v5", "Full team futsal match")
+        "boxing" -> Pair("1v1", "One-on-one sparring")
+        "basketball" -> Pair("3v3 / 5v5", "Half court or Full court")
+        "running" -> Pair("1-10", "Solo or group run")
+        "tennis" -> Pair("1v1 / 2v2", "Singles or Doubles")
+        "muaythai" -> Pair("1v1", "Combat sparring session")
+        "swimming" -> Pair("1-8", "Lane training")
+        "cycling" -> Pair("1-20", "Solo or group ride")
+        "volleyball" -> Pair("6v6", "Full team match")
+        else -> Pair("1v1", "Standard match")
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SPARRING DETAIL BOTTOM SHEET - COMPACT iOS PREMIUM DESIGN 🔥
+// ═══════════════════════════════════════════════════════════════════════════
+
+@Composable
+private fun SparringDetailSheet(
+    competitor: CompetitorPin,
+    onDismiss: () -> Unit,
+    onConfirmSparring: () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "sparring_detail")
+    
+    // Swipe to dismiss state
+    var dragOffsetY by remember { mutableStateOf(0f) }
+    val dismissThreshold = 150f // pixels to trigger dismiss
+    
+    // Animated offset for smooth return
+    val animatedOffsetY by animateFloatAsState(
+        targetValue = dragOffsetY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "drag_offset"
+    )
+    
+    // Calculate alpha based on drag
+    val backdropAlpha = (0.6f - (dragOffsetY / 500f)).coerceIn(0f, 0.6f)
+    
+    // Subtle breathing glow
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glow_pulse"
+    )
+    
+    // Get capacity info based on sport
+    val (capacityValue, capacityDesc) = getSportCapacityInfo(competitor.sport)
+    
+    // Mock location data
+    val locationName = "GBK Sports Complex"
+    val locationDistance = "${String.format("%.1f", competitor.distance)} km"
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = backdropAlpha))
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onDismiss() }
+    ) {
+        // iOS-style Compact Bottom Sheet
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .graphicsLayer {
+                    translationY = animatedOffsetY.coerceAtLeast(0f)
+                }
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragEnd = {
+                            if (dragOffsetY > dismissThreshold) {
+                                onDismiss()
+                            } else {
+                                dragOffsetY = 0f
+                            }
+                        },
+                        onDragCancel = {
+                            dragOffsetY = 0f
+                        },
+                        onVerticalDrag = { change, dragAmount ->
+                            change.consume()
+                            // Only allow dragging down (positive values)
+                            dragOffsetY = (dragOffsetY + dragAmount).coerceAtLeast(0f)
+                        }
+                    )
+                }
+                .clickable(enabled = false) {},
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+            color = PopupDarkSurface,
+            tonalElevation = 8.dp,
+            shadowElevation = 24.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 34.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // iOS Drag Handle - Enhanced for swipe indication
+                Spacer(modifier = Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(5.dp)
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    PopupTextMuted.copy(alpha = 0.3f),
+                                    PopupTextSecondary.copy(alpha = 0.6f),
+                                    PopupTextMuted.copy(alpha = 0.3f)
+                                )
+                            ),
+                            RoundedCornerShape(3.dp)
+                        )
+                )
+                
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                // ═══ COMPACT PROFILE HEADER ═══
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Profile Avatar with glow
+                    Box(contentAlignment = Alignment.Center) {
+                        // Subtle glow ring
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .blur(8.dp)
+                                .graphicsLayer { alpha = glowPulse * 0.5f }
+                                .background(
+                                    PopupCrimsonAccent.copy(alpha = 0.4f),
+                                    CircleShape
+                                )
+                        )
+                        // Avatar
+                        Surface(
+                            modifier = Modifier.size(56.dp),
+                            shape = CircleShape,
+                            color = PopupDarkCard,
+                            border = BorderStroke(
+                                2.dp,
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        PopupCrimsonBright,
+                                        PopupCrimsonAccent.copy(alpha = 0.5f)
+                                    )
+                                )
+                            )
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Text(
+                                    text = getSportEmoji(competitor.sport),
+                                    fontSize = 24.sp
+                                )
+                            }
+                        }
+                        // Status dot
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(14.dp)
+                                .background(PopupDarkSurface, CircleShape)
+                                .padding(2.dp)
+                                .background(competitor.status.color, CircleShape)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(14.dp))
+                    
+                    // Name & Info Column
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = competitor.name,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.3).sp
+                            ),
+                            color = PopupTextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Tier badge compact
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        competitor.tier.color.copy(alpha = 0.15f),
+                                        RoundedCornerShape(6.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(competitor.tier.icon, fontSize = 10.sp)
+                                    Text(
+                                        text = competitor.tier.label,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 10.sp
+                                        ),
+                                        color = competitor.tier.color
+                                    )
+                                }
+                            }
+                            // Sport badge compact
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        PopupCrimsonAccent.copy(alpha = 0.12f),
+                                        RoundedCornerShape(6.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = competitor.sport,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 10.sp
+                                    ),
+                                    color = PopupCrimsonBright
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Distance indicator
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = locationDistance,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = PopupGold
+                        )
+                        Text(
+                            text = "away",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PopupTextMuted
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // ═══ TRASH TALK BIO - MODERN CHAT BUBBLE DESIGN ═══
+                val displayBio = remember(competitor.id) {
+                    if (competitor.bio.isNotEmpty()) {
+                        competitor.bio
+                    } else {
+                        GenZPhrases.getRandomPhrase(GenZPhrases.trashTalkBios)
+                    }
+                }
+                
+                // Calculate max capacity based on sport (remembered to prevent random changes)
+                val maxCapacity = remember(competitor.sport) {
+                    when (competitor.sport.lowercase()) {
+                        "badminton" -> 4  // 2v2 max
+                        "futsal" -> 10    // 5v5
+                        "boxing", "muaythai" -> 2  // 1v1
+                        "basketball" -> 10 // 5v5
+                        "tennis" -> 4     // 2v2 max
+                        "volleyball" -> 12 // 6v6
+                        "running" -> 20   // group run
+                        else -> 10
+                    }
+                }
+                val joinedCount = remember(competitor.id) { (1 until maxCapacity).random() }
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            PopupDarkCard.copy(alpha = 0.6f),
+                            RoundedCornerShape(16.dp)
+                        )
+                        .border(
+                            1.dp,
+                            PopupDarkBorder.copy(alpha = 0.4f),
+                            RoundedCornerShape(16.dp)
+                        )
+                        .padding(14.dp)
+                ) {
+                    Column {
+                        // Chat Header - Like messaging app
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // Small avatar
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(
+                                            brush = Brush.linearGradient(
+                                                colors = listOf(
+                                                    PopupCrimsonAccent,
+                                                    PopupCrimsonDeep
+                                                )
+                                            ),
+                                            shape = CircleShape
+                                        )
+                                        .border(1.dp, PopupCrimsonBright.copy(alpha = 0.5f), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = competitor.name.first().toString(),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = Color.White
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = competitor.name,
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = PopupTextPrimary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = "just now",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 9.sp
+                                        ),
+                                        color = PopupTextMuted
+                                    )
+                                }
+                            }
+                            
+                            // Trash talk badge
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        PopupCrimsonAccent.copy(alpha = 0.15f),
+                                        RoundedCornerShape(6.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text("🔥", fontSize = 10.sp)
+                                    Text(
+                                        text = "Trash Talk",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 9.sp
+                                        ),
+                                        color = PopupCrimsonBright
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // Chat Bubble - Modern iMessage style
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f, fill = false)
+                                    .widthIn(max = 280.dp)
+                                    .background(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                PopupCrimsonDeep.copy(alpha = 0.9f),
+                                                PopupCrimsonAccent.copy(alpha = 0.8f)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(
+                                            topStart = 4.dp,
+                                            topEnd = 18.dp,
+                                            bottomEnd = 18.dp,
+                                            bottomStart = 18.dp
+                                        )
+                                    )
+                                    .border(
+                                        1.dp,
+                                        PopupCrimsonBright.copy(alpha = 0.3f),
+                                        RoundedCornerShape(
+                                            topStart = 4.dp,
+                                            topEnd = 18.dp,
+                                            bottomEnd = 18.dp,
+                                            bottomStart = 18.dp
+                                        )
+                                    )
+                                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text = displayBio,
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 17.sp,
+                                        lineHeight = 24.sp,
+                                        letterSpacing = 0.2.sp
+                                    ),
+                                    color = Color.White
+                                )
+                            }
+                        }
+                        
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // ═══ COMPACT INFO GRID - iOS STYLE ═══
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Capacity Info Card
+                    CompactInfoCard(
+                        modifier = Modifier.weight(1f),
+                        icon = "👥",
+                        label = "Format",
+                        value = capacityValue,
+                        accentColor = PopupCrimsonAccent,
+                        glowPulse = glowPulse
+                    )
+                    // Tier Card - Shows competitor's skill tier
+                    CompactInfoCard(
+                        modifier = Modifier.weight(1f),
+                        icon = competitor.tier.icon,
+                        label = "Tier",
+                        value = competitor.tier.label,
+                        accentColor = competitor.tier.color,
+                        glowPulse = glowPulse
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Schedule Card
+                    CompactInfoCard(
+                        modifier = Modifier.weight(1f),
+                        icon = "⏰",
+                        label = "Available",
+                        value = "Flexible",
+                        accentColor = Color(0xFF7B68EE),
+                        glowPulse = glowPulse
+                    )
+                    // Joined Counter Card - Uses calculated values based on sport
+                    CompactInfoCard(
+                        modifier = Modifier.weight(1f),
+                        icon = "🎯",
+                        label = "Joined",
+                        value = "$joinedCount/$maxCapacity",
+                        accentColor = if (joinedCount >= maxCapacity - 1) PopupCrimsonAccent else Color(0xFF50C878),
+                        glowPulse = glowPulse
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // ═══ LOCATION BAR - iOS STYLE ═══
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = PopupDarkCard.copy(alpha = 0.6f),
+                    border = BorderStroke(
+                        1.dp,
+                        PopupDarkBorder.copy(alpha = 0.5f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(
+                                    PopupGold.copy(alpha = 0.15f),
+                                    RoundedCornerShape(10.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("📍", fontSize = 18.sp)
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = locationName,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = PopupTextPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "Jl. Pintu Satu Senayan, Jakarta",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PopupTextMuted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Rounded.ChevronRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = PopupTextMuted
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // ═══ XP REWARD SECTION - PREMIUM STYLE ═══
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.Transparent
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        PopupGold.copy(alpha = 0.08f),
+                                        PopupCrimsonAccent.copy(alpha = 0.05f),
+                                        PopupGold.copy(alpha = 0.08f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        PopupGold.copy(alpha = 0.3f),
+                                        PopupCrimsonAccent.copy(alpha = 0.2f),
+                                        PopupGold.copy(alpha = 0.3f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .padding(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // Left side - XP info
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // XP Icon with glow
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .graphicsLayer { alpha = glowPulse }
+                                        .background(
+                                            brush = Brush.radialGradient(
+                                                colors = listOf(
+                                                    PopupGold.copy(alpha = 0.3f),
+                                                    Color.Transparent
+                                                )
+                                            ),
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("⭐", fontSize = 22.sp)
+                                }
+                                
+                                Column {
+                                    Text(
+                                        text = "Win Reward",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Medium
+                                        ),
+                                        color = PopupTextMuted
+                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "+500",
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = PopupGold
+                                        )
+                                        Text(
+                                            text = "XP",
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = PopupGoldMuted
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            // Right side - Bonus indicator
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(
+                                                PopupCrimsonDeep.copy(alpha = 0.8f),
+                                                PopupCrimsonAccent.copy(alpha = 0.9f)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text("🔥", fontSize = 12.sp)
+                                    Text(
+                                        text = "2x BONUS",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.ExtraBold,
+                                            letterSpacing = 0.5.sp
+                                        ),
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // ═══ ACTION BUTTONS - iOS STYLE ═══
+                // Primary Confirm Button
+                Surface(
+                    onClick = onConfirmSparring,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.Transparent
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        PopupCrimsonDeep,
+                                        PopupCrimsonAccent
+                                    )
+                                ),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        PopupCrimsonBright.copy(alpha = 0.6f),
+                                        PopupCrimsonGlow.copy(alpha = 0.4f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(14.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("🔥", fontSize = 18.sp)
+                            Text(
+                                text = "Confirm Sparring",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.3.sp
+                                ),
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                // Secondary Cancel Button
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Maybe Later",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = PopupTextMuted
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ═══ iOS COMPACT INFO CARD COMPONENT ═══
+@Composable
+private fun CompactInfoCard(
+    modifier: Modifier = Modifier,
+    icon: String,
+    label: String,
+    value: String,
+    accentColor: Color,
+    glowPulse: Float
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = PopupDarkCard.copy(alpha = 0.6f),
+        border = BorderStroke(
+            1.dp,
+            accentColor.copy(alpha = glowPulse * 0.2f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(icon, fontSize = 16.sp)
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = PopupTextMuted
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp
+                ),
+                color = PopupTextPrimary
+            )
+        }
+    }
+}
+
+// Legacy Sparring Info Card (kept for backwards compatibility)
+@Composable
+private fun SparringInfoCardLegacy(
+    icon: String,
+    title: String,
+    value: String,
+    description: String,
+    accentColor: Color,
+    glowPulse: Float
+) {
+    // Backwards compatible version - not used in new design
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2196,6 +3321,9 @@ private fun MatchedCompetitorCard(
 // BOTTOM SHEET
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Sheet expansion states
+private enum class SheetState { Collapsed, HalfExpanded, FullExpanded }
+
 @Composable
 private fun CompetitorsBottomSheet(
     competitors: List<CompetitorPin>,
@@ -2205,6 +3333,42 @@ private fun CompetitorsBottomSheet(
     onViewModeChange: (String) -> Unit,
     onCompetitorClick: (CompetitorPin) -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val screenHeightDp = configuration.screenHeightDp.dp
+    
+    // Height configurations for different states
+    val collapsedHeight = 200.dp
+    val halfExpandedHeight = 380.dp
+    val fullExpandedHeight = screenHeightDp * 0.85f
+    
+    // State management for sheet expansion
+    var sheetState by remember { mutableStateOf(SheetState.HalfExpanded) }
+    
+    // Animated height based on state
+    val targetHeight = when (sheetState) {
+        SheetState.Collapsed -> collapsedHeight
+        SheetState.HalfExpanded -> halfExpandedHeight
+        SheetState.FullExpanded -> fullExpandedHeight
+    }
+    
+    val animatedHeight by animateDpAsState(
+        targetValue = targetHeight,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "sheetHeight"
+    )
+    
+    // Drag offset for smooth dragging
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    val currentHeightPx = with(density) { animatedHeight.toPx() }
+    val actualHeight = with(density) { (currentHeightPx - dragOffset).coerceIn(
+        collapsedHeight.toPx(),
+        fullExpandedHeight.toPx()
+    ).toDp() }
+    
     val infiniteTransition = rememberInfiniteTransition(label = "sheet")
     
     val borderGlow by infiniteTransition.animateFloat(
@@ -2217,6 +3381,17 @@ private fun CompetitorsBottomSheet(
         label = "border"
     )
     
+    // Handle bar glow when expanded
+    val handleGlow by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "handleGlow"
+    )
+    
     // Group competitors by sport
     val sportGroups = competitors.groupBy { it.sport }
     val displayCompetitors = if (viewMode == "category" && selectedSport != "All") {
@@ -2225,10 +3400,43 @@ private fun CompetitorsBottomSheet(
         competitors
     }
     
+    // Expansion progress for visual effects (0 = collapsed, 1 = full)
+    val expansionProgress = remember(animatedHeight, collapsedHeight, fullExpandedHeight) {
+        ((animatedHeight - collapsedHeight) / (fullExpandedHeight - collapsedHeight)).coerceIn(0f, 1f)
+    }
+    
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(380.dp),
+            .height(actualHeight)
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragStart = { },
+                    onDragEnd = {
+                        // Snap to nearest state based on current height
+                        val currentHeight = currentHeightPx - dragOffset
+                        val collapsedPx = collapsedHeight.toPx()
+                        val halfPx = halfExpandedHeight.toPx()
+                        val fullPx = fullExpandedHeight.toPx()
+                        
+                        // Calculate thresholds for snapping
+                        val toCollapsedThreshold = collapsedPx + (halfPx - collapsedPx) * 0.3f
+                        val toFullThreshold = halfPx + (fullPx - halfPx) * 0.4f
+                        
+                        sheetState = when {
+                            currentHeight <= toCollapsedThreshold -> SheetState.Collapsed
+                            currentHeight >= toFullThreshold -> SheetState.FullExpanded
+                            else -> SheetState.HalfExpanded
+                        }
+                        dragOffset = 0f
+                    },
+                    onVerticalDrag = { change, dragAmount ->
+                        change.consume()
+                        // Invert because dragging up should increase height
+                        dragOffset += dragAmount
+                    }
+                )
+            },
         shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
         color = Color.Transparent
     ) {
@@ -2238,8 +3446,8 @@ private fun CompetitorsBottomSheet(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            RadarGlassBg.copy(alpha = 0.95f),
-                            RadarDarkBase.copy(alpha = 0.98f)
+                            RadarGlassBg.copy(alpha = 0.97f),
+                            RadarDarkBase.copy(alpha = 0.99f)
                         )
                     ),
                     shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
@@ -2259,29 +3467,91 @@ private fun CompetitorsBottomSheet(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Handle bar
+                // ═══ DRAGGABLE HANDLE BAR ═══
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 12.dp),
+                        .padding(top = 12.dp, bottom = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .width(40.dp)
-                            .height(4.dp)
-                            .background(
-                                RadarTextMuted.copy(alpha = 0.5f),
-                                RoundedCornerShape(2.dp)
-                            )
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Glowing handle bar
+                        Box(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(5.dp)
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(
+                                            RadarCrimsonPrimary.copy(alpha = handleGlow * 0.3f),
+                                            RadarCrimsonBright.copy(alpha = handleGlow),
+                                            RadarCrimsonPrimary.copy(alpha = handleGlow * 0.3f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(3.dp)
+                                )
+                        )
+                        
+                        // Drag hint text (only when collapsed or half)
+                        AnimatedVisibility(
+                            visible = sheetState != SheetState.FullExpanded,
+                            enter = fadeIn(tween(200)),
+                            exit = fadeOut(tween(150))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(top = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.KeyboardArrowUp,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = RadarTextMuted.copy(alpha = 0.7f)
+                                )
+                                Text(
+                                    text = "Swipe up for full list",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = RadarTextMuted.copy(alpha = 0.6f),
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                // ═══ SHEET STATE INDICATOR DOTS ═══
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    listOf(SheetState.Collapsed, SheetState.HalfExpanded, SheetState.FullExpanded).forEach { state ->
+                        val isActive = sheetState == state
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 3.dp)
+                                .size(if (isActive) 8.dp else 6.dp)
+                                .background(
+                                    color = if (isActive) 
+                                        RadarCrimsonPrimary 
+                                    else 
+                                        RadarTextMuted.copy(alpha = 0.3f),
+                                    shape = CircleShape
+                                )
+                                .clickable { sheetState = state }
+                        )
+                    }
                 }
                 
                 // Header with view mode toggle
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                        .padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),

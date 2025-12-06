@@ -31,11 +31,19 @@ import com.example.sparin.ui.theme.*
 import kotlin.math.cos
 import kotlin.math.sin
 
-// ==================== GEN-Z COLOR PALETTE ====================
-private val GenZBlue = Color(0xFF8CCFFF)
-private val GenZTeal = Color(0xFF35C8C3)
-private val GenZCyan = Color(0xFF57D3FF)
-private val GenZLavender = Color(0xFFB8B5FF)
+// ==================== VIBRANT COLOR PALETTE ====================
+private val GenZBlue = Color(0xFF00B4D8)
+private val GenZTeal = Color(0xFF00D26A)
+private val GenZCyan = Color(0xFF00E5CC)
+private val GenZLavender = Color(0xFF8B5CF6)
+
+// Vibrant colors
+private val VibrantOrange = Color(0xFFFF6B35)
+private val VibrantGreen = Color(0xFF00D26A)
+private val VibrantBlue = Color(0xFF00B4D8)
+private val VibrantPink = Color(0xFFFF2D78)
+private val VibrantPurple = Color(0xFF8B5CF6)
+private val VibrantYellow = Color(0xFFFFD60A)
 
 // ==================== SAMPLE DATA ====================
 // This would typically come from a ViewModel in production
@@ -44,29 +52,29 @@ private val allMyCommunities = listOf(
         id = "1",
         name = "Badminton Jakarta",
         emoji = "🏸",
-        bannerColor = PeachGlow,
+        bannerColor = VibrantOrange,
         memberCount = "3.2k",
         newPosts = 15,
         isJoined = true,
-        description = "Komunitas badminton terbesar di Jakarta!",
+        description = "The biggest badminton community in Jakarta!",
         category = "Badminton"
     ),
     Community(
         id = "2",
         name = "Futsal Bandung",
         emoji = "⚽",
-        bannerColor = MintBreeze,
+        bannerColor = VibrantGreen,
         memberCount = "2.1k",
         newPosts = 8,
         isJoined = true,
-        description = "Main futsal bareng di Bandung",
+        description = "Play futsal together in Bandung",
         category = "Futsal"
     ),
     Community(
         id = "3",
         name = "Basketball Surabaya",
         emoji = "🏀",
-        bannerColor = SkyMist,
+        bannerColor = VibrantBlue,
         memberCount = "1.5k",
         newPosts = 5,
         isJoined = true,
@@ -77,23 +85,23 @@ private val allMyCommunities = listOf(
         id = "11",
         name = "Volleyball Champions",
         emoji = "🏐",
-        bannerColor = RoseDust,
+        bannerColor = VibrantPink,
         memberCount = "890",
         newPosts = 3,
         isJoined = true,
-        description = "Komunitas voli se-Indonesia",
+        description = "Indonesia volleyball community",
         category = "Volleyball"
     ),
     Community(
         id = "12",
         name = "Running Squad Jakarta",
         emoji = "🏃",
-        bannerColor = MintBreeze,
+        bannerColor = VibrantYellow,
         memberCount = "1.2k",
         newPosts = 12,
         isJoined = true,
-        description = "Morning run dan marathon training",
-        category = "Lari"
+        description = "Morning run and marathon training",
+        category = "Running"
     )
 )
 

@@ -66,19 +66,33 @@ data class Community(
 
 // ==================== SAMPLE DATA ====================
 
+// Sharp, vibrant colors for categories
+private val VibrantOrange = Color(0xFFFF6B35)
+private val VibrantGreen = Color(0xFF00D26A)
+private val VibrantBlue = Color(0xFF00B4D8)
+private val VibrantPink = Color(0xFFFF2D78)
+private val VibrantPurple = Color(0xFF8B5CF6)
+private val VibrantYellow = Color(0xFFFFD60A)
+private val VibrantRed = Color(0xFFEF4444)
+private val VibrantCyan = Color(0xFF00E5CC)
+private val VibrantLime = Color(0xFFC8FF00)
+private val VibrantMagenta = Color(0xFFE040FB)
+private val ElectricBlue = Color(0xFF00D4FF)
+private val NeonCoral = Color(0xFFFF6B6B)
+
 private val sportCategories = listOf(
-    SportCategory("Badminton", "🏸", PeachGlow),
-    SportCategory("Futsal", "⚽", MintBreeze),
-    SportCategory("Basket", "🏀", SkyMist),
-    SportCategory("Volleyball", "🏐", RoseDust),
-    SportCategory("Sepeda", "🚴", SoftLavender),
-    SportCategory("Lari", "🏃", ChineseSilver),
-    SportCategory("Gym", "💪", PeachGlow.copy(alpha = 0.8f)),
-    SportCategory("Boxing", "🥊", RoseDust.copy(alpha = 0.9f)),
-    SportCategory("Hiking", "🥾", MintBreeze.copy(alpha = 0.9f)),
-    SportCategory("Tennis", "🎾", SkyMist.copy(alpha = 0.9f)),
-    SportCategory("Renang", "🏊", SoftLavender.copy(alpha = 0.9f)),
-    SportCategory("Bowling", "🎳", ChineseSilver.copy(alpha = 0.9f))
+    SportCategory("Badminton", "🏸", VibrantOrange),
+    SportCategory("Futsal", "⚽", VibrantGreen),
+    SportCategory("Basket", "🏀", VibrantBlue),
+    SportCategory("Volleyball", "🏐", VibrantPink),
+    SportCategory("Cycling", "🚴", VibrantPurple),
+    SportCategory("Running", "🏃", VibrantYellow),
+    SportCategory("Gym", "💪", VibrantRed),
+    SportCategory("Boxing", "🥊", NeonCoral),
+    SportCategory("Hiking", "🥾", VibrantCyan),
+    SportCategory("Tennis", "🎾", VibrantLime),
+    SportCategory("Swimming", "🏊", ElectricBlue),
+    SportCategory("Bowling", "🎳", VibrantMagenta)
 )
 
 private val initialMyCommunities = listOf(
@@ -86,29 +100,29 @@ private val initialMyCommunities = listOf(
         id = "1",
         name = "Badminton Jakarta",
         emoji = "🏸",
-        bannerColor = PeachGlow,
+        bannerColor = VibrantOrange,
         memberCount = "3.2k",
         newPosts = 15,
         isJoined = true,
-        description = "Komunitas badminton terbesar di Jakarta!",
+        description = "The biggest badminton community in Jakarta!",
         category = "Badminton"
     ),
     Community(
         id = "2",
         name = "Futsal Bandung",
         emoji = "⚽",
-        bannerColor = MintBreeze,
+        bannerColor = VibrantGreen,
         memberCount = "2.1k",
         newPosts = 8,
         isJoined = true,
-        description = "Main futsal bareng di Bandung",
+        description = "Play futsal together in Bandung",
         category = "Futsal"
     ),
     Community(
         id = "3",
         name = "Basketball Surabaya",
         emoji = "🏀",
-        bannerColor = SkyMist,
+        bannerColor = VibrantBlue,
         memberCount = "1.5k",
         newPosts = 5,
         isJoined = true,
@@ -122,25 +136,25 @@ private val initialRecommendedCommunities = listOf(
         id = "4",
         name = "Badminton Jogja Community",
         emoji = "🏸",
-        bannerColor = PeachGlow,
+        bannerColor = VibrantOrange,
         memberCount = "1.8k",
-        description = "Komunitas bulutangkis Yogyakarta",
+        description = "Yogyakarta badminton community",
         category = "Badminton"
     ),
     Community(
         id = "5",
         name = "Running Club Bali",
         emoji = "🏃",
-        bannerColor = MintBreeze,
+        bannerColor = VibrantYellow,
         memberCount = "980",
         description = "Morning run around beautiful Bali",
-        category = "Lari"
+        category = "Running"
     ),
     Community(
         id = "6",
         name = "Gym Bros Jakarta",
         emoji = "💪",
-        bannerColor = SkyMist,
+        bannerColor = VibrantRed,
         memberCount = "2.5k",
         description = "Fitness enthusiasts unite!",
         category = "Gym"
@@ -149,25 +163,25 @@ private val initialRecommendedCommunities = listOf(
         id = "7",
         name = "Volleyball Semarang",
         emoji = "🏐",
-        bannerColor = RoseDust,
+        bannerColor = VibrantPink,
         memberCount = "750",
-        description = "Spiker & setter Semarang",
+        description = "Spikers & setters Semarang",
         category = "Volleyball"
     ),
     Community(
         id = "8",
         name = "Cycling Malang",
         emoji = "🚴",
-        bannerColor = SoftLavender,
+        bannerColor = VibrantPurple,
         memberCount = "1.2k",
         description = "Explore Malang on wheels",
-        category = "Sepeda"
+        category = "Cycling"
     ),
     Community(
         id = "9",
         name = "Tennis Club Medan",
         emoji = "🎾",
-        bannerColor = SkyMist.copy(alpha = 0.9f),
+        bannerColor = VibrantLime,
         memberCount = "650",
         description = "Tennis enthusiasts in Medan",
         category = "Tennis"
@@ -176,21 +190,21 @@ private val initialRecommendedCommunities = listOf(
         id = "10",
         name = "Boxing Academy Surabaya",
         emoji = "🥊",
-        bannerColor = RoseDust.copy(alpha = 0.9f),
+        bannerColor = NeonCoral,
         memberCount = "480",
         description = "Learn boxing techniques",
         category = "Boxing"
     )
 )
 
-// ==================== GEN-Z COLOR PALETTE ====================
+// ==================== VIBRANT COLOR PALETTE ====================
 
-private val GenZBlue = Color(0xFF8CCFFF)
-private val GenZTeal = Color(0xFF35C8C3)
-private val GenZCyan = Color(0xFF57D3FF)
-private val GenZLavender = Color(0xFFB8B5FF)
-private val GenZGradientStart = Color(0xFF35C8C3)
-private val GenZGradientEnd = Color(0xFF57D3FF)
+private val GenZBlue = Color(0xFF00B4D8)
+private val GenZTeal = Color(0xFF00D26A)
+private val GenZCyan = Color(0xFF00E5CC)
+private val GenZLavender = Color(0xFF8B5CF6)
+private val GenZGradientStart = Color(0xFF8B5CF6)
+private val GenZGradientEnd = Color(0xFF00D4FF)
 
 /**
  * Premium Community Screen for SparIN
@@ -248,8 +262,8 @@ fun CommunityScreen(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         CascadingWhite,
-                        GenZBlue.copy(alpha = 0.08f),
-                        SoftLavender.copy(alpha = 0.15f)
+                        GenZBlue.copy(alpha = 0.1f),
+                        VibrantPurple.copy(alpha = 0.08f)
                     )
                 )
             )
@@ -456,9 +470,9 @@ private fun CommunityBackgroundBlobs() {
             )
         )
 
-        // Peach blob - bottom left
+        // Orange blob - bottom left
         drawCircle(
-            color = PeachGlow.copy(alpha = 0.15f),
+            color = VibrantOrange.copy(alpha = 0.2f),
             radius = 120f,
             center = Offset(
                 x = size.width * 0.15f + sin(Math.toRadians(offset2.toDouble())).toFloat() * 30f,
